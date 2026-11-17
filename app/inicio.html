@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Herpetodados</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%231e1c19'/%3E%3Cpath d='M8 50 C 16 24, 30 18, 40 17 S 52 16, 58 16' fill='none' stroke='%23f2ede1' stroke-width='4'/%3E%3Ccircle cx='36' cy='17.5' r='7.5' fill='%231e1c19' stroke='%23f2ede1' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' rx='13' fill='%23161716'/%3E%3Cpath d='M8 34 C 12 19, 18 14, 36 12.5' fill='none' stroke='%23b9d7a8' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='28.5' cy='13.6' r='5' fill='%23b9d7a8'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="/identidade/prancha.css">
 <style>
 *{box-sizing:border-box}
@@ -63,27 +63,97 @@ details.ajuda{margin-top:14px}
 details.ajuda summary{cursor:pointer;color:var(--acento-2);font-size:.95em;margin-bottom:8px}
 .arvore{font:13px/1.6 var(--f-mono);background:var(--papel);border:1px solid var(--fio);padding:12px 16px;white-space:pre;overflow:auto}
 @media (max-width:980px){.menu{display:none}main{margin:0;padding:16px}.passos,.formato,.guia{grid-template-columns:1fr}}
+
+/* ===== Herpetodados · Direção A "Sálvia" (17/11/2026) =====
+   Referências: painel de cafeteira da Orbix (fundo cinza quente, cartões brancos, faixa de indicadores, destaque verde-sálvia,
+   botões pretos em pílula) e menu "nido" da Felvra (vidro fosco, valor de cada item à direita, ativo em pílula preta com círculo verde).
+   Este bloco substitui a Direção C (cópia em versoes/direcao-c-sintese-2026-11-17). Letras do Windows, para funcionar sem internet. */
+:root{
+  color-scheme: light;
+  --papel:#dededb; --papel-2:#ececea; --papel-3:#e2e2df; --cartao:#ffffff; --fig:#f7f7f5;
+  --tinta:#1d1f1e; --tinta-2:#5c615c; --tinta-3:#80857f; --fio:#d6d6d2; --fio-2:#ebebe8; --linha:#d6d6d2;
+  --acento:#3f6e55; --acento-2:#3f6e55; --salvia:#7c9c88; --salvia-2:#b9d7a8; --preto:#161716; --sobre-preto:#f3f4f2;
+  --s1:#3f8c62; --s2:#d0482a; --s3:#2a5cab; --s4:#a87700; --s5:#9a3f8f; --s6:#5c8a00; --s7:#3d8fdc; --s8:#ad4f19;
+  --erro:#b0321c; --erro-bg:#f7dfd8; --aten:#7a5600; --aten-bg:#f3e8c9; --info:#2a5cab; --info-bg:#e0e8f4; --ok:#2f6b45;
+  --vidro: rgba(255,255,255,.64); --vidro-borda: rgba(29,31,30,.09); --vidro-brilho: rgba(255,255,255,.8);
+  --sombra: 0 26px 56px -34px rgba(20,22,21,.38);
+  --f-titulo: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --f-texto: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --f-num: "Bahnschrift", "Segoe UI Variable Display", "Segoe UI", sans-serif;
+  --f-mono: "Cascadia Mono", Consolas, monospace;
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --papel:#0e100f; --papel-2:#161918; --papel-3:#232825; --cartao:#1e2220; --fig:#f7f7f5;
+  --tinta:#eceeea; --tinta-2:#a3aba5; --tinta-3:#7d857f; --fio:#343a37; --fio-2:#2a2f2c; --linha:#343a37;
+  --acento:#8fb59e; --acento-2:#9cc5ad; --salvia:#3f5b4b; --salvia-2:#b9d7a8; --preto:#eceeea; --sobre-preto:#161716;
+  --s1:#4fa274; --s2:#e05a3b; --s3:#5385d4; --s4:#bb8708; --s5:#ad5fa4; --s6:#6f9e24; --s7:#4596e0; --s8:#c4692f;
+  --erro:#f0937c; --erro-bg:#4a2a22; --aten:#e9bf6a; --aten-bg:#3f3420; --info:#9cc0ee; --info-bg:#24364c; --ok:#a9cf6a;
+  --vidro: rgba(30,34,32,.74); --vidro-borda: rgba(236,238,234,.10); --vidro-brilho: rgba(255,255,255,.05);
+  --sombra: 0 26px 56px -30px rgba(0,0,0,.8);
+}
+body{background:var(--papel);font-family:var(--f-texto)}
+body::before,.formulas{display:none}
+.ital,h1,h2,.menu .nomep,.solta .grande,.passos b,.guia b,table.lev .t,.vazio{font-family:var(--f-titulo);font-style:normal}
+button{border-radius:999px;border:1px solid var(--fio);background:var(--cartao);color:var(--tinta);padding:8px 16px}
+button:hover{border-color:var(--tinta-3)}
+.abrir,#escolher{background:var(--preto)!important;color:var(--sobre-preto)!important;border-color:var(--preto)!important}
+.rotulo{letter-spacing:.01em;text-transform:none;font-size:.8em;color:var(--tinta-2)}
+.menu{width:270px;border-radius:26px;background:var(--vidro);border:1px solid var(--vidro-borda);backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2);box-shadow:var(--sombra);padding:18px 14px}
+.menu .logo{display:flex;align-items:center;gap:12px;margin:0 6px 16px}
+.menu .logo svg{width:44px;height:44px;margin:0}
+.menu .nomep{font:600 1.15em/1.1 var(--f-titulo);margin:0}
+.menu .sub{margin:2px 0 0;font-size:.82em;color:var(--tinta-2)}
+.menu a{grid-template-columns:30px 1fr;align-items:center;gap:10px;padding:5px 12px 5px 5px;border-radius:999px;margin:2px 0}
+.menu a:hover{background:rgba(127,127,127,.09);box-shadow:none}
+.menu a .n{width:30px;height:30px;border-radius:50%;border:1px solid var(--fio);display:flex;align-items:center;justify-content:center;font:500 .76em var(--f-texto);color:var(--tinta-2)}
+.menu a.ativo{background:var(--preto);color:var(--sobre-preto)} .menu a.ativo .n{background:var(--salvia-2);border-color:transparent;color:#161716}
+.menu a small{display:none}
+.menu .pe{border-top:0;color:var(--tinta-3)}
+.menu .tema{width:100%;margin-top:10px;display:flex;justify-content:space-between;background:var(--papel-2);border-color:transparent}
+main{margin-left:306px;padding:22px 28px 80px 0}
+section{background:var(--papel-2);border:0;border-radius:30px;padding:24px 26px;box-shadow:var(--sombra)}
+.cab{border-bottom:0;padding-bottom:0;margin-bottom:2px}
+h1{font:600 2.1em/1.1 var(--f-titulo);letter-spacing:-.02em}
+h2{font:600 1.6em/1.15 var(--f-titulo);letter-spacing:-.02em}
+.solta{border:1.5px dashed var(--fio);background:var(--cartao);border-radius:24px;padding:40px 20px}
+.solta.sobre{background:var(--papel-3);border-color:var(--salvia)}
+.solta .grande{font-size:1.35em;font-weight:600}
+.passos{gap:10px;border:0}
+.passos div{background:var(--cartao);border:0;border-radius:18px;padding:14px 16px}
+.passos b{font:300 2em var(--f-num);color:var(--acento)}
+.formato table{border-radius:12px;overflow:hidden}
+.formato td,.formato th{border-color:var(--fio-2)}
+.formato th{background:var(--papel-3)}
+.log{border-left:0;border-radius:14px;background:var(--papel-3)}
+.barra .trilho{height:8px;border:0;border-radius:999px;background:var(--papel-3)}
+.barra .enche{background:var(--salvia);border-radius:999px}
+#lista{background:var(--cartao);border-radius:22px;padding:8px 14px;overflow-x:auto}
+table.lev .acs{white-space:normal;min-width:190px} table.lev .acs button{margin:2px 0 2px 4px}
+table.lev th{border-bottom:1px solid var(--fio);font-weight:500}
+table.lev .t{font-weight:600}
+table.lev .acs button{padding:5px 12px;background:var(--papel-2);border-color:transparent}
+.guia{gap:10px;border:0}
+.guia div,.guia div:nth-child(odd),.guia div:nth-child(even){background:var(--cartao);border:0;border-radius:16px;padding:12px 14px}
+.guia b{font-weight:600}
+.arvore{border-radius:14px;background:var(--cartao);border-color:var(--fio-2)}
+details.ajuda summary{color:var(--acento)}
+/* fim Sálvia */
 </style>
 </head>
 <body>
 <div class="formulas" aria-hidden="true"><span style="left:62%;top:8%">H′ = − Σ pᵢ ln pᵢ</span><span style="left:74%;top:46%;font-size:24px">S<sub>Chao2</sub> = S<sub>obs</sub> + Q₁² / 2Q₂</span><span style="left:44%;top:78%;font-size:24px">S<sub>jack1</sub> = S<sub>obs</sub> + Q₁ (m − 1)/m</span></div>
 <aside class="menu">
-  <svg viewBox="0 0 230 92" aria-hidden="true"><defs><pattern id="h1" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#1e1c19" stroke-width=".8"/></pattern></defs>
-    <line x1="8" y1="78" x2="214" y2="78" stroke="#1e1c19"/><g stroke="#1e1c19"><line x1="30" y1="78" x2="30" y2="82"/><line x1="70" y1="78" x2="70" y2="82"/><line x1="110" y1="78" x2="110" y2="82"/><line x1="150" y1="78" x2="150" y2="82"/><line x1="190" y1="78" x2="190" y2="82"/></g>
-    <path d="M14 76 C 34 30, 70 20, 110 18 S 180 15, 212 15 L212 26 C 180 27, 140 30, 110 34 S 40 60, 14 77 Z" fill="url(#h1)" opacity=".5"/>
-    <path d="M14 76 C 34 34, 70 24, 110 22 S 180 19, 212 19" fill="none" stroke="#1e1c19" stroke-width="3"/>
-    <line x1="14" y1="9" x2="212" y2="9" stroke="#d0482a" stroke-width="1.5" stroke-dasharray="5 5"/>
-    <circle cx="110" cy="22" r="13" fill="#f8f5ee" stroke="#1e1c19" stroke-width="2.5"/><ellipse cx="110" cy="22" rx="8" ry="3.2" fill="#1e1c19"/><circle cx="107" cy="20.5" r="1.2" fill="#f8f5ee"/></svg>
-  <div class="nomep">Herpeto<span>dados</span></div>
-  <div class="sub rotulo">análise de comunidades · R</div>
-  <a href="#inserir"><span class="n">1</span><span>Inserir planilha<small>soltar o arquivo e rodar no R</small></span></a>
+  <div class="logo"><svg viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" rx="13" fill="#161716"/><path d="M8 34 C 12 19, 18 14, 36 12.5" fill="none" stroke="#b9d7a8" stroke-width="2.6" stroke-linecap="round"/><circle cx="28.5" cy="13.6" r="4.6" fill="#161716" stroke="#b9d7a8" stroke-width="2"/><rect x="26" y="12.7" width="5" height="1.9" rx=".95" fill="#b9d7a8"/></svg><div><div class="nomep">Herpetodados</div><div class="sub">análises de comunidade no R</div></div></div>
+  <a href="#inserir" class="ativo"><span class="n">1</span><span>Inserir planilha<small>soltar o arquivo e rodar no R</small></span></a>
   <a href="#levantamentos"><span class="n">2</span><span>Levantamentos<small>abrir painéis já feitos</small></span></a>
   <a href="#guia"><span class="n">3</span><span>Ajuda<small>o que faz cada parte, onde ficam os arquivos</small></span></a>
-  <div class="pe">Roda só neste computador. R 4.6.2 · vegan · iNEXT · ggplot2.<br>Para fechar o programa, feche a janela preta.</div>
+  <div class="pe">Roda só neste computador. R 4.6.2 · vegan · iNEXT · ggplot2.<br>Para fechar o programa, feche a janela preta.
+    <button class="tema" id="btTema" type="button"><span>Claro e escuro</span><b id="btTemaTx">Escuro</b></button></div>
 </aside>
 <main>
   <section id="inserir">
-    <div class="cab"><span class="rotulo">Prancha 1 · Inserir planilha</span><span class="rotulo">entrada</span></div>
+    <div class="cab"><span class="rotulo">Inserir planilha</span><span class="rotulo"></span></div>
     <h1>Da planilha de campo ao laudo</h1>
     <p class="lead">Solte a planilha do levantamento aqui. O R confere os dados, monta as matrizes, roda as análises de comunidade e desenha as figuras; depois o painel abre sozinho.</p>
     <div class="solta" id="solta">
@@ -114,13 +184,13 @@ details.ajuda summary{cursor:pointer;color:var(--acento-2);font-size:.95em;margi
   </section>
 
   <section id="levantamentos">
-    <div class="cab"><span class="rotulo">Prancha 2 · Levantamentos</span><span class="rotulo">resultados</span></div>
+    <div class="cab"><span class="rotulo">Levantamentos</span><span class="rotulo"></span></div>
     <h2>Levantamentos analisados</h2>
     <div id="lista"><p class="vazio">Carregando...</p></div>
   </section>
 
   <section id="guia"><details class="ajuda"><summary>O que faz cada parte do painel</summary>
-    <div class="cab"><span class="rotulo">Prancha 3 · Guia</span><span class="rotulo">o que faz cada parte</span></div>
+    <div class="cab"><span class="rotulo">Guia</span><span class="rotulo">o que faz cada parte</span></div>
     <h2>O que faz cada parte do painel</h2>
     <div class="guia">
       <div><b><span>I</span>Sobre o campo</b><br>Espaço para escrever como foi a campanha e a finalidade. Fica salvo na pasta e sai na impressão.</div>
@@ -137,7 +207,7 @@ details.ajuda summary{cursor:pointer;color:var(--acento-2);font-size:.95em;margi
   </details></section>
 
   <section id="arquivos"><details class="ajuda"><summary>Onde ficam os arquivos</summary>
-    <div class="cab"><span class="rotulo">Prancha 4 · Arquivos</span><span class="rotulo">onde fica cada coisa</span></div>
+    <div class="cab"><span class="rotulo">Arquivos</span><span class="rotulo">onde fica cada coisa</span></div>
     <h2>Onde ficam os arquivos</h2>
     <p class="lead">Cada levantamento tem uma pasta própria. O botão <b>Pasta</b> na lista acima abre ela no Explorer.</p>
     <div class="arvore">herpetodados\levantamentos\&lt;levantamento&gt;\
@@ -210,6 +280,14 @@ z.addEventListener("drop", e => enviar(e.dataTransfer.files[0]));
 $("#escolher").onclick = () => $("#arquivo").click();
 $("#arquivo").onchange = e => enviar(e.target.files[0]);
 lista();
+</script>
+<script>
+(function(){ // claro e escuro, o mesmo do painel
+  const k = "herp.estilo5"; let e = {}; try { e = JSON.parse(localStorage.getItem(k) || "{}"); } catch (x) {}
+  const aplica = () => { document.documentElement.dataset.theme = e.painel === "escuro" ? "dark" : "light"; const t = document.getElementById("btTemaTx"); if (t) t.textContent = e.painel === "escuro" ? "Claro" : "Escuro"; };
+  aplica();
+  document.getElementById("btTema").onclick = () => { e.painel = e.painel === "escuro" ? "claro" : "escuro"; try { localStorage.setItem(k, JSON.stringify(e)); } catch (x) {} aplica(); };
+})();
 </script>
 </body>
 </html>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Herpetodados · painel</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%231e1c19'/%3E%3Cpath d='M8 50 C 16 24, 30 18, 40 17 S 52 16, 58 16' fill='none' stroke='%23f2ede1' stroke-width='4'/%3E%3Ccircle cx='36' cy='17.5' r='7.5' fill='%231e1c19' stroke='%23f2ede1' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' rx='13' fill='%23161716'/%3E%3Cpath d='M8 34 C 12 19, 18 14, 36 12.5' fill='none' stroke='%23b9d7a8' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='28.5' cy='13.6' r='5' fill='%23b9d7a8'/%3E%3C/svg%3E">
 <script src="dados.js"></script>
 <style>
 /* ===== sistema visual Prancha (mesmo de identidade/prancha.css; repetido aqui para o painel abrir sozinho) ===== */
@@ -197,6 +197,145 @@ details.sentido div{padding:6px 0 0 0} details.sentido p{margin:4px 0} details.s
 .relitem{display:grid;grid-template-columns:40px 70px 1fr auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--fio-2)}
 .relitem img{width:70px;border:1px solid var(--fio);background:#fff}
 .relitem .n{font:italic 1.05em var(--f-titulo);color:var(--acento)}
+
+/* ===== Herpetodados · Direção A "Sálvia" (17/11/2026) =====
+   Referências: painel de cafeteira da Orbix (fundo cinza quente, cartões brancos, faixa de indicadores, destaque verde-sálvia,
+   botões pretos em pílula) e menu "nido" da Felvra (vidro fosco, valor de cada item à direita, ativo em pílula preta com círculo verde).
+   Este bloco substitui a Direção C (cópia em versoes/direcao-c-sintese-2026-11-17). Letras do Windows, para funcionar sem internet. */
+:root{
+  color-scheme: light;
+  --papel:#dededb; --papel-2:#ececea; --papel-3:#e2e2df; --cartao:#ffffff; --fig:#f7f7f5;
+  --tinta:#1d1f1e; --tinta-2:#5c615c; --tinta-3:#80857f; --fio:#d6d6d2; --fio-2:#ebebe8; --linha:#d6d6d2;
+  --acento:#3f6e55; --acento-2:#3f6e55; --salvia:#7c9c88; --salvia-2:#b9d7a8; --preto:#161716; --sobre-preto:#f3f4f2;
+  --s1:#3f8c62; --s2:#d0482a; --s3:#2a5cab; --s4:#a87700; --s5:#9a3f8f; --s6:#5c8a00; --s7:#3d8fdc; --s8:#ad4f19;
+  --erro:#b0321c; --erro-bg:#f7dfd8; --aten:#7a5600; --aten-bg:#f3e8c9; --info:#2a5cab; --info-bg:#e0e8f4; --ok:#2f6b45;
+  --vidro: rgba(255,255,255,.64); --vidro-borda: rgba(29,31,30,.09); --vidro-brilho: rgba(255,255,255,.8);
+  --sombra: 0 26px 56px -34px rgba(20,22,21,.38);
+  --f-titulo: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  --f-texto: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --f-num: "Bahnschrift", "Segoe UI Variable Display", "Segoe UI", sans-serif;
+  --f-mono: "Cascadia Mono", Consolas, monospace;
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --papel:#0e100f; --papel-2:#161918; --papel-3:#232825; --cartao:#1e2220; --fig:#f7f7f5;
+  --tinta:#eceeea; --tinta-2:#a3aba5; --tinta-3:#7d857f; --fio:#343a37; --fio-2:#2a2f2c; --linha:#343a37;
+  --acento:#8fb59e; --acento-2:#9cc5ad; --salvia:#3f5b4b; --salvia-2:#b9d7a8; --preto:#eceeea; --sobre-preto:#161716;
+  --s1:#4fa274; --s2:#e05a3b; --s3:#5385d4; --s4:#bb8708; --s5:#ad5fa4; --s6:#6f9e24; --s7:#4596e0; --s8:#c4692f;
+  --erro:#f0937c; --erro-bg:#4a2a22; --aten:#e9bf6a; --aten-bg:#3f3420; --info:#9cc0ee; --info-bg:#24364c; --ok:#a9cf6a;
+  --vidro: rgba(30,34,32,.74); --vidro-borda: rgba(236,238,234,.10); --vidro-brilho: rgba(255,255,255,.05);
+  --sombra: 0 26px 56px -30px rgba(0,0,0,.8);
+}
+body{background:var(--papel);font-family:var(--f-texto)}
+body::before,.fundo-formulas{display:none}
+.ital,figcaption,.leitura h3,.explica b,.aviso b,.prancha h2,.menu .marca b,.menu .lev .t,.figr .topo .tit,.tabbox .topo .tit,
+.relitem .n,.formas button span,details.sentido b,.galeria span,.editor h3,.figr .quadro .aviso-r{font-family:var(--f-titulo);font-style:normal}
+.esp,.leitura i{font-family:var(--f-texto);font-style:italic}
+a{color:var(--acento)}
+button,select,input[type=text],input[type=number]{border-radius:999px;border:1px solid var(--fio);background:var(--cartao);color:var(--tinta);padding:7px 14px}
+textarea{border-radius:16px;background:var(--cartao);border-color:var(--fio)}
+button:hover{border-color:var(--tinta-3)}
+button.forte,button.acento{background:var(--preto);color:var(--sobre-preto);border-color:var(--preto)}
+button.bcorr{background:var(--preto);color:var(--sobre-preto);border-color:var(--preto);padding:4px 12px}
+.rotulo{letter-spacing:.01em;text-transform:none;font-size:.8em;color:var(--tinta-2)}
+
+/* menu de vidro: marca no quadrado preto, valor de cada seção à direita, ativo em pílula preta */
+.menu{left:16px;top:16px;bottom:16px;width:280px;border-radius:26px;background:var(--vidro);border:1px solid var(--vidro-borda);
+  backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2);box-shadow:var(--sombra)}
+.menu .marca{padding:16px 18px 6px;gap:12px}
+.menu .marca svg{width:44px;height:44px}
+.menu .marca b{font:600 1.12em/1.1 var(--f-titulo);letter-spacing:-.01em} .menu .marca b span{font:inherit;color:inherit}
+.menu .lev{padding:2px 18px 12px;border-bottom:0}
+.menu .lev .t{font-size:.84em;color:var(--tinta-2)}
+.menu .lev .rotulo{font-size:0;letter-spacing:0;margin-top:0!important}
+.menu .lev .rotulo select{font-size:14px}
+.menu .lev select{margin-top:10px;width:100%;background:var(--papel-2);border-color:transparent}
+.menu nav{padding:6px 12px;margin:0;border:0}
+.menu nav a{grid-template-columns:30px 1fr auto;align-items:center;gap:10px;padding:5px 12px 5px 5px;margin:2px 0;border-radius:999px;box-shadow:none}
+.menu nav a .n{width:30px;height:30px;border-radius:50%;border:1px solid var(--fio);display:flex;align-items:center;justify-content:center;font:500 .76em/1 var(--f-texto);color:var(--tinta-2);text-align:center}
+.menu nav a .nome{font-size:.93em}
+.menu nav a small{display:none}
+.menu nav a .val{font-size:.76em;color:var(--tinta-3);white-space:nowrap;font-variant-numeric:tabular-nums}
+.menu nav a:hover{background:rgba(127,127,127,.09);box-shadow:none}
+.menu nav a.ativo{background:var(--preto);color:var(--sobre-preto)}
+.menu nav a.ativo .n{background:var(--salvia-2);border-color:transparent;color:#161716}
+.menu nav a.ativo .val{color:var(--salvia-2)}
+:root[data-theme="dark"] .menu nav a.ativo .val{color:#3f6e55}
+.menu .acoes{border-top:0;padding:10px 14px 14px;gap:6px}
+.menu .acoes button{border-radius:16px;background:var(--papel-2);border-color:transparent;padding:8px 12px}
+.menu .acoes button.tema{grid-column:1 / -1;display:flex;justify-content:space-between;align-items:center;border-radius:999px}
+main{margin-left:316px;padding:22px 28px 80px 0;max-width:1220px}
+
+/* seções: casca cinza com cartões brancos dentro */
+section.prancha{background:var(--papel-2);border:0;border-radius:30px;padding:22px 24px 26px;box-shadow:var(--sombra)}
+.prancha .cab{border-bottom:0;padding-bottom:0;margin-bottom:0}
+.prancha .cab .rotulo{font-size:.78em}
+.prancha h2{font:600 1.85em/1.15 var(--f-titulo);letter-spacing:-.02em;margin:2px 0 6px}
+.prancha .pergunta{color:var(--tinta-2)}
+
+/* faixa de indicadores: azulejos com número grande */
+.numeros{gap:10px;border:0;counter-reset:none}
+.numeros > div,.numeros > div:last-child{background:var(--cartao);border:1px solid var(--fio-2);border-radius:20px;padding:14px 16px}
+.numeros > div::before{content:none}
+.numeros .v{font:300 2.35em/1.05 var(--f-num);letter-spacing:-.02em}
+.numeros .v.ac{color:var(--acento)}
+.numeros .r{font-size:.8em;color:var(--tinta-2);letter-spacing:0;margin-top:4px}
+.numeros .nn{font:.8em var(--f-texto);color:var(--tinta-3)}
+
+/* painel de destaque verde-sálvia */
+.destaque{background:var(--salvia);border-radius:26px;padding:16px 18px 18px;margin:16px 0;color:#f6f8f5}
+.destaque .figr{background:transparent;border:0;padding:0;margin:0}
+.destaque .figr .topo .tit{color:#f6f8f5;font-weight:600}
+.destaque .figr .topo .acs button,.destaque .rel{background:rgba(255,255,255,.92);color:#1d1f1e;border-color:transparent}
+.destaque .figr .quadro{border-radius:18px}
+
+/* abas e seletores em pílula */
+.abas{display:inline-flex;gap:4px;border:0;background:var(--cartao);padding:4px;border-radius:999px;margin:6px 0 16px}
+.abas button{border:0;border-radius:999px;padding:7px 15px;color:var(--tinta-2)}
+.abas button[aria-pressed="true"]{background:var(--preto);color:var(--sobre-preto);border:0;font-weight:500}
+.seg{border:0;background:var(--cartao);padding:3px;border-radius:999px;gap:3px}
+.seg button{border-radius:999px;background:transparent}
+.seg button + button{border-left:0}
+.seg button[aria-pressed="true"]{background:var(--preto);color:var(--sobre-preto)}
+
+/* figuras e tabelas em cartões */
+.figr{background:var(--cartao);border:1px solid var(--fio-2);border-radius:24px;padding:14px 16px 16px}
+.figr .topo .tit{font-size:1em;font-weight:600}
+.figr .topo .acs button,.figr .topo .acs a button{border-radius:999px;padding:4px 11px;background:var(--papel-2);border-color:transparent}
+.rel{border-radius:999px;background:var(--papel-2);border-color:transparent;padding:4px 11px}
+.rel.on{background:var(--preto);color:var(--sobre-preto)}
+.figr .quadro{border:0;border-radius:16px;background:var(--fig);padding:0;overflow:hidden}
+.formas{border-top:1px solid var(--fio-2)}
+.formas button{border-radius:14px;background:var(--papel-2);border-color:transparent}
+.formas button.atual{border:2px solid var(--acento)}
+.tabbox{background:var(--cartao);border:1px solid var(--fio-2);border-radius:22px;padding:14px 16px}
+.tabbox .topo .tit{font-weight:600;color:var(--tinta)}
+th{background:var(--cartao);border-bottom:1px solid var(--fio);color:var(--tinta-2);font-weight:500;font-size:.86em}
+td{border-bottom:1px solid var(--fio-2)}
+tbody tr:hover td{background:rgba(127,127,127,.05)}
+.rolagem{border-radius:12px}
+
+/* textos de resultado, leitura e avisos */
+.resultado{border:0;border-radius:18px;background:var(--cartao);padding:12px 16px}
+.resultado b{font-family:var(--f-titulo);font-style:normal;color:var(--acento);font-weight:600}
+.leitura{background:var(--cartao);border-radius:22px;padding:16px 20px;max-width:none}
+.leitura h3{font-weight:600;border-bottom:1px solid var(--fio-2)}
+details.sentido summary{color:var(--acento)}
+.explica{border-top:0;gap:10px}
+.explica div,.explica div + div{background:var(--cartao);border:0;border-radius:16px;padding:12px 14px}
+.pill{border-radius:999px;padding:2px 10px;font-weight:600;transform:none}
+.aviso{border-bottom:1px solid var(--fio-2)}
+.semapp,.pulado{border-radius:14px;border-color:var(--fio)}
+.corr,.corrlista,.edtit{background:var(--cartao);border:1px solid var(--fio-2);border-radius:20px}
+.tabatr th,.tabatr td{border-color:var(--fio-2)}
+.barra .trilho{height:8px;border:0;border-radius:999px;background:var(--papel-3)}
+.barra .enche{background:var(--salvia);border-radius:999px}
+.tarefa{border-left:0;border-radius:14px;background:var(--papel-3)}
+.relitem img{border-radius:8px;border-color:var(--fio-2)}
+aside.editor{border-radius:26px;background:var(--vidro);border-color:var(--vidro-borda)}
+#tip{border-radius:10px;background:var(--preto);color:var(--sobre-preto)}
+@media (max-width:980px){main{margin-left:0;padding:60px 12px 60px}section.prancha{border-radius:22px;padding:16px}.numeros{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* fim Sálvia */
 </style>
 </head>
 <body>
@@ -208,13 +347,8 @@ details.sentido div{padding:6px 0 0 0} details.sentido p{margin:4px 0} details.s
 <button class="abre-menu" id="abreMenu">Menu</button>
 <aside class="menu" id="menu" aria-label="Menu do painel">
   <a class="marca" href="/" id="marcaLink" title="Voltar ao início">
-    <svg viewBox="0 0 230 92" aria-hidden="true"><defs><pattern id="hm" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="currentColor" stroke-width=".8"/></pattern></defs>
-      <g style="color:var(--tinta)"><line x1="8" y1="78" x2="214" y2="78" stroke="currentColor"/>
-      <path d="M14 76 C 34 30, 70 20, 110 18 S 180 15, 212 15 L212 26 C 180 27, 140 30, 110 34 S 40 60, 14 77 Z" fill="url(#hm)" opacity=".5"/>
-      <path d="M14 76 C 34 34, 70 24, 110 22 S 180 19, 212 19" fill="none" stroke="currentColor" stroke-width="4"/>
-      <line x1="14" y1="9" x2="212" y2="9" stroke="var(--acento)" stroke-width="2" stroke-dasharray="6 6"/>
-      <circle cx="110" cy="22" r="15" fill="var(--cartao)" stroke="currentColor" stroke-width="3.5"/><ellipse cx="110" cy="22" rx="9" ry="3.6" fill="currentColor"/></g></svg>
-    <b>Herpeto<span>dados</span></b>
+    <svg viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" rx="13" fill="#161716"/><path d="M8 34 C 12 19, 18 14, 36 12.5" fill="none" stroke="#b9d7a8" stroke-width="2.6" stroke-linecap="round"/><circle cx="28.5" cy="13.6" r="4.6" fill="#161716" stroke="#b9d7a8" stroke-width="2"/><rect x="26" y="12.7" width="5" height="1.9" rx=".95" fill="#b9d7a8"/></svg>
+    <b>Herpetodados</b>
   </a>
   <div class="lev"><div class="t" id="levTitulo"></div>
     <label class="rotulo" style="display:block;margin-top:8px">Grupo<select id="selGrupo"></select></label></div>
@@ -222,6 +356,7 @@ details.sentido div{padding:6px 0 0 0} details.sentido p{margin:4px 0} details.s
   <div class="acoes">
     <button id="btEditor"><b>Aparência</b>cores e letras</button>
     <button id="btPasta"><b>Pasta</b>dos arquivos</button>
+    <button id="btTema" class="tema" aria-label="Trocar entre claro e escuro"><span>Claro e escuro</span><b id="btTemaTx">Escuro</b></button>
   </div>
 </aside>
 <main id="main"></main>
@@ -230,11 +365,11 @@ details.sentido div{padding:6px 0 0 0} details.sentido p{margin:4px 0} details.s
   <div style="display:flex;justify-content:space-between;align-items:center"><span class="rotulo">Aparência dos gráficos</span><button id="fechaEditor">Fechar</button></div>
   <p class="nota">Os gráficos são desenhados pelo R. Mude aqui e clique em <b>Redesenhar no R</b> (cerca de 2 minutos). Isso só redesenha: os resultados continuam os mesmos. Para recalcular com a planilha corrigida, use <b>Planilha → Atualizar planilha</b>.</p>
   <h3>Estilo</h3>
-  <div class="linha">Tema <select id="selTemaR"><option value="prancha">Prancha (papel)</option><option value="ggplot">ggplot2 padrão (cinza)</option><option value="bw">theme_bw</option><option value="classic">theme_classic</option><option value="minimal">theme_minimal</option></select></div>
+  <div class="linha">Tema <select id="selTemaR"><option value="salvia">Sálvia (cinza quente, sem moldura)</option><option value="sintese">Síntese (papel creme e grade)</option><option value="prancha">Prancha (fundo branco)</option><option value="ggplot">ggplot2 padrão (cinza)</option><option value="bw">theme_bw</option><option value="classic">theme_classic</option><option value="minimal">theme_minimal</option></select></div>
   <div class="linha">Fundo <div class="seg" id="segTema"><button data-v="claro">Branco</button><button data-v="escuro">Lousa</button></div></div>
-  <div class="linha">Cores <select id="selPaleta"><option value="prancha">Prancha</option><option value="hue">R padrão</option><option value="okabe">Okabe-Ito</option><option value="cerrado">Cerrado</option><option value="cinza">Tons de cinza</option><option value="livre">Personalizada</option></select></div>
+  <div class="linha">Cores <select id="selPaleta"><option value="salvia">Sálvia</option><option value="sintese">Síntese</option><option value="prancha">Prancha</option><option value="hue">R padrão</option><option value="okabe">Okabe-Ito</option><option value="cerrado">Cerrado</option><option value="cinza">Tons de cinza</option><option value="livre">Personalizada</option></select></div>
   <div class="cores" id="cores"></div>
-  <div class="linha">Letra dos títulos <select id="selFTitulo"><option>Georgia Pro</option><option>Sitka Heading</option><option>Cambria</option><option>Bahnschrift</option><option>Arial</option><option>Times New Roman</option></select></div>
+  <div class="linha">Letra dos títulos <select id="selFTitulo"><option>Segoe UI Semibold</option><option>Georgia Pro</option><option>Sitka Heading</option><option>Cambria</option><option>Bahnschrift</option><option>Arial</option><option>Times New Roman</option></select></div>
   <div class="linha">Letra do texto <select id="selFTexto"><option>Bahnschrift</option><option>Segoe UI</option><option>Arial</option><option>Calibri</option><option>Times New Roman</option></select></div>
   <div class="linha">Tamanho da letra <input type="number" id="nFonte" min="8" max="18" step="1" style="width:70px"></div>
   <div class="linha">Espessura das linhas <input type="number" id="nLinha" min="0.3" max="3" step="0.1" style="width:70px"></div>
@@ -282,6 +417,8 @@ if (!H) { document.body.innerHTML = "<p style='padding:40px;font-family:Georgia'
 
 /* ---------------- estilo do R ---------------- */
 const PALETAS = {
+  salvia: ["#3f8c62","#d0482a","#2a5cab","#a87700","#9a3f8f","#5c8a00","#3d8fdc","#ad4f19"],
+  sintese: ["#008E96","#D9661F","#2F62A8","#A67414","#9A3F8F","#5C8A00","#3D8FDC","#8C4A1E"],
   prancha: ["#2a5cab","#d0482a","#00897b","#c28a00","#9a3f8f","#5c8a00","#3d8fdc","#ad4f19"],
   hue:     ["#F8766D","#00BA38","#619CFF","#B79F00","#00BFC4","#F564E3","#C49A00","#53B400"],
   okabe:   ["#0072B2","#D55E00","#009E73","#E69F00","#CC79A7","#56B4E9","#F0E442","#000000"],
@@ -289,13 +426,13 @@ const PALETAS = {
   cinza:   ["#1e1c19","#57524a","#8a8375","#b3ab9a","#3c3a35","#6f6a60","#9c9585","#c9c1b0"]
 };
 const CAT = H.catalogo || {};
-const PADRAO = { tema_r:"prancha", tema:"claro", paleta:"prancha", cores:null, fonte:11, familia:"Bahnschrift", familia_titulo:"Georgia Pro", linha:1, ponto:2.5, legenda:"bottom",
+const PADRAO = { tema_r:"salvia", tema:"claro", paleta:"salvia", cores:null, fonte:11, familia:"Segoe UI", familia_titulo:"Segoe UI Semibold", linha:1, ponto:2.5, legenda:"bottom",
   faixa:true, grade:true, mostrar_titulo:true, mostrar_grupo:true, titulos:{}, formas:{}, largura:18, altura:11.5, dpi:300, painel:"claro" };
 const doR = H.estilo && typeof H.estilo === "object" ? H.estilo : {};
-let E = Object.assign(JSON.parse(JSON.stringify(PADRAO)), store.get("herp.estilo4", {}));
+let E = Object.assign(JSON.parse(JSON.stringify(PADRAO)), store.get("herp.estilo5", {}));
 if (doR._painel) Object.assign(E, doR._painel);
 for (const k of ["titulos","formas"]) if (doR[k] && !Array.isArray(doR[k])) E[k] = doR[k]; else if (!E[k] || Array.isArray(E[k])) E[k] = {};
-const salvaE = () => store.set("herp.estilo4", E);
+const salvaE = () => store.set("herp.estilo5", E);
 const cores = () => E.paleta === "livre" && E.cores ? E.cores : (PALETAS[E.paleta] || PALETAS.prancha);
 function estiloR(){
   const cm = v => Math.round(v / 2.54 * 100) / 100;
@@ -561,12 +698,13 @@ const SECOES = [
 function secao(id, titulo, pergunta){
   const s = el("section", {class:"prancha" + (aba === id ? " ativa" : ""), id});
   const n = SECOES.findIndex(x => x[0] === id);
-  s.innerHTML = `<div class="cab"><span class="rotulo">Prancha ${n} · ${esc(SECOES[n][1])}</span><span class="rotulo">${esc(grupo)}</span></div><h2>${titulo}</h2>${pergunta ? `<p class="pergunta">${pergunta}</p>` : ""}`;
+  s.innerHTML = `<div class="cab"><span class="rotulo">${esc(SECOES[n][1])}</span><span class="rotulo">${esc(grupo)}</span></div><h2>${titulo}</h2>${pergunta ? `<p class="pergunta">${pergunta}</p>` : ""}`;
   $("#main").appendChild(s); return s;
 }
 
 function render(){
   document.documentElement.dataset.theme = E.painel === "escuro" ? "dark" : "light";
+  if ($("#btTemaTx")) $("#btTemaTx").textContent = E.painel === "escuro" ? "Claro" : "Escuro";
   $("#main").innerHTML = "";
   const G = H.grupos[grupo] || {};
   $("#levTitulo").textContent = H.meta.planilha.replace(/\.(xlsx|xls)$/i, "");
@@ -581,6 +719,8 @@ function render(){
       [`${nf(Math.min(...est.slice(1).map(e => e.valor)), 0)} a ${nf(Math.max(...est.slice(1).map(e => e.valor)), 0)}`, "espécies estimadas", `Chao 2 ${nf(v("Chao 2"), 1)} · Jack 1 ${nf(v("Jackknife 1"), 1)} · Boot ${nf(v("Bootstrap"), 1)}`]]
       .map(([a, b, c], i) => `<div><div class="v ${i === 3 ? "ac" : ""}">${a}</div><div class="r">${b}</div><div class="nn">${c}</div></div>`).join("");
     s0.appendChild(n4);
+    // painel de destaque verde-sálvia com a curva de acumulação
+    if (G.acumulacao){ const dz = el("div", {class:"destaque"}); s0.appendChild(dz); figuraR(dz, "acumulacao", "Curva de acumulação"); }
   }
   const lt = el("div", {class:"leitura", style:"margin-top:16px"}, H.leitura ? md(H.leitura) : "<p class='ital'>Sem leitura escrita ainda.</p>"); s0.appendChild(lt);
   if (LID){ const be = el("button", {class:"naoimprime"}, "Editar a leitura"), ta = el("textarea", {style:"min-height:320px;display:none;font-family:var(--f-mono);font-size:.85em"}), bs = el("button", {class:"forte naoimprime", style:"display:none;margin-left:8px"}, "Salvar");
@@ -757,11 +897,26 @@ function render(){
   montaMenu(); mostraAba();
 }
 function mostraAba(){ document.querySelectorAll("main > section.prancha").forEach(s => s.classList.toggle("ativa", s.id === aba)); if (!document.querySelector("main > section.ativa")) { aba = "inicio"; mostraAba(); } }
+// número que aparece à direita de cada seção no menu
+function valorMenu(id){
+  const G = H.grupos[grupo] || {}, D = G.descritiva, est = arr((G.acumulacao || {}).estimadores), cf = arr(H.conferencia);
+  try {
+    if (id === "inicio") return G.riqueza != null ? `${G.riqueza} sp.` : "";
+    if (id === "planilha") { const n = cf.filter(c => c.nivel === "erro").length; return n ? `${n} ${n > 1 ? "erros" : "erro"}` : "ok"; }
+    if (id === "descritiva") return D ? `${D.familias.length} fam.` : "";
+    if (id === "riqueza" && est.length > 1) { const v = est.slice(1).map(e => e.valor); return `${Math.round(Math.min(...v))} a ${Math.round(Math.max(...v))}`; }
+    if (id === "similaridade") { const p = arr((G.similaridade || {}).pares); return p.length ? "J " + nf(p.reduce((a, r) => a + (r.jaccard || 0), 0) / p.length, 2) : ""; }
+    if (id === "fitofisionomias") return G.fitofisionomias ? String(arr(G.fitofisionomias.classes.tabela).length) : "";
+    if (id === "campanhas") return G.campanhas ? String(arr(G.campanhas.resumo).length) : "";
+    if (id === "relatorio") return SEL.length ? String(SEL.length) : "";
+  } catch (e) {}
+  return "";
+}
 function montaMenu(){
   const nav = $("#indice"); nav.innerHTML = "";
   SECOES.filter(([id]) => (id !== "campanhas" || (H.grupos[grupo] || {}).campanhas) && (id !== "fitofisionomias" || (H.grupos[grupo] || {}).fitofisionomias)).forEach(([id, nome, faz], i) => {
     const extra = id === "relatorio" && SEL.length ? ` (${SEL.length})` : "";
-    const a = el("a", {href:"#" + id, class: id === aba ? "ativo" : ""}, `<span class="n">${i}</span><span class="nome">${esc(nome)}${extra}<small>${esc(faz)}</small></span>`);
+    const a = el("a", {href:"#" + id, class: id === aba ? "ativo" : "", title: faz}, `<span class="n">${i + 1}</span><span class="nome">${esc(nome)}<small>${esc(faz)}</small></span><span class="val">${esc(valorMenu(id))}</span>`);
     a.onclick = ev => { ev.preventDefault(); aba = id; history.replaceState(null, "", "#" + id); $("#menu").classList.remove("aberto"); montaMenu(); mostraAba(); scrollTo(0, 0); };
     nav.appendChild(a);
   });
@@ -771,6 +926,7 @@ function montaMenu(){
 function carregaTitulos(){ const k = $("#selFig").value, t = E.titulos[k] || {}; $("#tTitulo").value = t.titulo || ""; $("#tX").value = t.x || ""; $("#tY").value = t.y || ""; $("#tNota").value = t.nota || ""; }
 function montaEditor(){
   $("#btEditor").onclick = () => $("#editor").classList.toggle("aberto"); $("#fechaEditor").onclick = () => $("#editor").classList.remove("aberto");
+  $("#btTema").onclick = () => { E.painel = E.painel === "escuro" ? "claro" : "escuro"; salvaE(); render(); sincroniza(); };
   $("#btPasta").onclick = () => { if (LID) api("pasta"); else alert("Os arquivos estão na mesma pasta deste painel."); };
   $("#abreMenu").onclick = () => $("#menu").classList.toggle("aberto");
   if (!LID) $("#marcaLink").removeAttribute("href");

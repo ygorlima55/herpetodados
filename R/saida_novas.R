@@ -5,6 +5,24 @@
 # - iNEXT com legenda que diz o que é cada linha, e linhas do observado e dos estimadores.
 # - Diversidade por ponto em números de Hill e índices com valores escritos.
 
+
+# ---- hachura (Direção C): faixas de confiança e segunda série com listras diagonais (pacote ggpattern) ----
+# Sem o ggpattern instalado, volta à faixa de cor transparente.
+tem_hachura <- function(e = NULL) identical(e$tema_r, "sintese") && requireNamespace("ggpattern", quietly = TRUE)   # só no tema da Direção C
+faixa_ic <- function(e, data, cores, grupo = NULL, x = "x") {
+  if (!isTRUE(e$faixa) || is.null(data) || !nrow(data)) return(NULL)
+  grs <- if (is.null(grupo)) list(data) else split(data, as.character(data[[grupo]]))
+  lapply(seq_along(grs), function(i) {
+    d <- grs[[i]]; d <- d[order(d[[x]]), , drop = FALSE]
+    cor <- if (is.null(grupo)) unname(cores[1]) else unname(cores[[names(grs)[i]]] %||% cores[1])
+    d$.x <- d[[x]]
+    if (tem_hachura(e)) ggpattern::geom_ribbon_pattern(data = d, mapping = ggplot2::aes(x = .x, ymin = li, ymax = ls), inherit.aes = FALSE,
+      fill = grDevices::adjustcolor(cor, .07), colour = NA, pattern = "stripe", pattern_angle = 45, pattern_density = .12,
+      pattern_spacing = .014, pattern_fill = grDevices::adjustcolor(cor, .55), pattern_colour = NA)
+    else ggplot2::geom_ribbon(data = d, mapping = ggplot2::aes(x = .x, ymin = li, ymax = ls), inherit.aes = FALSE, fill = cor, alpha = .12, colour = NA)
+  })
+}
+
 ATRIBUTOS <- c(endemismo = "Distribuição (endemismo)", habito = "Hábito", dependencia = "Dependência de ambiente florestal",
                sensibilidade = "Sensibilidade a alterações", salve = "Status nacional (SALVE)", iucn = "Status global (IUCN)")
 
@@ -88,7 +106,7 @@ desenhar_novas <- function(chave, forma, G, e, gg, pal, k, w, h) {
     fim <- do.call(rbind, lapply(split(d, d$serie), function(z) z[which.max(z$pontos), ]))
     fim$rot <- paste0(fim$serie, ": ", fmt1(fim$v))
     p <- ggplot2::ggplot(d, ggplot2::aes(pontos, v, colour = serie, fill = serie)) +
-      { if (isTRUE(e$faixa)) ggplot2::geom_ribbon(ggplot2::aes(ymin = li, ymax = ls), alpha = .1, colour = NA) } +
+      faixa_ic(e, d, cs, "serie", "pontos") +
       ggplot2::geom_line(linewidth = e$linha * 1.2) + ggplot2::geom_point(size = e$ponto * 1.2)
     if (forma == "final") p <- p + ggplot2::geom_label(data = fim, ggplot2::aes(label = rot), hjust = -.08, family = e$familia, size = tam, fill = k$fundo, linewidth = 0, fontface = "bold", show.legend = FALSE) +
       ggplot2::scale_x_continuous(breaks = unique(d$pontos), expand = ggplot2::expansion(mult = c(.04, .35)))
@@ -121,7 +139,7 @@ inext_claro <- function(chave, forma, G, e, gg, pal, k, w, h) {
     nq <- c("0" = "Riqueza (q = 0)", "1" = "Espécies comuns: Shannon (q = 1)", "2" = "Espécies dominantes: Simpson (q = 2)")
     z$qn <- factor(nq[as.character(z$q)], levels = nq); ob <- z[z$metodo == "Observed" & z$parte != "Extrapolação (projeção além da amostra)", ]
     return(gg(ggplot2::ggplot(z, ggplot2::aes(m, qD, colour = qn, fill = qn)) +
-      { if (isTRUE(e$faixa)) ggplot2::geom_ribbon(ggplot2::aes(ymin = li, ymax = ls, group = qn), alpha = .1, colour = NA) } +
+      faixa_ic(e, z[!duplicated(paste(z$qn, z$m)), ], setNames(pal[1:3], levels(z$qn)), "qn", "m") +
       ggplot2::geom_line(ggplot2::aes(linetype = parte, group = interaction(qn, parte)), linewidth = e$linha * 1.1) +
       ggplot2::geom_point(data = ob, size = e$ponto * 1.8, shape = 21, colour = k$fundo, stroke = .8) +
       ggplot2::geom_label(data = ob, ggplot2::aes(label = fmt1(qD)), vjust = -.6, family = e$familia, size = tam, fill = k$fundo, linewidth = 0, fontface = "bold", show.legend = FALSE) +
@@ -142,7 +160,7 @@ inext_claro <- function(chave, forma, G, e, gg, pal, k, w, h) {
   cr <- setNames(c(k$tinta, pal[c(2, 4, 3)])[seq_len(nrow(ref))], levels(ref$rot))
   xmax <- max(z$m)
   return(gg(ggplot2::ggplot(z, ggplot2::aes(m, qD)) +
-    { if (isTRUE(e$faixa)) ggplot2::geom_ribbon(ggplot2::aes(ymin = li, ymax = ls), fill = pal[1], alpha = .14) } +
+    faixa_ic(e, z[!duplicated(z$m), ], pal[1], NULL, "m") +
     ggplot2::geom_hline(data = ref, ggplot2::aes(yintercept = v, colour = rot), linetype = 3, linewidth = e$linha * .9) +
     ggplot2::geom_line(ggplot2::aes(linetype = parte, group = parte), colour = pal[1], linewidth = e$linha * 1.3) +
     ggplot2::geom_point(data = ob, colour = pal[1], size = e$ponto * 2) +
@@ -176,7 +194,7 @@ curvas_estilo_inext <- function(chave, zs, nomes, cores, G, e, gg, pal, k, w, h)
   um <- length(nomes) == 1
   rot <- if (um) paste0(if (nomes == "Riqueza observada") "amostra real: " else paste0(nomes, " com ", fim$x, " pontos: "), fmt1(fim$y, if (nomes == "Riqueza observada") 0 else 1), " espécies") else paste0(fim$serie, ": ", fmt1(fim$y))
   p <- ggplot2::ggplot(d, ggplot2::aes(x, y)) +
-    { if (isTRUE(e$faixa)) ggplot2::geom_ribbon(ggplot2::aes(ymin = li, ymax = ls, fill = serie), alpha = .14, show.legend = FALSE) } +
+    faixa_ic(e, d, cs, "serie", "x") +
     ggplot2::geom_hline(data = ref, ggplot2::aes(yintercept = v, linetype = nome), colour = cr[as.character(ref$nome)], linewidth = e$linha * .9) +
     ggplot2::geom_line(ggplot2::aes(colour = serie), linewidth = e$linha * 1.3) +
     ggplot2::geom_point(data = fim, ggplot2::aes(colour = serie), size = e$ponto * 2) +

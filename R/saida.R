@@ -3,8 +3,11 @@
 # vêm do estilo.json da pasta do levantamento, editado no painel.
 
 estilo_padrao <- list(
-  paleta = c("#2a5cab", "#d0482a", "#00897b", "#c28a00", "#9a3f8f", "#5c8a00", "#3d8fdc", "#ad4f19"),
-  tema_r = "prancha", fonte = 11, familia = "Bahnschrift", familia_titulo = "Georgia Pro",
+  # Direção A "Sálvia" (17/11/2026): paleta validada para daltonismo sobre #f7f7f5
+  # (escuro: #4fa274 #e05a3b #5385d4 #bb8708 #ad5fa4 #6f9e24 #4596e0 #c4692f sobre #1a1d1b).
+  # A Direção C "Síntese" continua como tema_r = "sintese" (cópia em versoes/direcao-c-sintese-2026-11-17).
+  paleta = c("#3f8c62", "#d0482a", "#2a5cab", "#a87700", "#9a3f8f", "#5c8a00", "#3d8fdc", "#ad4f19"),
+  tema_r = "salvia", fonte = 11, familia = "Segoe UI", familia_titulo = "Segoe UI Semibold",
   tema = "claro", faixa = TRUE, grade = TRUE, linha = 1, ponto = 2.5,
   legenda = "bottom", largura = 7, altura = 4.5, dpi = 300, mostrar_titulo = TRUE, mostrar_grupo = TRUE,
   titulos = list(), formas = list()
@@ -60,6 +63,11 @@ rot <- function(e, chave, campo, padrao) {
 }
 cores_tema <- function(e) {
   escuro <- identical(e$tema, "escuro")
+  if (identical(e$tema_r %||% "", "salvia"))   # Sálvia: cinza quente claro ou grafite
+    return(if (escuro) list(tinta = "#eceeea", tinta2 = "#a3aba5", fundo = "#1a1d1b", grade = "#2c312e")
+           else list(tinta = "#1d1f1e", tinta2 = "#5c615c", fundo = "#f7f7f5", grade = "#e4e4e0"))
+  if (!escuro && identical(e$tema_r %||% "", "sintese"))   # papel creme, nanquim, grade sépia
+    return(list(tinta = "#2B2620", tinta2 = "#55493B", fundo = "#F7F1E3", grade = "#E3D7BF"))
   list(tinta = if (escuro) "#ecebe3" else "#24231f", tinta2 = if (escuro) "#b8bab3" else "#5d5a52",
        fundo = if (escuro) "#23282b" else "#ffffff", grade = if (escuro) "#3a4246" else "#e7e4dc")
 }
@@ -72,7 +80,37 @@ tema_gg <- function(e) {
   t <- base + ggplot2::theme(legend.position = e$legenda, plot.title.position = "plot",
     plot.title = ggplot2::element_text(family = e$familia_titulo, face = "bold", size = ggplot2::rel(1.15)),
     plot.caption = ggplot2::element_text(size = ggplot2::rel(.8)))
-  if (identical(e$tema_r %||% "prancha", "prancha") || identical(e$tema, "escuro")) {
+  if (identical(e$tema_r %||% "", "salvia")) {
+    salvia_esc <- if (identical(e$tema, "escuro")) "#8fb59e" else "#4c7a5f"
+    t <- t + ggplot2::theme(text = ggplot2::element_text(colour = k$tinta), axis.text = ggplot2::element_text(colour = k$tinta2, size = ggplot2::rel(.92)),
+      axis.title = ggplot2::element_text(colour = k$tinta2, size = ggplot2::rel(.95)),
+      plot.title = ggplot2::element_text(family = e$familia_titulo, face = "plain", size = ggplot2::rel(1.3), colour = k$tinta, margin = ggplot2::margin(b = 2)),
+      plot.subtitle = ggplot2::element_text(colour = salvia_esc, size = ggplot2::rel(.95), margin = ggplot2::margin(b = 10)),
+      plot.caption = ggplot2::element_text(size = ggplot2::rel(.8), colour = k$tinta2, hjust = 0),
+      plot.caption.position = "plot",
+      panel.grid.major = if (isTRUE(e$grade)) ggplot2::element_line(colour = k$grade, linewidth = .4) else ggplot2::element_blank(),
+      panel.grid.major.x = ggplot2::element_blank(), panel.grid.minor = ggplot2::element_blank(),
+      axis.line.x = ggplot2::element_line(colour = k$tinta2, linewidth = .4), axis.ticks = ggplot2::element_blank(),
+      plot.background = ggplot2::element_rect(fill = k$fundo, colour = NA), panel.background = ggplot2::element_rect(fill = k$fundo, colour = NA),
+      plot.margin = ggplot2::margin(16, 18, 12, 14),
+      strip.text = ggplot2::element_text(family = e$familia_titulo, colour = k$tinta, size = ggplot2::rel(1), hjust = 0),
+      strip.background = ggplot2::element_rect(fill = NA, colour = NA),
+      legend.background = ggplot2::element_rect(fill = k$fundo, colour = NA), legend.key = ggplot2::element_rect(fill = k$fundo, colour = NA),
+      legend.text = ggplot2::element_text(colour = k$tinta, size = ggplot2::rel(.9)), legend.title = ggplot2::element_text(colour = k$tinta2, size = ggplot2::rel(.85)))
+  } else if (identical(e$tema_r %||% "", "sintese") && !identical(e$tema, "escuro")) {
+    t <- t + ggplot2::theme(text = ggplot2::element_text(colour = k$tinta), axis.text = ggplot2::element_text(colour = k$tinta2),
+      plot.title = ggplot2::element_text(family = e$familia_titulo, face = "plain", size = ggplot2::rel(1.3), colour = k$tinta),
+      plot.subtitle = ggplot2::element_text(family = e$familia_titulo, face = "italic", colour = "#00747B"),
+      plot.caption = ggplot2::element_text(family = e$familia_titulo, face = "italic", size = ggplot2::rel(.82), colour = k$tinta2),
+      panel.grid.major = if (isTRUE(e$grade)) ggplot2::element_line(colour = k$grade, linewidth = .35) else ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank(),
+      axis.line = ggplot2::element_line(colour = k$tinta, linewidth = .45), axis.ticks = ggplot2::element_line(colour = k$tinta, linewidth = .4),
+      axis.ticks.length = grid::unit(3, "pt"),
+      plot.background = ggplot2::element_rect(fill = k$fundo, colour = NA), panel.background = ggplot2::element_rect(fill = k$fundo, colour = NA),
+      strip.text = ggplot2::element_text(family = e$familia_titulo, face = "italic", colour = k$tinta, size = ggplot2::rel(1.05)),
+      strip.background = ggplot2::element_rect(fill = NA, colour = NA),
+      legend.background = ggplot2::element_rect(fill = k$fundo, colour = NA), legend.key = ggplot2::element_rect(fill = k$fundo, colour = NA))
+  } else if (identical(e$tema_r %||% "prancha", "prancha") || identical(e$tema, "escuro")) {
     t <- t + ggplot2::theme(text = ggplot2::element_text(colour = k$tinta), axis.text = ggplot2::element_text(colour = k$tinta2),
       panel.grid.major = if (isTRUE(e$grade)) ggplot2::element_line(colour = k$grade, linewidth = .4) else ggplot2::element_blank(),
       panel.grid.minor = ggplot2::element_blank(), axis.line.x = ggplot2::element_line(colour = k$tinta2, linewidth = .4),
@@ -133,7 +171,7 @@ desenhar <- function(chave, forma, G, O, e, arq, w, h, dpi) {
     if (forma == "faixa") {
       c1 <- G$acumulacao$curva
       return(gg(ggplot2::ggplot(c1, ggplot2::aes(pontos, riqueza)) +
-        { if (isTRUE(e$faixa)) ggplot2::geom_ribbon(ggplot2::aes(ymin = li, ymax = ls), fill = pal[1], alpha = .2) } +
+        faixa_ic(e, c1, pal[1], NULL, "pontos") +
         ggplot2::geom_line(colour = pal[1], linewidth = lw) + ggplot2::geom_point(colour = pal[1], size = pt) + ggplot2::scale_x_continuous(breaks = c1$pontos) +
         titulos_gg(e, chave, tt, xl, yl, "Média de 999 ordens aleatórias dos pontos; faixa = IC 95%.") + tema_gg(e)))
     }
@@ -147,7 +185,7 @@ desenhar <- function(chave, forma, G, O, e, arq, w, h, dpi) {
       pool$estimador <- factor(nomes_est[pool$estimador], levels = nomes_est)
       cs <- setNames(c(k$tinta, pal[1:4]), nomes_est)
       return(gg(ggplot2::ggplot(pool, ggplot2::aes(pontos, media, colour = estimador, fill = estimador)) +
-        { if (isTRUE(e$faixa)) ggplot2::geom_ribbon(ggplot2::aes(ymin = li, ymax = ls), alpha = .08, colour = NA) } +
+        faixa_ic(e, pool, cs, "estimador", "pontos") +
         ggplot2::geom_line(linewidth = lw) + ggplot2::geom_point(size = pt) +
         ggplot2::scale_colour_manual(values = cs) + ggplot2::scale_fill_manual(values = cs) + ggplot2::scale_x_continuous(breaks = unique(pool$pontos)) +
         titulos_gg(e, ch, tt, "Número de pontos amostrais", "Número de espécies", "vegan::poolaccum, 199 permutações; faixas = IC 95%.") +

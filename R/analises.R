@@ -26,6 +26,20 @@ montar_matriz <- function(reg, pontos_todos) {
        n_excluido = sum(reg$total[reg$especie %in% amb], na.rm = TRUE))
 }
 
+# equitabilidade e índices de riqueza para um vetor de abundâncias (um ponto ou a área toda)
+#   Pielou J' = H'/ln S; Simpson E = (1/D)/S; Hill E2,1 = N2/N1; Evar (Smith & Wilson 1996) = 1 - 2/pi * arctan(var(ln x));
+#   Margalef = (S - 1)/ln N; Menhinick = S/raiz(N); alfa de Fisher (vegan::fisher.alpha)
+equitabilidade <- function(v) {
+  v <- v[v > 0]; S <- length(v); N <- sum(v)
+  if (!S) return(c(H_max = NA, pielou = NA, simpson_E = NA, hill_E21 = NA, evar = NA, margalef = NA, menhinick = NA, fisher_alfa = NA))
+  H <- vegan::diversity(v, "shannon"); invD <- 1 / sum((v / N)^2)
+  lv <- log(v); evar <- if (S > 1) 1 - 2 / pi * atan(mean((lv - mean(lv))^2)) else NA
+  fa <- tryCatch(suppressWarnings(vegan::fisher.alpha(v)), error = function(e) NA)
+  c(H_max = if (S > 1) log(S) else NA, pielou = if (S > 1) H / log(S) else NA, simpson_E = invD / S,
+    hill_E21 = if (S > 1 && exp(H) > 0) invD / exp(H) else NA, evar = evar,
+    margalef = if (N > 1) (S - 1) / log(N) else NA, menhinick = S / sqrt(N), fisher_alfa = fa)
+}
+
 indices_por_ponto <- function(m) {
   S <- rowSums(m > 0); N <- rowSums(m)
   H <- vegan::diversity(m, "shannon"); D <- vegan::diversity(m, "simpson")
@@ -39,10 +53,26 @@ indices_por_ponto <- function(m) {
   if (!is.null(rar)) { Srar[N > 1] <- rar[1, ]; Srar_se[N > 1] <- rar[2, ] }
   excl <- sapply(seq_len(nrow(m)), function(i) sum(m[i, ] > 0 & colSums(m[-i, , drop = FALSE] > 0) == 0))
   sing <- rowSums(m == 1)
+  eq <- t(apply(m, 1, equitabilidade))
   data.frame(ponto = rownames(m), S = S, N = N, shannon = round(H, 3), simpson = round(D, 3),
              hill0 = S, hill1 = round(exp(H), 2), hill2 = round(invD, 2), pielou = round(J, 3),
              berger_parker = round(bp, 3), dominante = dom, S_rarefeita = round(Srar, 2), S_rarefeita_ep = round(Srar_se, 2),
-             n_rarefacao = nmin, exclusivas = excl, singletons = sing, stringsAsFactors = FALSE)
+             n_rarefacao = nmin, exclusivas = excl, singletons = sing,
+             H_max = round(eq[, "H_max"], 3), simpson_E = round(eq[, "simpson_E"], 3), hill_E21 = round(eq[, "hill_E21"], 3), evar = round(eq[, "evar"], 3),
+             margalef = round(eq[, "margalef"], 3), menhinick = round(eq[, "menhinick"], 3), fisher_alfa = round(eq[, "fisher_alfa"], 2),
+             stringsAsFactors = FALSE)
+}
+
+# índices da área inteira (todos os pontos somados), como os relatórios costumam apresentar
+indices_area <- function(m) {
+  v <- colSums(m); v <- v[v > 0]; S <- length(v); N <- sum(v); H <- vegan::diversity(v, "shannon")
+  eq <- equitabilidade(v)
+  data.frame(medida = c("Riqueza (S)", "Abundância (N)", "Shannon (H')", "Shannon máximo (H'max = ln S)", "Equitabilidade de Pielou (J')",
+                        "Simpson (1 - D)", "Simpson inverso (1/D)", "Equitabilidade de Simpson (E = (1/D)/S)", "Razão de Hill (E2,1 = N2/N1)",
+                        "Equitabilidade Evar (Smith & Wilson)", "Berger-Parker (dominância)", "Margalef", "Menhinick", "Alfa de Fisher"),
+             valor = round(c(S, N, H, eq["H_max"], eq["pielou"], 1 - sum((v / N)^2), 1 / sum((v / N)^2), eq["simpson_E"], eq["hill_E21"],
+                             eq["evar"], max(v) / N, eq["margalef"], eq["menhinick"], eq["fisher_alfa"]), 3),
+             stringsAsFactors = FALSE, row.names = NULL)
 }
 
 analisar_grupo <- function(reg, nome, pontos_info, consol = NULL, campanhas = NULL, faixa = NULL) {
@@ -64,13 +94,14 @@ analisar_grupo <- function(reg, nome, pontos_info, consol = NULL, campanhas = NU
   if (!is.null(pontos_info)) ip$fitofisionomia <- pontos_info$fitofisionomia[match(ip$ponto, pontos_info$ponto)]
   best <- ip[which.max(ip$shannon), ]; worst <- ip[ip$N > 0, ][which.min(ip$shannon[ip$N > 0]), ]
   pdom <- ip[which.max(ip$berger_parker), ]
-  res$indices <- list(tabela = ip, texto = txt(
-    "Para cada ponto: riqueza (S, número de espécies), abundância (N, número de indivíduos), Shannon (H', mistura riqueza e equilíbrio entre as espécies; usa log natural), Simpson (1 menos D, chance de dois indivíduos sorteados serem de espécies diferentes), Pielou (J', equitabilidade de 0 a 1), Berger-Parker (fração do ponto que é da espécie mais comum) e números de Hill (q0 = riqueza, q1 = exp(H'), número de espécies 'comuns', q2 = 1/D, número de espécies 'dominantes'). A riqueza rarefeita estima quantas espécies cada ponto teria se todos tivessem o mesmo número de indivíduos.",
-    sprintf("Maior diversidade no %s (S = %d, H' = %s, J' = %s); menor no %s (S = %d, H' = %s). Maior dominância no %s, onde %s responde por %s dos indivíduos. Rarefazendo todos os pontos para %d indivíduos, a riqueza esperada vai de %s a %s espécies.",
-            best$ponto, best$S, fmt(best$shannon), fmt(best$pielou), worst$ponto, worst$S, fmt(worst$shannon),
+  ia <- indices_area(m); ja <- ia$valor[ia$medida == "Equitabilidade de Pielou (J')"]; ha <- ia$valor[ia$medida == "Shannon (H')"]
+  res$indices <- list(tabela = ip, area = ia, texto = txt(
+    "Para cada ponto: riqueza (S, número de espécies), abundância (N, número de indivíduos), Shannon (H', mistura riqueza e equilíbrio entre as espécies; usa log natural), Simpson (1 menos D, chance de dois indivíduos sorteados serem de espécies diferentes), EQUITABILIDADE (quão parecidas são as abundâncias das espécies, de 0 = uma espécie domina tudo a 1 = todas com o mesmo número): Pielou (J' = H'/ln S, a mais usada nos relatórios), Simpson E ((1/D)/S), razão de Hill (E2,1) e Evar (Smith & Wilson, a menos dependente da riqueza); Margalef e Menhinick (riqueza corrigida pelo número de indivíduos), alfa de Fisher, Berger-Parker (fração do ponto que é da espécie mais comum) e números de Hill (q0 = riqueza, q1 = exp(H'), número de espécies 'comuns', q2 = 1/D, número de espécies 'dominantes'). A riqueza rarefeita estima quantas espécies cada ponto teria se todos tivessem o mesmo número de indivíduos.",
+    sprintf("Na área toda: H' = %s e equitabilidade de Pielou J' = %s (de 0 a 1). Maior diversidade no %s (S = %d, H' = %s, J' = %s); menor no %s (S = %d, H' = %s). Maior dominância no %s, onde %s responde por %s dos indivíduos. Rarefazendo todos os pontos para %d indivíduos, a riqueza esperada vai de %s a %s espécies.",
+            fmt(ha), fmt(ja), best$ponto, best$S, fmt(best$shannon), fmt(best$pielou), worst$ponto, worst$S, fmt(worst$shannon),
             pdom$ponto, pdom$dominante, pct(pdom$berger_parker), ip$n_rarefacao[1],
             fmt(min(ip$S_rarefeita, na.rm = TRUE), 1), fmt(max(ip$S_rarefeita, na.rm = TRUE), 1)),
-    "Compare os pontos pela riqueza rarefeita e pelos números de Hill, não pela riqueza bruta: um ponto com mais indivíduos tende a ter mais espécies só por isso. Pielou baixo e Berger-Parker alto indicam um ambiente dominado por poucas espécies, comum em áreas abertas ou alteradas, onde espécies generalistas formam grandes coros. Quando q1 e q2 ficam muito abaixo de q0, a maioria das espécies é rara no ponto.",
+    "Compare os pontos pela riqueza rarefeita e pelos números de Hill, não pela riqueza bruta: um ponto com mais indivíduos tende a ter mais espécies só por isso. Equitabilidade acima de 0,8 indica abundâncias bem distribuídas; abaixo de 0,5, poucas espécies concentram os indivíduos. Pielou baixo e Berger-Parker alto indicam um ambiente dominado por poucas espécies, comum em áreas abertas ou alteradas, onde espécies generalistas formam grandes coros. Quando q1 e q2 ficam muito abaixo de q0, a maioria das espécies é rara no ponto.",
     "Os índices dependem do esforço e da forma de contar. Contagens grandes (coros de anuros, bandos de aves, colônias) são estimativas e inflam a dominância. Com uma única amostra por ponto, a diferença entre pontos pode refletir só a noite (chuva, lua, hora) e não o ambiente. Não há teste estatístico entre pontos porque cada ponto tem uma única amostra."))
 
   # ---------- 2. curva de acumulação por pontos + estimadores de incidência ----------

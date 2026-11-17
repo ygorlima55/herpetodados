@@ -32,10 +32,15 @@ desenhar_extra <- function(chave, forma, G, O, e, arq, w, h, dpi, gg, pal, k) {
       d <- rbind(data.frame(familia = tf$familia, medida = "Riqueza (espécies)", v = tf$riqueza, p = tf$riqueza_pct),
                  data.frame(familia = tf$familia, medida = "Abundância (indivíduos)", v = tf$abundancia, p = tf$abundancia_pct))
       d$medida <- factor(d$medida, levels = unique(d$medida)); d$familia <- factor(d$familia, levels = rev(levels(tf$familia)))
-      return(gg(ggplot2::ggplot(d, ggplot2::aes(familia, p, fill = medida)) + ggplot2::geom_col(position = ggplot2::position_dodge(.8), width = .75) +
+      colunas <- if (tem_hachura(e)) list(ggpattern::geom_col_pattern(ggplot2::aes(pattern = medida), position = ggplot2::position_dodge(.8), width = .75,
+            colour = "#2B2620", linewidth = .25, pattern_fill = pal[2], pattern_colour = NA, pattern_angle = 45, pattern_density = .45, pattern_spacing = .018),
+          ggpattern::scale_pattern_manual(values = c("none", "stripe"), name = NULL))
+        else list(ggplot2::geom_col(position = ggplot2::position_dodge(.8), width = .75))
+      cor_ab <- if (tem_hachura(e)) grDevices::adjustcolor(pal[2], .18) else pal[2]
+      return(gg(ggplot2::ggplot(d, ggplot2::aes(familia, p, fill = medida)) + colunas +
         ggplot2::geom_text(ggplot2::aes(label = paste0(v, "\n(", fmt1(100 * p, 0), "%)")), position = ggplot2::position_dodge(.8), vjust = -.25, lineheight = .9,
                            family = e$familia, size = tam * .85, colour = k$tinta) +
-        ggplot2::scale_fill_manual(values = pal[1:2], name = NULL) +
+        ggplot2::scale_fill_manual(values = c(pal[1], cor_ab), name = NULL) +
         ggplot2::scale_y_continuous(labels = function(x) paste0(round(100 * x), "%"), expand = ggplot2::expansion(mult = c(0, .22))) +
         titulos_gg(e, chave, "Riqueza e abundância por família", NULL, "Porcentagem do total",
                    sprintf("Altura = %% do total de espécies (%d) e de indivíduos (%d); o número em cima é a contagem.", sum(tf$riqueza), sum(tf$abundancia))) +
@@ -114,7 +119,7 @@ desenhar_extra <- function(chave, forma, G, O, e, arq, w, h, dpi, gg, pal, k) {
       ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, .12))) +
       titulos_gg(e, chave, tt, "Número de pontos amostrais", "Número de espécies", "Barras de erro = IC 95%.") + tema_gg(e)))
     return(gg(ggplot2::ggplot(z, ggplot2::aes(pontos, media)) +
-      { if (isTRUE(e$faixa)) ggplot2::geom_ribbon(ggplot2::aes(ymin = li, ymax = ls), fill = cor, alpha = .15) } +
+      faixa_ic(e, z, cor, NULL, "pontos") +
       { if (est != "S") ggplot2::geom_hline(yintercept = obs, linetype = 3, colour = k$tinta2) } +
       { if (est != "S") ggplot2::annotate("text", x = min(z$pontos), y = obs, label = paste("observada =", obs), vjust = -.5, hjust = 0, family = e$familia, size = tam * .9, colour = k$tinta2) } +
       ggplot2::geom_line(colour = cor, linewidth = e$linha * 1.2) + ggplot2::geom_point(colour = cor, size = e$ponto * 1.3) +

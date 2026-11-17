@@ -131,7 +131,7 @@ desenhar_fito <- function(chave, forma, G, e, gg, pal, k, w, h) {
     lig <- z[z$metodo == "Observed", ]; ob <- lig; lig$parte <- "Extrapolação (projeção)"; z <- rbind(z, lig)
     cs <- cores_f(levels(z$fito))
     return(gg(ggplot2::ggplot(z, ggplot2::aes(m, qD, colour = fito, fill = fito)) +
-      { if (isTRUE(e$faixa)) ggplot2::geom_ribbon(ggplot2::aes(ymin = li, ymax = ls, group = fito), alpha = .1, colour = NA) } +
+      faixa_ic(e, z[!duplicated(paste(z$fito, z$m)), ], cs, "fito", "m") +
       ggplot2::geom_line(ggplot2::aes(linetype = parte, group = interaction(fito, parte)), linewidth = e$linha * 1.2) +
       ggplot2::geom_point(data = ob, size = e$ponto * 1.8) +
       ggplot2::geom_text(data = ob, ggplot2::aes(label = fmt1(qD, 0)), vjust = -1, family = e$familia, size = tam, fontface = "bold", show.legend = FALSE) +
