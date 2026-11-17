@@ -7,11 +7,11 @@ catalogo_extra <- function() c(catalogo_camp(), catalogo_novas(), catalogo_fito(
   descritiva_pontos = list(nome = "Riqueza e abundância por ponto", padrao = "duas", formas = list(
     duas = "Riqueza e abundância lado a lado")),
   forma_registro = list(nome = "Forma de registro", padrao = "colunas", formas = list(colunas = "Colunas com número e %", barras = "Barras deitadas com número e %")),
-  curva_S = list(nome = "Curva: riqueza observada", padrao = "inext", formas = list(inext = "Estilo iNEXT: curva com faixa, amostra real e linhas pontilhadas", linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
-  curva_chao = list(nome = "Curva: Chao 2", padrao = "inext", formas = list(inext = "Estilo iNEXT: curva com faixa, amostra real e linhas pontilhadas", linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
-  curva_jack1 = list(nome = "Curva: Jackknife 1", padrao = "inext", formas = list(inext = "Estilo iNEXT: curva com faixa, amostra real e linhas pontilhadas", linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
-  curva_jack2 = list(nome = "Curva: Jackknife 2", padrao = "inext", formas = list(inext = "Estilo iNEXT: curva com faixa, amostra real e linhas pontilhadas", linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
-  curva_boot = list(nome = "Curva: Bootstrap", padrao = "inext", formas = list(inext = "Estilo iNEXT: curva com faixa, amostra real e linhas pontilhadas", linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
+  curva_S = list(nome = "Curva: riqueza observada", padrao = "limpa", formas = list(limpa = "Limpa: só a curva, a faixa e a legenda no canto", inext = "Estilo iNEXT: curva com faixa, amostra real e linhas pontilhadas", linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
+  curva_chao = list(nome = "Curva: Chao 2", padrao = "limpa", formas = list(limpa = "Limpa: só a curva, a faixa e a legenda no canto", inext = "Estilo iNEXT: curva com faixa, amostra real e linhas pontilhadas", linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
+  curva_jack1 = list(nome = "Curva: Jackknife 1", padrao = "limpa", formas = list(limpa = "Limpa: só a curva, a faixa e a legenda no canto", inext = "Estilo iNEXT: curva com faixa, amostra real e linhas pontilhadas", linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
+  curva_jack2 = list(nome = "Curva: Jackknife 2", padrao = "limpa", formas = list(limpa = "Limpa: só a curva, a faixa e a legenda no canto", inext = "Estilo iNEXT: curva com faixa, amostra real e linhas pontilhadas", linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
+  curva_boot = list(nome = "Curva: Bootstrap", padrao = "limpa", formas = list(limpa = "Limpa: só a curva, a faixa e a legenda no canto", inext = "Estilo iNEXT: curva com faixa, amostra real e linhas pontilhadas", linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
   similaridade_pares = list(nome = "Similaridade entre pares de pontos", padrao = "pares", formas = list(
     pares = "Pares ordenados: Jaccard e Bray-Curtis", triangulo = "Matriz em triângulo com valores")),
   beta = list(nome = "Diversidade beta (Baselga)", padrao = "barras", formas = list(barras = "Substituição e aninhamento", pares = "Substituição entre pares de pontos")),
@@ -112,7 +112,8 @@ desenhar_extra <- function(chave, forma, G, O, e, arq, w, h, dpi, gg, pal, k) {
     cor <- c(S = k$tinta, chao = pal[1], jack1 = pal[2], jack2 = pal[3], boot = pal[4])[[est]]
     obs <- tail(G$acumulacao$curva$riqueza, 1)
     tt <- paste0(NOMES_EST[[est]], " por número de pontos: ", gr)
-    if (forma == "inext") return(curvas_estilo_inext(chave, list(z), NOMES_EST[[est]], cor, G, e, gg, pal, k, w, h))
+    if (forma == "limpa") return(curvas_limpas(chave, list(if (est == "S") curva_obs_inext(G) else curva_estimador(G, est)), NOMES_EST[[est]], cor, e, gg, k, w, h))
+    if (forma == "inext") return(curvas_estilo_inext(chave, list(if (est == "S") curva_obs_inext(G) else curva_estimador(G, est)), NOMES_EST[[est]], cor, G, e, gg, pal, k, w, h))
     if (forma == "barras") return(gg(ggplot2::ggplot(z, ggplot2::aes(factor(pontos), media)) + ggplot2::geom_col(fill = cor, width = .6) +
       { if (isTRUE(e$faixa)) ggplot2::geom_errorbar(ggplot2::aes(ymin = li, ymax = ls), width = .15, colour = k$tinta2) } +
       ggplot2::geom_text(ggplot2::aes(y = if (isTRUE(e$faixa)) ls else media, label = fmt1(media)), vjust = -.6, family = e$familia, size = tam * 1.15, colour = k$tinta, fontface = "bold") +

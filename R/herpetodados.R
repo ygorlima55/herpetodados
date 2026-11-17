@@ -11,7 +11,7 @@ set.seed(20261117)
 
 args <- commandArgs(TRUE)
 aqui <- dirname(normalizePath(sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE)[1])))
-for (f in c("ler.R", "conferir.R", "analises.R", "descritiva.R", "saida.R", "saida_extra.R", "saida_novas.R", "campanhas.R", "fitofisionomias.R", "correcoes.R")) source(file.path(aqui, f), encoding = "UTF-8")
+for (f in c("ler.R", "conferir.R", "analises.R", "descritiva.R", "saida.R", "saida_extra.R", "saida_novas.R", "campanhas.R", "fitofisionomias.R", "correcoes.R", "relatorio_fauna.R")) source(file.path(aqui, f), encoding = "UTF-8")
 if (!length(args)) stop("Informe a planilha: Rscript herpetodados.R planilha.xlsx")
 planilha <- normalizePath(args[1], mustWork = TRUE)
 base <- tools::file_path_sans_ext(basename(planilha))
@@ -34,6 +34,9 @@ conf <- conferir_planilha(L)
 L <- completar_com_consolidada(L)
 if (nrow(L$completados)) msg(nrow(L$completados), "registros completados pela aba consolidada:", paste(sprintf("%s %s (+%s)", L$completados$especie, L$completados$ponto, L$completados$adicionados), collapse = "; "))
 conf <- rbind(conferencia_completados(L), conf)
+if (!is.null(L$secundarios) && nrow(L$secundarios)) conf <- rbind(conf, data.frame(nivel = "informação", aba = L$aba_registros, linha = paste(L$secundarios$linha_planilha, collapse = ", "),
+  campo = "Dado secundário", problema = sprintf("%d registros marcados como dado secundário (bibliografia, entrevista) ficaram fora das análises.", nrow(L$secundarios)),
+  sugestao = "Eles aparecem na planilha 09, aba Dados secundários.", tipo = "", especie = "", ponto = "", dados = "", stringsAsFactors = FALSE))
 unlink(file.path(saida, "planilha_corrigida.xlsx"))
 tryCatch(gravar_planilha_corrigida(L, saida), error = function(e) msg("planilha corrigida não gravada:", conditionMessage(e)))
 msg(sum(conf$nivel == "erro"), "erros,", sum(conf$nivel == "atenção"), "pontos de atenção,", sum(conf$nivel == "informação"), "informações")
@@ -80,6 +83,8 @@ for (g in names(R)) attr(R[[g]], "objs") <- NULL
 progresso(96, "Gravando as tabelas em Excel")
 msg("Gravando tabelas em Excel...")
 tabs <- exportar_tabelas(L, conf, R, saida); unlink(file.path(saida, "tabelas_herpetodados.xlsx"))
+tryCatch(exportar_relatorio_fauna(L, R, saida), error = function(e) msg("planilha 09 não gravada:", conditionMessage(e)))
+tabs <- list.files(file.path(saida, "tabelas"))
 
 ctx_arq <- file.path(saida, "contexto_campo.txt")
 contexto <- if (file.exists(ctx_arq)) paste(readLines(ctx_arq, encoding = "UTF-8", warn = FALSE), collapse = "\n") else ""

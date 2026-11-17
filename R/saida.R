@@ -14,15 +14,15 @@ estilo_padrao <- list(
 )
 
 catalogo_formas <- function() list(
-  acumulacao = list(nome = "Curva de acumulação", padrao = "inext", formas = list(
-    inext = "Estilo iNEXT: curva com faixa, amostra real e linha pontilhada", vegan = "vegan: plot(specaccum) com caixas", faixa = "ggplot: linha e faixa de 95%", estimadores = "Observada com Chao 2, Jackknife e Bootstrap")),
+  acumulacao = list(nome = "Curva de acumulação", padrao = "limpa", formas = list(
+    limpa = "Limpa: só a curva, a faixa e a legenda no canto", inext = "Estilo iNEXT: curva com faixa, amostra real e linha pontilhada", vegan = "vegan: plot(specaccum) com caixas", faixa = "ggplot: linha e faixa de 95%", estimadores = "Observada com Chao 2, Jackknife e Bootstrap")),
   estimadores = list(nome = "Estimadores de riqueza", padrao = "curvas", formas = list(
     curvas = "Curvas dos estimadores por ponto (poolaccum)", lattice = "vegan: plot(poolaccum), um painel por estimador",
     barras = "Barras com erro padrão", pontos = "Pontos com erro padrão")),
-  inext_individuos = list(nome = "iNEXT por indivíduos", padrao = "clara", formas = list(
-    clara = "Riqueza com observado e estimador, legenda explicada", hill = "Números de Hill (q 0, 1 e 2) com legenda explicada", ggiNEXT = "ggiNEXT: rarefação e extrapolação", facetas = "ggiNEXT: um painel por q", cobertura = "ggiNEXT: diversidade pela cobertura", completude = "ggiNEXT: completude da amostra")),
-  inext_pontos = list(nome = "iNEXT por pontos", padrao = "clara", formas = list(
-    clara = "Riqueza com observado e estimadores, legenda explicada", hill = "Números de Hill (q 0, 1 e 2) com legenda explicada", ggiNEXT = "ggiNEXT: rarefação e extrapolação", facetas = "ggiNEXT: um painel por q", cobertura = "ggiNEXT: diversidade pela cobertura", completude = "ggiNEXT: completude da amostra")),
+  inext_individuos = list(nome = "iNEXT por indivíduos", padrao = "limpa", formas = list(
+    limpa = "Limpa: só a curva, a faixa e a legenda no canto", clara = "Riqueza com observado e estimador, legenda explicada", hill = "Números de Hill (q 0, 1 e 2) com legenda explicada", ggiNEXT = "ggiNEXT: rarefação e extrapolação", facetas = "ggiNEXT: um painel por q", cobertura = "ggiNEXT: diversidade pela cobertura", completude = "ggiNEXT: completude da amostra")),
+  inext_pontos = list(nome = "iNEXT por pontos", padrao = "limpa", formas = list(
+    limpa = "Limpa: só a curva, a faixa e a legenda no canto", clara = "Riqueza com observado e estimadores, legenda explicada", hill = "Números de Hill (q 0, 1 e 2) com legenda explicada", ggiNEXT = "ggiNEXT: rarefação e extrapolação", facetas = "ggiNEXT: um painel por q", cobertura = "ggiNEXT: diversidade pela cobertura", completude = "ggiNEXT: completude da amostra")),
   rarefacao_pontos = list(nome = "Rarefação por ponto", padrao = "rarecurve", formas = list(
     rarecurve = "vegan: rarecurve", ggiNEXT = "ggiNEXT: cada ponto com faixa")),
   indices_pontos = list(nome = "Índices por ponto", padrao = "hill", formas = list(
@@ -152,13 +152,21 @@ desenhar <- function(chave, forma, G, O, e, arq, w, h, dpi) {
   base <- function(fun) { abrir_png(arq, e, w, h, dpi); on.exit(grDevices::dev.off()); fun() }
   e$grupo_atual <- gr
   if (chave %in% names(catalogo_extra())) return(desenhar_extra(chave, forma, G, O, e, arq, w, h, dpi, gg, pal, k))
+  if (chave %in% c("inext_individuos", "inext_pontos") && forma == "limpa") {
+    z <- if (chave == "inext_individuos") G$inext$abundancia else G$inext$incidencia
+    if (is.null(z)) return(invisible()); z <- z[z$q == 0, ]
+    return(curvas_limpas(chave, list(data.frame(pontos = z$m, media = z$qD, li = z$li, ls = z$ls, real = z$metodo != "Extrapolation")), "Riqueza (q = 0)", pal[1], e, gg, k, w, h,
+                         if (chave == "inext_individuos") "Número de indivíduos" else "Número de pontos amostrais"))
+  }
   if (chave %in% c("inext_individuos", "inext_pontos") && forma %in% c("clara", "hill")) return(inext_claro(chave, forma, G, e, gg, pal, k, w, h))
   if (chave == "whittaker" && forma == "nomes" && !is.null(G$descritiva)) return(dominancia_nomes(G, e, chave, gg, pal, k))
   nomes_est <- c(S = "Observada", chao = "Chao 2", jack1 = "Jackknife 1", jack2 = "Jackknife 2", boot = "Bootstrap")
 
+  if (chave == "acumulacao" && forma == "limpa" && !is.null(G$acumulacao$curva))
+    return(curvas_limpas(chave, list(curva_obs_inext(G)), "Riqueza observada", pal[1], e, gg, k, w, h))
   if (chave == "acumulacao" && forma == "inext" && !is.null(G$acumulacao$curva)) {
     c1 <- G$acumulacao$curva
-    return(curvas_estilo_inext(chave, list(data.frame(pontos = c1$pontos, media = c1$riqueza, li = c1$li, ls = c1$ls)), "Riqueza observada", pal[1], G, e, gg, pal, k, w, h))
+    return(curvas_estilo_inext(chave, list(curva_obs_inext(G)), "Riqueza observada", pal[1], G, e, gg, pal, k, w, h))
   }
   if (chave == "acumulacao") {
     tt <- paste("Curva de acumulação de espécies:", gr); xl <- rot(e, chave, "x", "Número de pontos amostrais"); yl <- rot(e, chave, "y", "Riqueza acumulada")

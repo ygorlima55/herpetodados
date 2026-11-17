@@ -120,10 +120,27 @@ analisar_grupo <- function(reg, nome, pontos_info, consol = NULL, campanhas = NU
     sm <- summary(pa, display = c("S", "chao", "jack1", "jack2", "boot"))
     pool <- do.call(rbind, lapply(names(sm), function(k) { z <- as.data.frame(sm[[k]]); data.frame(estimador = k, pontos = z[[1]], media = round(z[[2]], 2), li = round(z[[3]], 2), ls = round(z[[4]], 2)) }))
   }
+  # incerteza do próprio estimador a cada número de pontos: erro padrão do vegan::specpool (média em todas as combinações
+  # de n pontos, ou 300 sorteadas) somado à variação entre essas combinações. Diferente da faixa do poolaccum, que só mede
+  # a ordem dos pontos e por isso se fecha em zero com todos os pontos.
+  pool_ep <- tryCatch({
+    P <- pr[rowSums(pr) > 0, , drop = FALSE]; P <- P[, colSums(P) > 0, drop = FALSE]; nP <- nrow(P)
+    if (nP < 2) NULL else do.call(rbind, lapply(2:nP, function(n) {
+      cs <- if (choose(nP, n) <= 300) utils::combn(nP, n, simplify = FALSE) else replicate(300, sort(sample(nP, n)), simplify = FALSE)
+      sp <- do.call(rbind, lapply(cs, function(ix) vegan::specpool(P[ix, , drop = FALSE])))
+      do.call(rbind, lapply(c("chao", "jack1", "jack2", "boot"), function(k) {
+        v <- sp[[k]]; se <- if (paste0(k, ".se") %in% names(sp)) sp[[paste0(k, ".se")]] else NA
+        se2 <- mean(se^2, na.rm = TRUE); if (!is.finite(se2)) se2 <- 0
+        vv <- if (length(v) > 1) stats::var(v, na.rm = TRUE) else 0; if (!is.finite(vv)) vv <- 0
+        m <- mean(v, na.rm = TRUE); ep <- sqrt(se2 + vv)
+        data.frame(estimador = k, pontos = n, media = round(m, 2), ep = round(ep, 2), li = round(max(0, m - 1.96 * ep), 2), ls = round(m + 1.96 * ep, 2))
+      }))
+    }))
+  }, error = function(e) NULL)
   ult <- tail(curva, 2); ganho <- ult$riqueza[2] - ult$riqueza[1]
   uniq <- sum(colSums(pr) == 1); dup <- sum(colSums(pr) == 2)
   faixa <- range(est$valor[-1])
-  res$acumulacao <- list(curva = curva, estimadores = est, poolaccum = pool, unicas = uniq, duplicadas = dup, texto = txt(
+  res$acumulacao <- list(curva = curva, estimadores = est, poolaccum = pool, poolaccum_ep = pool_ep, unicas = uniq, duplicadas = dup, texto = txt(
     "A curva de acumulação mostra quantas espécies se acumulam conforme se somam pontos amostrais, na média de 999 ordens sorteadas dos pontos (com faixa de 95%). Os estimadores (Chao 2, Jackknife 1 e 2, Bootstrap) usam as espécies raras, vistas em só um ponto (únicas) ou em dois (duplicadas), para estimar quantas espécies existem na área, incluindo as que não foram encontradas.",
     sprintf("Foram %d espécies em %d pontos. O último ponto somado ainda acrescenta %s espécies em média. %d espécies apareceram em um único ponto e %d em dois. Os estimadores indicam de %s a %s espécies para a área; a amostragem registrou entre %s e %s do esperado.",
             S, sum(rowSums(pr) > 0), fmt(ganho, 1), uniq, dup, fmt(faixa[1], 1), fmt(faixa[2], 1),
@@ -273,6 +290,7 @@ analisar_grupo <- function(reg, nome, pontos_info, consol = NULL, campanhas = NU
   # objetos do R guardados para as figuras (não vão para o painel em JSON)
   objs <- list(sa = sa, pa = pa, inx = inx, inc = inc, ipt = if (exists("ipt")) ipt else NULL, m = m, pr = pr)
   if (exists("bc")) { objs$bc <- bc; objs$bcs <- bcs; objs$ja <- ja }
+  res$relatorio <- tryCatch(analisar_relatorio(reg, m, nome, pontos_info, consol, campanhas), error = function(e) { message("relatório de fauna: ", conditionMessage(e)); NULL })
   fam_v <- tapply(reg$familia, reg$especie, function(x) x[!is.na(x)][1])
   res$fitofisionomias <- tryCatch(analisar_fito(m, pontos_info, fam_v), error = function(e) { message("fitofisionomias: ", conditionMessage(e)); NULL })
   if (!is.null(reg$camp_cod) && length(unique(reg$camp_cod)) >= 2 && !is.null(campanhas))

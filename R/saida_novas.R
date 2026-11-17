@@ -30,7 +30,8 @@ catalogo_novas <- function() c(
   list(
     familias_pontos = list(nome = "Espécies de cada família por ponto", padrao = "colunas", formas = list(
       colunas = "Uma coluna por família, com valores", empilhado = "Colunas empilhadas com valores")),
-    curva_jack1_boot = list(nome = "Curvas: Observada, Jackknife 1 e Bootstrap", padrao = "inext", formas = list(
+    curva_jack1_boot = list(nome = "Curvas: Observada, Jackknife 1 e Bootstrap", padrao = "limpa", formas = list(
+      limpa = "Limpa: só a curva, a faixa e a legenda no canto",
       inext = "Estilo iNEXT: curvas com faixa e linhas pontilhadas do valor final",
       linhas = "Três curvas com valores", final = "Só o valor final de cada uma"))
   ),
@@ -90,10 +91,13 @@ desenhar_novas <- function(chave, forma, G, e, gg, pal, k, w, h) {
       (if (nrow(t) > 4 || max(nchar(as.character(t$classe))) > 18) rotx), w * .85, h * .9))
   }
 
+  if (chave == "curva_jack1_boot" && !is.null(G$acumulacao$poolaccum) && forma == "limpa")
+    return(curvas_limpas(chave, list(curva_obs_inext(G), curva_estimador(G, "jack1"), curva_estimador(G, "boot")), c("Riqueza observada", "Jackknife 1", "Bootstrap"), c(pal[1], pal[2], pal[4]), e, gg, k, w, h))
   if (chave == "curva_jack1_boot" && !is.null(G$acumulacao$poolaccum) && forma == "inext") {
     c1 <- G$acumulacao$curva; pool <- G$acumulacao$poolaccum
     zs <- list(data.frame(pontos = c1$pontos, media = c1$riqueza, li = c1$li, ls = c1$ls),
                pool[pool$estimador == "jack1", c("pontos", "media", "li", "ls")], pool[pool$estimador == "boot", c("pontos", "media", "li", "ls")])
+    zs <- list(curva_obs_inext(G), curva_estimador(G, "jack1"), curva_estimador(G, "boot"))
     return(curvas_estilo_inext(chave, zs, c("Riqueza observada", "Jackknife 1", "Bootstrap"), c(pal[1], pal[2], pal[4]), G, e, gg, pal, k, w, h))
   }
   if (chave == "curva_jack1_boot" && !is.null(G$acumulacao$poolaccum)) {
@@ -178,14 +182,20 @@ inext_claro <- function(chave, forma, G, e, gg, pal, k, w, h) {
 # ponto grande na amostra real com o valor, e linhas pontilhadas: riqueza observada e valor final de cada estimador.
 curvas_estilo_inext <- function(chave, zs, nomes, cores, G, e, gg, pal, k, w, h) {
   fmt1 <- function(x, d = 1) formatC(x, format = "f", digits = d, decimal.mark = ","); tam <- e$fonte / 3.1
+  # cada série: pontos, media, li, ls e, quando vem do iNEXT, "real" = TRUE até a amostra real (depois é extrapolação)
   suave <- function(z, nome) {
-    z <- z[order(z$pontos), ]; z <- rbind(data.frame(pontos = 0, media = 0, li = 0, ls = 0), z[, c("pontos", "media", "li", "ls")])
-    xs <- seq(0, max(z$pontos), length.out = 120)
-    f <- function(y) { y[is.na(y)] <- approx(z$pontos[!is.na(y)], y[!is.na(y)], z$pontos[is.na(y)], rule = 2)$y; stats::splinefun(z$pontos, y, method = "monoH.FC")(xs) }
-    data.frame(serie = nome, x = xs, y = f(z$media), li = pmin(f(z$li), f(z$media)), ls = pmax(f(z$ls), f(z$media)))
+    z <- z[order(z$pontos), ]; z <- z[!duplicated(z$pontos), ]
+    T <- if (!is.null(z$real)) max(z$pontos[z$real]) else max(z$pontos)
+    xs <- seq(min(z$pontos), max(z$pontos), length.out = 160)
+    f <- function(y) { if (length(y) < 2) return(rep(y, length(xs))); y[is.na(y)] <- stats::approx(z$pontos[!is.na(y)], y[!is.na(y)], z$pontos[is.na(y)], rule = 2)$y; stats::splinefun(z$pontos, y, method = "monoH.FC")(xs) }
+    yy <- f(z$media)
+    data.frame(serie = nome, x = xs, y = yy, li = pmin(f(z$li), yy), ls = pmax(f(z$ls), yy), extra = xs > T + 1e-9, T = T)
   }
   d <- do.call(rbind, Map(suave, zs, nomes)); d$serie <- factor(d$serie, levels = nomes)
-  fim <- do.call(rbind, Map(function(z, nome) { z <- z[which.max(z$pontos), ]; data.frame(serie = nome, x = z$pontos, y = z$media) }, zs, nomes)); fim$serie <- factor(fim$serie, levels = nomes)
+  # ponto da amostra real (no fim da parte real) e valor final de cada estimador
+  fim <- do.call(rbind, Map(function(z, nome) { T <- if (!is.null(z$real)) max(z$pontos[z$real]) else max(z$pontos); r <- z[z$pontos == T, ][1, ]
+    data.frame(serie = nome, x = T, y = r$media) }, zs, nomes)); fim$serie <- factor(fim$serie, levels = nomes)
+  tem_extra <- any(d$extra)
   obs <- G$riqueza
   ref <- data.frame(nome = paste0("Riqueza observada = ", obs), v = obs)
   for (i in seq_along(nomes)) if (nomes[i] != "Riqueza observada") ref <- rbind(ref, data.frame(nome = paste0(nomes[i], " com todos os pontos = ", fmt1(fim$y[i])), v = fim$y[i]))
@@ -193,20 +203,102 @@ curvas_estilo_inext <- function(chave, zs, nomes, cores, G, e, gg, pal, k, w, h)
   cs <- setNames(cores, nomes); cr <- setNames(c(k$tinta, cores[nomes != "Riqueza observada"])[seq_len(nrow(ref))], levels(ref$nome))
   um <- length(nomes) == 1
   rot <- if (um) paste0(if (nomes == "Riqueza observada") "amostra real: " else paste0(nomes, " com ", fim$x, " pontos: "), fmt1(fim$y, if (nomes == "Riqueza observada") 0 else 1), " espécies") else paste0(fim$serie, ": ", fmt1(fim$y))
+  real <- d[!d$extra | abs(d$x - d$T) < 1e-9, ]; proj <- d[d$extra | abs(d$x - d$T) < 1e-6, ]
+  fonte_obs <- any(vapply(zs, function(z) !is.null(z$real), TRUE))
+  nota <- paste0("Faixa = IC 95%",
+    if (fonte_obs) "; riqueza observada pelo iNEXT por pontos (bootstrap), tracejado = extrapolação" else "",
+    if (any(nomes != "Riqueza observada")) "; estimadores: erro padrão do vegan::specpool somado à variação entre combinações de pontos" else "", ".")
+  nota <- paste(strwrap(nota, width = 105), collapse = "
+")
   p <- ggplot2::ggplot(d, ggplot2::aes(x, y)) +
     faixa_ic(e, d, cs, "serie", "x") +
     ggplot2::geom_hline(data = ref, ggplot2::aes(yintercept = v, linetype = nome), colour = cr[as.character(ref$nome)], linewidth = e$linha * .9) +
-    ggplot2::geom_line(ggplot2::aes(colour = serie), linewidth = e$linha * 1.3) +
+    ggplot2::geom_line(data = real, ggplot2::aes(colour = serie, group = serie), linewidth = e$linha * 1.3) +
+    { if (tem_extra) ggplot2::geom_line(data = proj, ggplot2::aes(colour = serie, group = serie), linewidth = e$linha * 1.3, linetype = "22") } +
     ggplot2::geom_point(data = fim, ggplot2::aes(colour = serie), size = e$ponto * 2) +
-    { if (um) ggplot2::geom_label(data = fim, ggplot2::aes(label = rot, colour = serie), vjust = 1.9, hjust = .95, family = e$familia, size = tam, fill = k$fundo, linewidth = 0, show.legend = FALSE) } +
+    { if (um) ggplot2::geom_label(data = fim, ggplot2::aes(label = rot, colour = serie), vjust = 1.9, hjust = if (tem_extra) .5 else .95, family = e$familia, size = tam, fill = k$fundo, linewidth = 0, show.legend = FALSE) } +
     ggplot2::scale_colour_manual(values = cs, name = if (um) NULL else "Curvas") + ggplot2::scale_fill_manual(values = cs) +
     ggplot2::scale_linetype_manual(values = setNames(rep("dotted", nrow(ref)), levels(ref$nome)), name = "Linhas pontilhadas",
       guide = ggplot2::guide_legend(ncol = 1, override.aes = list(colour = unname(cr), linewidth = e$linha))) +
     ggplot2::scale_x_continuous(breaks = function(l) unique(round(pretty(l))), expand = ggplot2::expansion(mult = c(.02, .06))) +
     ggplot2::scale_y_continuous(limits = c(0, NA), expand = ggplot2::expansion(mult = c(0, .08))) +
-    ggplot2::guides(colour = if (um) "none" else ggplot2::guide_legend(ncol = 1, order = 1)) +
-    titulos_gg(e, chave, if (um) paste(nomes, "por número de pontos") else "Riqueza observada e estimada por número de pontos", "Número de pontos amostrais", "Número de espécies",
-               "Faixa = IC 95%. Linha suavizada entre os valores de cada número de pontos (vegan::specaccum e poolaccum).") +
+    ggplot2::guides(colour = if (um) "none" else ggplot2::guide_legend(nrow = 1, order = 1)) +
+    titulos_gg(e, chave, if (um) paste(nomes, "por número de pontos") else "Riqueza observada e estimada por número de pontos", "Número de pontos amostrais", "Número de espécies", nota) +
     tema_gg(e) + ggplot2::theme(legend.box = "vertical", legend.box.just = "left", legend.position = "bottom", legend.justification = "left", legend.title.position = "top")
-  gg(p, w, h * 1.25)
+  gg(p, w, h * (if (um) 1.25 else 1.6))
+}
+
+# riqueza observada pela curva do iNEXT por pontos (mesma média da acumulação, faixa de bootstrap e extrapolação)
+curva_obs_inext <- function(G) {
+  z <- G$inext$incidencia
+  if (is.null(z)) { c1 <- G$acumulacao$curva; return(data.frame(pontos = c1$pontos, media = c1$riqueza, li = c1$li, ls = c1$ls)) }
+  z <- z[z$q == 0, ]
+  data.frame(pontos = z$m, media = z$qD, li = z$li, ls = z$ls, real = z$metodo != "Extrapolation")
+}
+# estimador com a faixa do erro padrão (cai para a faixa do poolaccum se não houver)
+curva_estimador <- function(G, est) {
+  pe <- G$acumulacao$poolaccum_ep
+  if (!is.null(pe) && any(pe$estimador == est)) return(pe[pe$estimador == est, c("pontos", "media", "li", "ls")])
+  pool <- G$acumulacao$poolaccum; pool[pool$estimador == est, c("pontos", "media", "li", "ls")]
+}
+
+
+# ---- curvas limpas (como as figuras de rarefação dos artigos): só a curva, a faixa estreita e a legenda dentro do gráfico ----
+# Sem título, subtítulo, nota, linhas pontilhadas nem rótulos. Linha cheia até a amostra real; tracejada na extrapolação.
+curvas_limpas <- function(chave, zs, nomes, cores, e, gg, k, w, h, xlab = "Número de pontos amostrais") {
+  varias <- length(zs) > 1
+  if (varias) {
+    # todas começam no mesmo ponto (1 unidade amostral: Jackknife 1 e Bootstrap = riqueza observada) e vão até o fim da
+    # extrapolação do iNEXT da observada; depois do último ponto amostrado, cada estimador segue no valor com todos os pontos.
+    ob <- zs[[1]]; xmax <- max(ob$pontos); y1 <- ob$media[which.min(ob$pontos)]; x1 <- min(ob$pontos)
+    zs[-1] <- lapply(zs[-1], function(z) {
+      z <- z[order(z$pontos), c("pontos", "media", "li", "ls")]
+      if (min(z$pontos) > x1) z <- rbind(data.frame(pontos = x1, media = y1, li = y1, ls = y1), z)
+      z$real <- TRUE; ult <- z[nrow(z), ]
+      if (xmax > ult$pontos) z <- rbind(z, data.frame(pontos = seq(ult$pontos + 1, xmax), media = ult$media, li = ult$li, ls = ult$ls, real = FALSE))
+      z })
+  }
+  pts <- do.call(rbind, Map(function(z, nome) { if (!is.null(z$real)) z <- z[z$real, , drop = FALSE]; data.frame(serie = nome, x = z$pontos, y = z$media) }, zs, nomes))
+  pts$serie <- factor(pts$serie, levels = nomes)
+  suave <- function(z, nome) {
+    z <- z[order(z$pontos), ]; z <- z[!duplicated(z$pontos), ]
+    T <- if (!is.null(z$real)) max(z$pontos[z$real]) else max(z$pontos)
+    xs <- seq(min(z$pontos), max(z$pontos), length.out = 200)
+    f <- function(y) { if (length(y) < 2) return(rep(y, length(xs))); y[is.na(y)] <- stats::approx(z$pontos[!is.na(y)], y[!is.na(y)], z$pontos[is.na(y)], rule = 2)$y; stats::splinefun(z$pontos, y, method = "monoH.FC")(xs) }
+    yy <- f(z$media)
+    data.frame(serie = nome, x = xs, y = yy, li = pmin(f(z$li), yy), ls = pmax(f(z$ls), yy), T = T)
+  }
+  d <- do.call(rbind, Map(suave, zs, nomes)); d$serie <- factor(d$serie, levels = nomes)
+  d$parte <- factor(ifelse(d$x > d$T + 1e-9, "Extrapolação", "Rarefação"), levels = c("Rarefação", "Extrapolação"))
+  rot_partes <- c("Rarefação" = "Interpolação", "Extrapolação" = "Extrapolação")
+  lig <- d[abs(d$x - d$T) == ave(abs(d$x - d$T), d$serie, FUN = min), ]; lig$parte <- "Extrapolação"; d2 <- rbind(d, lig)
+  tem_extra <- any(d$parte == "Extrapolação")
+  fim <- do.call(rbind, lapply(split(d, d$serie), function(q) q[which.min(abs(q$x - q$T)), ]))
+  cs <- setNames(cores, nomes)
+  fmt_v <- function(v) ifelse(abs(v - round(v)) < .05, formatC(round(v), format = "d"), formatC(v, format = "f", digits = 1, decimal.mark = ","))
+  fim_proj <- do.call(rbind, lapply(split(d, d$serie), function(q) q[which.max(q$x), ])); fim_proj <- fim_proj[fim_proj$x > fim_proj$T + 1e-9 & as.integer(fim_proj$serie) == 1, ]   # só a projeção da observada (os estimadores ficam retos)
+  p <- ggplot2::ggplot(d2, ggplot2::aes(x, y, colour = serie, fill = serie)) +
+    { if (isTRUE(e$faixa) && !varias) ggplot2::geom_ribbon(data = d, ggplot2::aes(ymin = li, ymax = ls, group = serie), alpha = .22, colour = NA) } +
+    ggplot2::geom_line(ggplot2::aes(linetype = parte, group = interaction(serie, parte)), linewidth = e$linha * 1.1) +
+    { if (varias) ggplot2::geom_point(data = fim, ggplot2::aes(shape = serie), size = e$ponto * 2.2) else ggplot2::geom_point(data = fim, size = e$ponto * 1.3, shape = 21, stroke = .8, show.legend = FALSE) } +
+    { if (varias) ggplot2::geom_text(data = fim, ggplot2::aes(label = ifelse(as.integer(serie) == 1, fmt_v(y), formatC(y, format = "f", digits = 1, decimal.mark = ",")), colour = serie), vjust = ifelse(as.integer(fim$serie) == 1, 2.2, -1.5),
+                                     family = e$familia, size = e$fonte / 3.1, fontface = "bold", show.legend = FALSE) } +
+    { if (varias && tem_extra) ggplot2::geom_text(data = fim_proj, ggplot2::aes(label = fmt_v(y), colour = serie), hjust = -.15, family = e$familia, size = e$fonte / 3.3, show.legend = FALSE) } +
+    { if (varias) ggplot2::scale_shape_manual(values = setNames(c(16, 17, 15, 18, 1, 2)[seq_along(nomes)], nomes), name = "Curva") } +
+    ggplot2::scale_colour_manual(values = cs, name = if (varias) "Curva" else NULL) + ggplot2::scale_fill_manual(values = cs, name = if (varias) "Curva" else NULL) +
+    ggplot2::scale_linetype_manual(values = c("Rarefação" = "solid", "Extrapolação" = "22"), labels = rot_partes, name = "Método", drop = TRUE,
+                                   guide = if (tem_extra) ggplot2::guide_legend(order = 1, override.aes = list(colour = k$tinta, fill = NA, linewidth = .8)) else "none") +
+    ggplot2::guides(colour = ggplot2::guide_legend(order = 2, override.aes = list(linetype = "solid", size = e$ponto * 1.1, fill = NA)),
+                    fill = if (varias) "none" else ggplot2::guide_legend(order = 2), shape = ggplot2::guide_legend(order = 2, override.aes = list(size = e$ponto * 1.1))) +
+    ggplot2::scale_x_continuous(breaks = function(l) unique(round(pretty(l))), expand = ggplot2::expansion(mult = c(.01, if (varias) .07 else .03))) +
+    ggplot2::scale_y_continuous(limits = c(0, NA), expand = ggplot2::expansion(mult = c(0, if (varias) .1 else .05))) +
+    ggplot2::labs(title = NULL, subtitle = NULL, caption = NULL, x = rot(e, chave, "x", xlab), y = rot(e, chave, "y", "Número de espécies")) +
+    ggplot2::theme_classic(e$fonte, e$familia) +
+    ggplot2::theme(text = ggplot2::element_text(colour = k$tinta), axis.text = ggplot2::element_text(colour = k$tinta2),
+      axis.line = ggplot2::element_line(colour = k$tinta2, linewidth = .4), axis.ticks = ggplot2::element_line(colour = k$tinta2, linewidth = .35),
+      plot.background = ggplot2::element_rect(fill = k$fundo, colour = NA), panel.background = ggplot2::element_rect(fill = k$fundo, colour = NA),
+      legend.position = c(.98, .04), legend.justification = c(1, 0), legend.background = ggplot2::element_rect(fill = grDevices::adjustcolor(k$fundo, .85), colour = NA),
+      legend.key = ggplot2::element_rect(fill = NA, colour = NA), legend.key.width = grid::unit(1.4, "lines"), legend.spacing.y = grid::unit(2, "pt"),
+      legend.text = ggplot2::element_text(size = ggplot2::rel(.85)), plot.margin = ggplot2::margin(12, 16, 8, 10))
+  gg(p, w, h)
 }

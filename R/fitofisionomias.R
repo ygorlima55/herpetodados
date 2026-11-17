@@ -70,7 +70,19 @@ analisar_fito <- function(m, pontos_info, fam = NULL) {
     nrow(t1), paste(sprintf("%s: %s", t1$nome, t1$pontos), collapse = "; "), t1$nome[1], t1$riqueza[1], t1$n_pontos[1], if (t1$n_pontos[1] > 1) "s" else "",
     t1$nome[which.max(t1$exclusivas)], max(t1$exclusivas),
     if (!is.null(B)) sprintf(" Contando cada sigla separada: %s.", paste(sprintf("%s %d espécies (%d %s)", B$tabela$nome, B$tabela$riqueza, B$tabela$n_pontos, ifelse(B$tabela$n_pontos == 1, "ponto", "pontos")), collapse = "; ")) else "")
-  list(classes = A, componentes = B, texto = txt(
+  GA <- NULL
+  ga <- pontos_info$grupo_amostral[match(rownames(m), pontos_info$ponto)]
+  if (any(!is.na(ga) & nzchar(ga)) && length(unique(na.omit(ga))) >= 2) {
+    vs <- lapply(split(rownames(m)[!is.na(ga)], ga[!is.na(ga)]), function(p) { v <- sort(colSums(m[p, , drop = FALSE]), decreasing = TRUE); v[v > 0] })
+    vs <- vs[vapply(vs, function(v) length(v) >= 2 && sum(v) >= 4, TRUE)]
+    if (length(vs) >= 2) {
+      o <- tryCatch(suppressWarnings(iNEXT::iNEXT(vs, q = 0, datatype = "abundance", knots = 40, nboot = 50)), error = function(e) NULL)
+      if (!is.null(o)) { z <- o$iNextEst$size_based
+        GA <- list(rarefacao = data.frame(fitofisionomia = as.character(z$Assemblage), m = z$m, metodo = as.character(z$Method), qD = round(z$qD, 3), li = round(z$qD.LCL, 3), ls = round(z$qD.UCL, 3)),
+                   titulo = if (all(grepl("^C[0-9]+$", names(vs)))) "Campanha" else "Ambiente") }
+    }
+  }
+  list(classes = A, componentes = B, grupos_amostrais = GA, texto = txt(
     "Junta os pontos pela fitofisionomia da aba de pontos e compara o que cada ambiente tem: espécies, indivíduos, espécies que só aparecem nele (exclusivas) e quanto as listas se parecem (Jaccard). Em pontos mistos (ex.: MG/VR), a segunda leitura conta cada sigla separada, porque o ponto tem os dois ambientes.",
     txtres,
     paste0("Fitofisionomias com espécies exclusivas são as que mais contribuem para a riqueza da área: perder esse ambiente leva espécies que os outros não têm. Ambientes úmidos (veredas, matas de galeria, brejos) costumam concentrar anuros; formações abertas e rupestres podem ter espécies especialistas. Jaccard baixo entre fitofisionomias indica comunidades diferentes (alta diversidade beta entre ambientes).",
@@ -85,7 +97,10 @@ catalogo_fito <- function() list(
   fito_abundancia = list(nome = "Fitofisionomias: indivíduos", padrao = "classes", formas = list(
     classes = "Fitofisionomia como escrita (MG/VR...)", componentes = "Cada sigla separada (pontos mistos contam nas duas)")),
   fito_diversidade = list(nome = "Fitofisionomias: diversidade (Hill)", padrao = "hill", formas = list(hill = "Riqueza, espécies comuns e dominantes, com valores")),
-  fito_rarefacao = list(nome = "Fitofisionomias: rarefação (iNEXT)", padrao = "inext", formas = list(inext = "Curvas de cada fitofisionomia, estilo iNEXT")),
+  fito_rarefacao = list(nome = "Fitofisionomias: rarefação (iNEXT)", padrao = "classico", formas = list(
+    classico = "Por fitofisionomia: interpolação cheia, extrapolação tracejada, faixa preenchida", inext = "Curvas de cada fitofisionomia, estilo iNEXT")),
+  rarefacao_ambientes = list(nome = "Rarefação por ambiente (grupo amostral)", padrao = "classico", formas = list(
+    classico = "Por grupo amostral (ex.: mata x aberto): interpolação cheia, extrapolação tracejada, faixa preenchida")),
   fito_familias = list(nome = "Fitofisionomias: famílias", padrao = "colunas", formas = list(colunas = "Espécies de cada família em cada fitofisionomia")),
   fito_similaridade = list(nome = "Fitofisionomias: similaridade (Jaccard)", padrao = "ladrilhos", formas = list(ladrilhos = "Mapa com os valores de Jaccard")),
   fitofisionomias_especies = list(nome = "Fitofisionomias: espécies em cada uma", padrao = "matriz", formas = list(matriz = "Espécie x fitofisionomia, círculo do tamanho da abundância"))
@@ -123,6 +138,11 @@ desenhar_fito <- function(chave, forma, G, e, gg, pal, k, w, h) {
       ggplot2::guides(fill = ggplot2::guide_legend(ncol = 1)) +
       titulos_gg(e, chave, "Diversidade de cada fitofisionomia em número de espécies", NULL, "Número efetivo de espécies",
                  "Colunas de Shannon e Simpson baixas em relação à riqueza = poucas espécies dominam.") + tema_gg(e), w, h * 1.1))
+  }
+  if ((chave == "fito_rarefacao" && forma == "classico" && !is.null(F$classes$rarefacao)) || (chave == "rarefacao_ambientes" && !is.null(F$grupos_amostrais$rarefacao))) {
+    if (chave == "fito_rarefacao") { z <- F$classes$rarefacao; t <- F$classes$tabela; nm <- setNames(t$nome %||% t$fitofisionomia, t$fitofisionomia); tit <- "Fitofisionomia" }
+    else { z <- F$grupos_amostrais$rarefacao; nm <- setNames(unique(z$fitofisionomia), unique(z$fitofisionomia)); tit <- F$grupos_amostrais$titulo }
+    return(gg(rarefacao_classica(chave, z, nm, tit, e, pal, k), w, h * 1.15))
   }
   if (chave == "fito_rarefacao" && !is.null(F$classes$rarefacao)) {
     z <- F$classes$rarefacao; t <- F$classes$tabela; nm <- setNames(t$nome %||% t$fitofisionomia, t$fitofisionomia)
@@ -188,4 +208,36 @@ desenhar_fito <- function(chave, forma, G, e, gg, pal, k, w, h) {
       tema_gg(e) + ggplot2::theme(axis.text.y = ggplot2::element_text(face = "italic")), w * .9, max(h, .2 * nrow(E) + 1.4)))
   }
   invisible()
+}
+
+
+# ---- rarefação e extrapolação por grupo no estilo das curvas de rarefação de artigos (17/11/2026) ----
+# interpolação = linha cheia, extrapolação = tracejada, faixa de IC preenchida na cor do grupo,
+# marcador grande no tamanho real da amostra, com forma diferente por grupo; legenda "Método" e o nome do agrupamento.
+rarefacao_classica <- function(chave, z, nomes, titulo, e, pal, k) {
+  z$grupo <- factor(nomes[z$fitofisionomia], levels = unique(unname(nomes)))
+  z$parte <- factor(ifelse(z$metodo == "Extrapolation", "Extrapolação", "Interpolação"), levels = c("Interpolação", "Extrapolação"))
+  ob <- z[z$metodo == "Observed", ]; lig <- ob; lig$parte <- factor("Extrapolação", levels = levels(z$parte)); z2 <- rbind(z, lig)
+  ob$parte <- factor("Interpolação", levels = levels(z$parte)); z2 <- rbind(z2, ob)
+  z2 <- z2[order(z2$grupo, z2$m), ]
+  gs <- levels(z$grupo); cs <- setNames(rep(pal, length.out = length(gs)), gs); fs <- setNames(rep(c(16, 17, 15, 18, 25, 8), length.out = length(gs)), gs)
+  rib <- z[!duplicated(paste(z$grupo, z$m)), ]; rib <- rib[order(rib$grupo, rib$m), ]
+  ggplot2::ggplot(z2, ggplot2::aes(m, qD, colour = grupo, fill = grupo)) +
+    { if (isTRUE(e$faixa)) ggplot2::geom_ribbon(data = rib, ggplot2::aes(ymin = li, ymax = ls, group = grupo), alpha = .35, colour = NA) } +
+    ggplot2::geom_line(ggplot2::aes(linetype = parte, group = interaction(grupo, parte)), linewidth = e$linha * 1.25) +
+    ggplot2::geom_point(data = ob, ggplot2::aes(shape = grupo), size = e$ponto * 2.1) +
+    ggplot2::scale_colour_manual(values = cs, name = titulo) + ggplot2::scale_fill_manual(values = cs, name = titulo) +
+    ggplot2::scale_shape_manual(values = fs, name = titulo) +
+    ggplot2::scale_linetype_manual(values = c("Interpolação" = "solid", "Extrapolação" = "22"), name = "Método") +
+    ggplot2::guides(linetype = ggplot2::guide_legend(order = 1, override.aes = list(colour = k$tinta, fill = NA, linewidth = .8)),
+                    colour = ggplot2::guide_legend(order = 2), fill = ggplot2::guide_legend(order = 2), shape = ggplot2::guide_legend(order = 2)) +
+    ggplot2::scale_y_continuous(limits = c(0, NA), expand = ggplot2::expansion(mult = c(.02, .05))) +
+    ggplot2::labs(title = NULL, subtitle = NULL, caption = NULL, x = rot(e, chave, "x", "Número de indivíduos"), y = rot(e, chave, "y", "Número de espécies")) +
+    ggplot2::theme_classic(e$fonte, e$familia) +
+    ggplot2::theme(text = ggplot2::element_text(colour = k$tinta), axis.text = ggplot2::element_text(colour = k$tinta2),
+      panel.border = ggplot2::element_rect(fill = NA, colour = k$tinta, linewidth = .5), axis.line = ggplot2::element_blank(),
+      plot.background = ggplot2::element_rect(fill = k$fundo, colour = NA), panel.background = ggplot2::element_rect(fill = k$fundo, colour = NA),
+      legend.position = c(.98, .04), legend.justification = c(1, 0), legend.box.just = "left",
+      legend.background = ggplot2::element_rect(fill = grDevices::adjustcolor(k$fundo, .85), colour = NA),
+      legend.key = ggplot2::element_rect(fill = NA, colour = NA), legend.title = ggplot2::element_text(size = ggplot2::rel(.95)))
 }

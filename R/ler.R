@@ -88,7 +88,18 @@ ler_planilha <- function(arquivo) {
     total   = acha_coluna(nm, c("^total$", "abundancia", "^n$", "quantidade")),
     campanha= acha_coluna(nm, c("^campanha")),
     anot    = acha_coluna(nm, c("anotacao")),
-    obs     = acha_coluna(nm, c("observ"))
+    obs     = acha_coluna(nm, c("observ")),
+    # colunas usadas nos relatórios de fauna (todas opcionais)
+    metodo  = acha_coluna(nm, c("^metodo", "metodo de registro", "metodo de amostragem", "^tecnica")),
+    estacao = acha_coluna(nm, c("sazonal", "^estacao")),
+    dado    = acha_coluna(nm, c("tipo de dado", "^dado$", "origem do dado", "primario")),
+    cinegetica = acha_coluna(nm, c("cinegetic")),
+    xerimbabo  = acha_coluna(nm, c("xerimbabo", "^pet$")),
+    medico     = acha_coluna(nm, c("interesse medico", "medico", "peconhent", "epidemiolog")),
+    exotica    = acha_coluna(nm, c("exotic", "invasor")),
+    bioindicadora = acha_coluna(nm, c("bioindicad", "indicadora")),
+    migratoria = acha_coluna(nm, c("migrat")),
+    guilda     = acha_coluna(nm, c("guilda", "dieta"))
   )
   if (is.na(col$ponto) || is.na(col$especie) || is.na(col$total))
     stop("A aba '", a_bru, "' precisa das colunas Ponto, Espécie e Total (ou Abundância).")
@@ -107,6 +118,9 @@ ler_planilha <- function(arquivo) {
     campanha = pega("campanha"),
     anotacao = pega("anot"),
     observacao = pega("obs"),
+    metodo = pega("metodo"), estacao = pega("estacao"), dado = pega("dado"),
+    cinegetica = pega("cinegetica"), xerimbabo = pega("xerimbabo"), medico = pega("medico"), exotica = pega("exotica"),
+    bioindicadora = pega("bioindicadora"), migratoria = pega("migratoria"), guilda = pega("guilda"),
     stringsAsFactors = FALSE
   )
   vazia <- (is.na(reg$especie_completa) | reg$especie_completa == "") &
@@ -117,6 +131,9 @@ ler_planilha <- function(arquivo) {
   g <- sem_acento(ifelse(is.na(reg$grupo), "", reg$grupo))
   reg$grupo_pad <- grupo_padrao(reg$grupo)
   if (all(is.na(reg$campanha) | reg$campanha == "")) reg$campanha <- "Campanha única"
+  # dados secundários (bibliografia, entrevista) não entram nas estatísticas (exigência do IEMA-ES e boa prática)
+  sec <- !is.na(reg$dado) & grepl("secund|entrevist|bibliogr|literat", sem_acento(reg$dado))
+  secundarios <- reg[sec, , drop = FALSE]; reg <- reg[!sec, , drop = FALSE]
 
   # Aba de pontos (fitofisionomia, coordenadas, método)
   a_pt <- abas[grepl("ponto", sem_acento(abas)) & !grepl("brut", sem_acento(abas))][1]
@@ -158,7 +175,7 @@ ler_planilha <- function(arquivo) {
     if (!is.null(consol$familia_cons)) { consol$familia <- ifelse(is.na(consol$familia), consol$familia_cons, consol$familia); consol$grupo <- ifelse(is.na(consol$grupo), consol$grupo_cons, consol$grupo) }
   }
   list(arquivo = arquivo, aba_registros = a_bru, aba_pontos = a_pt, aba_consolidada = a_con,
-       registros = reg, pontos = pontos, consolidada = consol)
+       registros = reg, pontos = pontos, consolidada = consol, secundarios = secundarios)
 }
 
 # lê a aba consolidada (espécie x P1..Pn, cabeçalho em duas linhas) com os atributos das espécies

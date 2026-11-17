@@ -655,6 +655,22 @@ function blocoCorrecoes(s1){
   if (H.tem_planilha_corrigida) b.appendChild(el("p", {style:"margin-top:10px"}, `<a href="planilha_corrigida.xlsx" download><button>Baixar a planilha corrigida</button></a> <span class="pergunta">registros como ficaram, com a coluna “Alterado no Herpetodados” e a lista das correções.</span>`));
   s1.appendChild(b);
 }
+// tabela automática: mostra as colunas de um data.frame do R com nomes legíveis (números com vírgula)
+const NOMES_COL = {estimador:"Estimador", valor:"Valor", erro_padrao:"Erro padrão", completude:"Completude", medida:"Medida", interpretacao:"O que quer dizer",
+  metodo:"Método", riqueza:"Espécies", abundancia:"Indivíduos", pct_especies:"% das espécies", exclusivas:"Exclusivas", especies_exclusivas:"Quais exclusivas",
+  ponto:"Ponto", horas:"Horas", ind_hora:"Indivíduos por hora", sp_hora:"Espécies por hora", especies_hora:"Espécies por hora", individuos_hora:"Indivíduos por hora",
+  familia:"Família", especie:"Espécie", individuos:"Indivíduos", ameacada:"Ameaçada", quase_ameacada:"Quase ameaçada", endemica:"Endêmica", cinegetica:"Cinegética",
+  xerimbabo:"Xerimbabo", interesse_medico:"Interesse médico", exotica:"Exótica", bioindicadora:"Bioindicadora", migratoria:"Migratória", rara_na_amostra:"Rara na amostra",
+  nivel:"Campanha ou estação", pontos:"Pontos", contatos:"Contatos", IPA:"IPA", comparacao:"Comparação", pontos_pareados:"Pontos pareados", p:"p", W:"W", V:"V"};
+function tabelaAuto(alvo, id, titulo, linhas, alto){
+  const L = arr(linhas); if (!L.length) return;
+  const ks = Object.keys(L[0]).filter(k => !k.startsWith("_") && L.some(r => r[k] != null && r[k] !== ""));  // esconde colunas vazias
+  const cols = ks.map(k => { const num = L.every(r => r[k] == null || typeof r[k] === "number");
+    if (k === "especie") return {t:"Espécie", f:r => esc(r[k] ?? ""), csv:r => r[k], esp:1};
+    if (k === "completude" || k === "pct_especies") return {t:NOMES_COL[k], f:r => r[k] == null ? "–" : pc(r[k]), csv:r => r[k], num:1};
+    return num ? {t:NOMES_COL[k] || k, f:r => r[k] == null ? "–" : (Number.isInteger(r[k]) ? ni(r[k]) : nf(r[k], 2)), csv:r => r[k], num:1} : {t:NOMES_COL[k] || k, f:r => esc(r[k] ?? ""), csv:r => r[k]}; });
+  tabela(alvo, id, titulo, cols, L, alto);
+}
 function texto(alvo, t, aberto){
   if (!t) return;
   alvo.appendChild(el("div", {class:"resultado"}, "<b>Resultado</b>" + esc(t.resultado)));
@@ -692,6 +708,7 @@ const SECOES = [
   ["similaridade", "Similaridade", "pontos parecidos e beta"],
   ["fitofisionomias", "Fitofisionomias", "o que cada ambiente tem"],
   ["dominancia", "Dominância", "ranque das espécies"],
+  ["laudo", "Para o laudo", "interesse, métodos, esforço"],
   ["campanhas", "Campanhas", "o que mudou entre campanhas"],
   ["relatorio", "Relatório", "o que você marcou"]
 ];
@@ -787,18 +804,21 @@ function render(){
 
   // ---- Riqueza: uma curva por vez
   const s3 = secao("riqueza", "Quantas espécies a área tem", "Escolha a curva. Cada uma tem o seu resultado e a sua explicação.");
-  const CURVAS = [["acumulacao","Acumulação"],["curva_S","Observada"],["curva_chao","Chao 2"],["curva_jack1","Jackknife 1"],["curva_jack2","Jackknife 2"],["curva_boot","Bootstrap"],["curva_jack1_boot","Jack 1 + Boot + Observada"],["estimadores","Todas juntas"],["inext","iNEXT"]];
+  const CURVAS = [["acumulacao","Acumulação"],["curva_S","Observada"],["curva_chao","Chao 2"],["curva_jack1","Jackknife 1"],["curva_jack2","Jackknife 2"],["curva_boot","Bootstrap"],["curva_jack1_boot","Jack 1 + Boot + Observada"],["estimadores","Todas juntas"],["chao1_ace","Chao 1 e ACE"],["inext","iNEXT"]];
   abas(s3, CURVAS, curva, v => { curva = v; store.set("herp.curva", v); render(); });
   const TX = G.acumulacao.textos || {}, pool = arr(G.acumulacao.poolaccum), K = {curva_S:"S", curva_chao:"chao", curva_jack1:"jack1", curva_jack2:"jack2", curva_boot:"boot"};
   if (curva === "acumulacao"){ figuraR(s3, "acumulacao", "Curva de acumulação de espécies"); texto(s3, G.acumulacao.texto); }
   else if (K[curva]){ const k = K[curva], nome = CURVAS.find(c => c[0] === curva)[1];
     figuraR(s3, curva, `${nome} por número de pontos`); texto(s3, TX[k], true);
-    const z = k === "S" ? arr(G.acumulacao.curva).map(r => ({pontos:r.pontos, media:r.riqueza, li:r.li, ls:r.ls})) : pool.filter(r => r.estimador === k);
+    const pep = arr(G.acumulacao.poolaccum_ep), z = k === "S" ? arr(G.acumulacao.curva).map(r => ({pontos:r.pontos, media:r.riqueza, li:r.li, ls:r.ls})) : (pep.length ? pep : pool).filter(r => r.estimador === k);
     tabela(s3, "curva_" + k, `${nome}: valor a cada número de pontos`, [{t:"Pontos", k:"pontos", num:1}, {t:"Espécies", f:r => nf(r.media, 1), num:1}, {t:"IC 95%", f:r => `${nf(r.li, 1)} a ${nf(r.ls, 1)}`, num:1}], z); }
   else if (curva === "curva_jack1_boot"){ figuraR(s3, "curva_jack1_boot", "Riqueza observada, Jackknife 1 e Bootstrap");
     texto(s3, TX.jack1, true); texto(s3, TX.boot);
     const ob = arr(G.acumulacao.curva), j1 = pool.filter(r => r.estimador === "jack1"), bo = pool.filter(r => r.estimador === "boot");
     tabela(s3, "curva_jack1_boot", "Observada, Jackknife 1 e Bootstrap a cada número de pontos", [{t:"Pontos", k:"pontos", num:1}, {t:"Observada", f:r => nf(r.riqueza, 1), num:1}, {t:"Jackknife 1", f:r => nf((j1.find(x => x.pontos === r.pontos) || {}).media, 1), num:1}, {t:"Bootstrap", f:r => nf((bo.find(x => x.pontos === r.pontos) || {}).media, 1), num:1}], ob); }
+  else if (curva === "chao1_ace"){ const RF = G.relatorio || {};
+    if (RF.estimadores_abundancia){ texto(s3, RF.texto_estimadores, true); tabelaAuto(s3, "chao1_ace", "Estimadores por abundância (Chao 1 e ACE)", RF.estimadores_abundancia); }
+    else s3.appendChild(el("p", {class:"semapp"}, "Não calculado para este grupo.")); }
   else if (curva === "estimadores"){ figuraR(s3, "estimadores", "Riqueza observada e estimadores");
     tabela(s3, "estimadores", "Estimadores com todos os pontos", [{t:"Estimador", k:"estimador"}, {t:"Espécies", f:r => nf(r.valor, 1), num:1}, {t:"Erro padrão", f:r => r.ep == null ? "–" : nf(r.ep, 2), num:1}, {t:"Completude", f:r => pc(r.completude), num:1}], est); }
   else { const sub = store.get("herp.subi", "inext_individuos");
@@ -812,9 +832,15 @@ function render(){
   // ---- Diversidade
   const s4 = secao("diversidade", "Diversidade em cada ponto", "Qual ponto é mais diverso e qual é dominado por poucas espécies.");
   const sub4 = store.get("herp.sub4", "indices");
-  abas(s4, [["indices","Índices"],["shannon","Shannon e teste de Hutcheson"]], sub4, v => { store.set("herp.sub4", v); render(); });
+  abas(s4, [["indices","Índices por ponto"],["area","Equitabilidade da área"],["shannon","Shannon e teste de Hutcheson"]], sub4, v => { store.set("herp.sub4", v); render(); });
   if (sub4 === "indices"){ figuraR(s4, "indices_pontos", "Índices de diversidade por ponto"); texto(s4, G.indices.texto);
     tabela(s4, "indices", "Índices por ponto", [{t:"Ponto", k:"ponto"}, {t:"Fitofisionomia", k:"fitofisionomia"}, {t:"S", k:"S", num:1}, {t:"N", k:"N", num:1}, {t:"Shannon H′", f:r => nf(r.shannon, 3), num:1}, {t:"Simpson 1−D", f:r => nf(r.simpson, 3), num:1}, {t:"Pielou J′", f:r => nf(r.pielou, 3), num:1}, {t:"Riqueza rarefeita", f:r => nf(r.S_rarefeita, 1), num:1}, {t:"Cobertura", f:r => pc(r.cobertura, 1), num:1}, {t:"Exclusivas", k:"exclusivas", num:1}], arr(G.indices.tabela)); }
+  else if (sub4 === "area"){
+    if (G.relatorio && G.relatorio.aviso) s4.appendChild(el("div", {class:"aviso"}, `<span><span class="pill atenção">atenção</span></span><div>${esc(G.relatorio.aviso)}</div>`));
+    tabelaAuto(s4, "indices_area", "Índices e equitabilidade da área toda", G.indices.area);
+    const extra = ["H_max","simpson_E","hill_E21","evar","margalef","menhinick","fisher_alfa"].filter(k => arr(G.indices.tabela).some(r => r[k] != null));
+    if (extra.length) tabela(s4, "equitab_pontos", "Equitabilidade e riqueza por ponto", [{t:"Ponto", k:"ponto"}].concat(extra.map(k => ({t:{H_max:"H′ máx.", simpson_E:"Simpson E", hill_E21:"Hill E2,1", evar:"Evar", margalef:"Margalef", menhinick:"Menhinick", fisher_alfa:"α de Fisher"}[k], f:r => nf(r[k], 3), num:1}))), arr(G.indices.tabela));
+    s4.appendChild(el("details", {class:"sentido"}, "<summary>O que cada índice mede</summary><div><p><b>Pielou J′, Simpson E, Hill E2,1 e Evar</b>: equitabilidade, de 0 (uma espécie domina) a 1 (todas com a mesma abundância). Evar é o menos afetado pelo número de espécies.</p><p><b>Margalef e Menhinick</b>: riqueza corrigida pelo número de indivíduos. <b>α de Fisher</b>: diversidade pela série logarítmica, pouco sensível ao tamanho da amostra.</p></div>")); }
   else if (G.hutcheson){ figuraR(s4, "shannon_ic", "Shannon por ponto com IC 95%"); texto(s4, G.hutcheson.texto);
     tabela(s4, "hutcheson", "Teste t de Hutcheson entre pares de pontos", [{t:"Par", f:r => `${r.ponto_a} × ${r.ponto_b}`}, {t:"H′ a", f:r => nf(r.H_a, 3), num:1}, {t:"H′ b", f:r => nf(r.H_b, 3), num:1}, {t:"t", f:r => nf(r.t, 2), num:1}, {t:"gl", f:r => nf(r.gl, 0), num:1}, {t:"p (Holm)", f:r => r.p_holm < .001 ? "< 0,001" : nf(r.p_holm, 3), num:1}, {t:"Resultado", k:"diferenca"}], arr(G.hutcheson.pares), true); }
 
@@ -844,6 +870,7 @@ function render(){
       tabela(s9, "fito", "Por fitofisionomia (como escrita na planilha)", colsT, arr(F.classes.tabela));
       if (F.componentes) tabela(s9, "fito_siglas", "Cada sigla separada (pontos mistos contam nas duas)", colsT, arr(F.componentes.tabela)); }
     else if (sub9 === "diversidade"){ figuraR(s9, "fito_diversidade", "Diversidade de cada fitofisionomia"); figuraR(s9, "fito_rarefacao", "Rarefação de cada fitofisionomia");
+      if (arr((H.figuras || {})[grupo]).includes(`${TAG(grupo)}_rarefacao_ambientes.png`)) figuraR(s9, "rarefacao_ambientes", "Rarefação por ambiente (grupo amostral)");
       tabela(s9, "fito_div", "Diversidade por fitofisionomia", [{t:"Fitofisionomia", k:"nome"}, {t:"Pontos", k:"pontos"}, {t:"Espécies", k:"riqueza", num:1}, {t:"Shannon H′", f:r => nf(r.shannon, 3), num:1}, {t:"Espécies comuns (q1)", f:r => nf(r.hill1, 1), num:1}, {t:"Espécies dominantes (q2)", f:r => nf(r.hill2, 1), num:1}, {t:"Pielou J′", f:r => nf(r.pielou, 3), num:1}, {t:"Chao 1 (iNEXT)", f:r => nf(r.chao1, 1), num:1}], arr(F.classes.tabela)); }
     else if (sub9 === "especies"){ figuraR(s9, "fitofisionomias_especies", "Espécies em cada fitofisionomia"); figuraR(s9, "fito_familias", "Famílias em cada fitofisionomia");
       const fs = arr(F.classes.tabela).map(r => r.fitofisionomia);
@@ -852,6 +879,22 @@ function render(){
       if (!pp.length) s9.appendChild(el("p", {class:"pergunta"}, "Só há uma fitofisionomia."));
       else tabela(s9, "fito_pares", "Similaridade entre fitofisionomias (Jaccard)", [{t:"Par", f:r => `${esc(r.fito_a)} × ${esc(r.fito_b)}`, csv:r => r.fito_a + " x " + r.fito_b}, {t:"Em comum", k:"comuns", num:1}, {t:"Só na 1ª", k:"so_a", num:1}, {t:"Só na 2ª", k:"so_b", num:1}, {t:"Jaccard", f:r => nf(r.jaccard, 2), num:1}], pp);
       if (F.componentes && arr(F.componentes.pares).length) tabela(s9, "fito_pares_siglas", "Similaridade entre siglas (Jaccard)", [{t:"Par", f:r => `${esc(r.fito_a)} × ${esc(r.fito_b)}`, csv:r => r.fito_a + " x " + r.fito_b}, {t:"Em comum", k:"comuns", num:1}, {t:"Só na 1ª", k:"so_a", num:1}, {t:"Só na 2ª", k:"so_b", num:1}, {t:"Jaccard", f:r => nf(r.jaccard, 2), num:1}], arr(F.componentes.pares)); }
+  }
+
+  // ---- Para o laudo (o que os termos de referência costumam pedir)
+  if (G.relatorio){
+    const RF = G.relatorio;
+    const sL = secao("laudo", "O que o laudo costuma pedir", "Espécies de interesse, eficiência dos métodos, esforço amostral, campanhas e estações.");
+    if (RF.aviso) sL.appendChild(el("div", {class:"aviso"}, `<span><span class="pill atenção">atenção</span></span><div>${esc(RF.aviso)}</div>`));
+    const opL = [["interesse","Espécies de interesse"]].concat(RF.por_metodo ? [["metodo","Por método"]] : []).concat(RF.esforco ? [["esforco","Esforço"]] : [])
+      .concat(arr(RF.sazonal).length ? [["sazonal","Campanhas e estações"]] : []).concat(RF.ipa ? [["ipa","IPA (aves)"]] : []);
+    let subL = store.get("herp.subL", "interesse"); if (!opL.some(o => o[0] === subL)) subL = opL[0][0];
+    abas(sL, opL, subL, v => { store.set("herp.subL", v); render(); });
+    if (subL === "interesse"){ texto(sL, RF.texto_interesse, true); tabelaAuto(sL, "interesse", "Espécies de interesse", RF.interesse, true); }
+    else if (subL === "metodo"){ texto(sL, RF.texto_metodo, true); tabelaAuto(sL, "por_metodo", "Riqueza e abundância por método", RF.por_metodo); if (RF.metodo_especies) tabelaAuto(sL, "metodo_especies", "Espécies por método (indivíduos)", RF.metodo_especies, true); }
+    else if (subL === "esforco"){ texto(sL, RF.texto_esforco, true); tabelaAuto(sL, "esforco", "Esforço e taxa de encontro", RF.esforco); }
+    else if (subL === "sazonal"){ texto(sL, RF.texto_sazonal, true); arr(RF.sazonal).forEach((st, i) => { tabelaAuto(sL, "sazonal_" + i, st.tipo, st.tabela); if (st.teste) tabelaAuto(sL, "sazonal_t_" + i, st.tipo + ": teste pareado", [].concat(st.teste)); }); }
+    else if (subL === "ipa"){ texto(sL, RF.texto_ipa, true); tabelaAuto(sL, "ipa", "Índice Pontual de Abundância", RF.ipa, true); }
   }
 
   // ---- Dominância
@@ -909,12 +952,13 @@ function valorMenu(id){
     if (id === "fitofisionomias") return G.fitofisionomias ? String(arr(G.fitofisionomias.classes.tabela).length) : "";
     if (id === "campanhas") return G.campanhas ? String(arr(G.campanhas.resumo).length) : "";
     if (id === "relatorio") return SEL.length ? String(SEL.length) : "";
+    if (id === "laudo") return G.relatorio && G.relatorio.interesse ? `${arr(G.relatorio.interesse).length} sp.` : "";
   } catch (e) {}
   return "";
 }
 function montaMenu(){
   const nav = $("#indice"); nav.innerHTML = "";
-  SECOES.filter(([id]) => (id !== "campanhas" || (H.grupos[grupo] || {}).campanhas) && (id !== "fitofisionomias" || (H.grupos[grupo] || {}).fitofisionomias)).forEach(([id, nome, faz], i) => {
+  SECOES.filter(([id]) => (id !== "laudo" || (H.grupos[grupo] || {}).relatorio) && (id !== "campanhas" || (H.grupos[grupo] || {}).campanhas) && (id !== "fitofisionomias" || (H.grupos[grupo] || {}).fitofisionomias)).forEach(([id, nome, faz], i) => {
     const extra = id === "relatorio" && SEL.length ? ` (${SEL.length})` : "";
     const a = el("a", {href:"#" + id, class: id === aba ? "ativo" : "", title: faz}, `<span class="n">${i + 1}</span><span class="nome">${esc(nome)}<small>${esc(faz)}</small></span><span class="val">${esc(valorMenu(id))}</span>`);
     a.onclick = ev => { ev.preventDefault(); aba = id; history.replaceState(null, "", "#" + id); $("#menu").classList.remove("aberto"); montaMenu(); mostraAba(); scrollTo(0, 0); };
