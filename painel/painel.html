@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Herpetodados · painel</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%231e1c19'/%3E%3Cpath d='M8 50 C 16 24, 30 18, 40 17 S 52 16, 58 16' fill='none' stroke='%23f2ede1' stroke-width='4'/%3E%3Ccircle cx='36' cy='17.5' r='7.5' fill='%231e1c19' stroke='%23f2ede1' stroke-width='3'/%3E%3C/svg%3E">
+<script src="dados.js"></script>
+<style>
+/* ===== sistema visual Prancha (mesmo de identidade/prancha.css; repetido aqui para o painel abrir sozinho) ===== */
+:root{
+  color-scheme: light;
+  --papel:#f2ede1; --papel-2:#e9e2d2; --papel-3:#ddd4bf; --cartao:#f8f5ee;
+  --tinta:#1e1c19; --tinta-2:#57524a; --tinta-3:#8a8375; --fio:#cbbfa6; --fio-2:#ddd3bd;
+  --acento:#d0482a; --acento-2:#2a5cab;
+  --s1:#2a5cab; --s2:#d0482a; --s3:#00897b; --s4:#c28a00; --s5:#9a3f8f; --s6:#5c8a00; --s7:#3d8fdc; --s8:#ad4f19;
+  --seq-lo:#e6ecf5; --seq-hi:#1d3f78;
+  --erro:#b0321c; --erro-bg:#f6dccf; --aten:#8a5a00; --aten-bg:#f3e3bd; --info:#2a5cab; --info-bg:#dce5f2; --ok:#3c6e12;
+  --vidro: rgba(248,245,238,.6); --vidro-borda: rgba(30,28,25,.13); --vidro-brilho: rgba(255,255,255,.6);
+  --sombra: 0 1px 0 rgba(30,28,25,.04), 0 14px 34px -22px rgba(30,28,25,.45);
+  --f-titulo: "Georgia Pro", Georgia, "Sitka Heading", serif;
+  --f-texto: "Bahnschrift", "Segoe UI", system-ui, sans-serif;
+  --f-mono: Consolas, "Cascadia Mono", monospace;
+  --fs: 15px;
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --papel:#23282b; --papel-2:#2b3134; --papel-3:#353c40; --cartao:#272d30;
+  --tinta:#ecebe3; --tinta-2:#b8bab3; --tinta-3:#8b8f8a; --fio:#4a5257; --fio-2:#30373b;
+  --acento:#e05a3b; --acento-2:#5385d4;
+  --s1:#5385d4; --s2:#e05a3b; --s3:#16a08f; --s4:#bb8708; --s5:#ad5fa4; --s6:#6f9e24; --s7:#4596e0; --s8:#c4692f;
+  --seq-lo:#2d3438; --seq-hi:#9cc0ee;
+  --erro:#f0937c; --erro-bg:#4a2a22; --aten:#e9bf6a; --aten-bg:#3f3420; --info:#9cc0ee; --info-bg:#24364c; --ok:#a9cf6a;
+  --vidro: rgba(43,49,52,.55); --vidro-borda: rgba(236,235,227,.14); --vidro-brilho: rgba(255,255,255,.06);
+  --sombra: 0 14px 34px -18px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;color:var(--tinta);font:var(--fs)/1.55 var(--f-texto);background:var(--papel)}
+body::before{content:"";position:fixed;inset:0;z-index:-1;opacity:.55;pointer-events:none;
+  background:linear-gradient(var(--fio-2) 1px, transparent 1px) 0 0/28px 28px, linear-gradient(90deg, var(--fio-2) 1px, transparent 1px) 0 0/28px 28px}
+.fundo-formulas{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;opacity:.07;font:italic 30px var(--f-titulo);color:var(--tinta)}
+.fundo-formulas span{position:absolute;white-space:nowrap}
+a{color:var(--acento-2)}
+button,select,input[type=text],input[type=number]{font:inherit;font-size:.9em;color:var(--tinta);background:var(--cartao);border:1px solid var(--fio);border-radius:3px;padding:6px 10px}
+button{cursor:pointer}
+button:hover{border-color:var(--tinta-2)}
+button.forte{background:var(--tinta);color:var(--papel);border-color:var(--tinta)}
+button.acento{background:var(--acento);color:#fff;border-color:var(--acento)}
+.rotulo{font-size:.72em;letter-spacing:.14em;text-transform:uppercase;color:var(--tinta-2)}
+.ital{font-family:var(--f-titulo);font-style:italic}
+.mono{font-family:var(--f-mono)}
+/* ===== menu de vidro ===== */
+.menu{position:fixed;left:16px;top:16px;bottom:16px;width:280px;z-index:30;display:flex;flex-direction:column;
+  background:var(--vidro);backdrop-filter:blur(16px) saturate(1.25);-webkit-backdrop-filter:blur(16px) saturate(1.25);
+  border:1px solid var(--vidro-borda);border-radius:8px;box-shadow:inset 0 1px 0 var(--vidro-brilho), var(--sombra)}
+.menu .marca{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;text-decoration:none;color:var(--tinta)}
+.menu .marca svg{width:62px;height:auto;flex:none}
+.menu .marca b{font:italic 400 1.35em/1 var(--f-titulo)} .menu .marca b span{font:600 .92em var(--f-texto);font-style:normal}
+.menu .lev{padding:4px 16px 10px;border-bottom:1px solid var(--vidro-borda)}
+.menu .lev .t{font:italic 1em/1.25 var(--f-titulo)}
+.menu .lev select{width:100%;margin-top:8px}
+.menu nav{flex:1;overflow:auto;padding:6px 8px}
+.menu .grupo{margin:12px 8px 4px}
+.menu nav a{display:grid;grid-template-columns:30px 1fr;gap:6px;align-items:start;padding:6px 8px;border-radius:4px;text-decoration:none;color:var(--tinta)}
+.menu nav a:hover,.menu nav a.ativo{background:var(--vidro-brilho);box-shadow:inset 2px 0 0 var(--acento)}
+.menu nav a .n{font:italic 1em var(--f-titulo);color:var(--acento);text-align:right}
+.menu nav a .nome{font-size:.92em;line-height:1.25}
+.menu nav a small{display:block;color:var(--tinta-3);font-size:.78em;line-height:1.3}
+.menu .acoes{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 12px 12px;border-top:1px solid var(--vidro-borda)}
+.menu .acoes button{background:transparent;text-align:left;font-size:.82em;padding:6px 8px}
+.menu .acoes button b{display:block;font-size:1.05em}
+.abre-menu{display:none}
+main{margin-left:312px;padding:28px 34px 90px 0;max-width:1180px}
+/* ===== pranchas ===== */
+section.prancha{position:relative;background:var(--cartao);border:1px solid var(--fio);padding:22px 26px 24px;margin-bottom:22px}
+section.prancha.oculto{display:none}
+.prancha .cab{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:1px solid var(--tinta);padding-bottom:6px;margin-bottom:12px}
+.prancha h2{font:italic 400 1.55em/1.15 var(--f-titulo);margin:4px 0 4px}
+.prancha .pergunta{color:var(--tinta-2);margin:0 0 14px;max-width:820px}
+.prancha .ajuda{float:right;margin:-2px 0 6px 12px}
+.ajuda-txt{display:none;background:var(--papel-2);border-left:2px solid var(--acento-2);padding:10px 14px;margin:0 0 14px;font-size:.92em}
+.ajuda-txt.aberta{display:block}
+.numeros{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;border:1px solid var(--fio)}
+.numeros > div{padding:12px 16px;border-right:1px solid var(--fio)}
+.numeros > div:last-child{border-right:0}
+.numeros .v{font:600 2.05em/1.05 var(--f-texto);font-variant-numeric:tabular-nums}
+.numeros .v.ac{color:var(--acento)}
+.numeros .r{font-size:.8em;color:var(--tinta-2);letter-spacing:.04em}
+.numeros .nn{font:italic .84em var(--f-titulo);color:var(--tinta-3);margin-top:2px}
+.explica{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0;margin-top:16px;border-top:1px solid var(--tinta)}
+.explica div{padding:10px 14px 4px 0;font-size:.92em}
+.explica div + div{padding-left:14px;border-left:1px solid var(--fio-2)}
+.explica b{display:block;font:italic 1.02em var(--f-titulo);color:var(--tinta);margin-bottom:2px}
+.explica .res b{color:var(--acento)}
+.controles{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:0 0 10px}
+.controles label{font-size:.85em;color:var(--tinta-2);display:inline-flex;gap:6px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--fio);border-radius:3px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:var(--cartao);padding:5px 10px}
+.seg button + button{border-left:1px solid var(--fio)}
+.seg button[aria-pressed="true"]{background:var(--tinta);color:var(--papel)}
+figure{margin:6px 0 14px}
+figure .grafico{position:relative}
+figure svg{display:block;width:100%;height:auto;overflow:visible}
+figcaption{font:italic .93em var(--f-titulo);color:var(--tinta-2);border-top:1px solid var(--fio-2);padding-top:6px;display:flex;justify-content:space-between;gap:12px}
+figcaption b{font-style:normal;font-family:var(--f-texto);font-weight:600;color:var(--tinta);letter-spacing:.03em}
+figcaption .bt{font-style:normal;white-space:nowrap}
+figcaption .bt button{font-size:.8em;padding:2px 7px;background:transparent}
+.legenda{display:flex;gap:14px;flex-wrap:wrap;font-size:.85em;color:var(--tinta-2);margin:4px 0 6px}
+.legenda i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+table{border-collapse:collapse;width:100%;font-size:.88em;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;border-bottom:1px solid var(--fio-2);text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--tinta-2);border-bottom:1px solid var(--tinta);position:sticky;top:0;background:var(--cartao);font-size:.92em}
+td.num,th.num{text-align:right}
+.rolagem{overflow:auto;max-height:420px}
+.esp{font-family:var(--f-titulo);font-style:italic}
+.pill{display:inline-block;font-size:.74em;font-weight:600;padding:1px 8px;border-radius:2px;white-space:nowrap;letter-spacing:.04em}
+.pill.erro{background:var(--erro-bg);color:var(--erro)} .pill.atenção{background:var(--aten-bg);color:var(--aten)} .pill.informação{background:var(--info-bg);color:var(--info)}
+.aviso{display:grid;grid-template-columns:110px 1fr;gap:14px;padding:10px 0;border-bottom:1px solid var(--fio-2)}
+.aviso b{font:italic 1.02em var(--f-titulo);display:block}
+textarea{width:100%;min-height:120px;font:inherit;font-size:.95em;color:var(--tinta);background:var(--papel);border:1px solid var(--fio);border-radius:3px;padding:10px 12px;resize:vertical;line-height:1.5}
+.duas{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.salvo{color:var(--ok);font-size:.82em;margin-left:8px}
+.leitura{max-width:860px}
+.leitura h3{font:italic 1.15em var(--f-titulo);margin:18px 0 4px;border-bottom:1px solid var(--fio-2);padding-bottom:2px}
+.leitura p{margin:6px 0} .leitura ul{margin:6px 0;padding-left:20px} .leitura li{margin:3px 0}
+.leitura i{font-family:var(--f-titulo)}
+.pulado{border:1px dashed var(--fio);padding:10px 14px;color:var(--tinta-2);margin-top:8px;font-size:.92em}
+.galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.galeria a{display:block;text-decoration:none;color:var(--tinta);border:1px solid var(--fio);background:var(--papel);padding:8px}
+.galeria img{width:100%;display:block;background:#fff}
+.galeria span{display:block;font:italic .85em var(--f-titulo);margin-top:6px;color:var(--tinta-2)}
+.barra{display:none;margin-top:14px}.barra .trilho{height:10px;background:var(--papel-2);border:1px solid var(--linha,#d9d4c7);border-radius:2px;overflow:hidden}
+.barra .enche{height:100%;width:0;background:var(--acento-2,#2a5cab);transition:width .6s}.barra .info{display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-top:5px}.barra .pc{font-variant-numeric:tabular-nums;font-weight:700}
+.edtit{display:none;border:1px solid var(--linha,#d9d4c7);background:var(--papel-2);padding:10px 12px;margin:6px 0 10px}.edtit.aberta{display:block}
+.edtit .grade-ed{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 14px;margin:8px 0}.edtit label{display:flex;flex-direction:column;font-size:12.5px;gap:3px}
+.edtit input[type=text]{font:inherit;font-size:14px;padding:5px 7px;border:1px solid var(--linha,#cfc9ba);background:var(--papel,#fff);color:inherit}.edtit .ck{flex-direction:row;align-items:center;gap:6px;margin:4px 0 8px}.edtit .bts{display:flex;gap:8px}
+.tarefa{font:12.5px/1.45 var(--f-mono);background:var(--papel-2);border-left:2px solid var(--acento-2);padding:8px 12px;margin:10px 0;white-space:pre-wrap;max-height:160px;overflow:auto;display:none}
+#tip{position:fixed;pointer-events:none;z-index:60;background:var(--tinta);color:var(--papel);font-size:.8em;padding:6px 9px;border-radius:2px;max-width:300px;opacity:0;transition:opacity .08s;line-height:1.4}
+#tip i{font-family:var(--f-titulo)}
+/* ===== editor de gráficos (vidro, à direita) ===== */
+aside.editor{position:fixed;top:16px;right:16px;bottom:16px;width:360px;max-width:94vw;z-index:40;transform:translateX(calc(100% + 30px));transition:transform .22s;overflow:auto;
+  background:var(--vidro);backdrop-filter:blur(18px) saturate(1.25);-webkit-backdrop-filter:blur(18px) saturate(1.25);border:1px solid var(--vidro-borda);border-radius:8px;box-shadow:inset 0 1px 0 var(--vidro-brilho), var(--sombra);padding:16px 18px 30px}
+aside.editor.aberto{transform:none}
+.editor h3{font:italic 1.05em var(--f-titulo);margin:18px 0 6px;border-bottom:1px solid var(--vidro-borda);padding-bottom:3px}
+.editor .linha{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:7px 0;font-size:.88em}
+.editor .linha select,.editor .linha input[type=text]{max-width:190px}
+.editor .cores{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
+.editor .cores input{width:100%;height:28px;border:1px solid var(--fio);border-radius:2px;padding:0;background:none}
+.editor .campo{display:block;font-size:.84em;color:var(--tinta-2);margin:6px 0}
+.editor .campo input{display:block;width:100%;margin-top:3px}
+.editor .marcar label{display:flex;gap:8px;align-items:center;font-size:.88em;margin:4px 0}
+.editor .nota{font-size:.8em;color:var(--tinta-3)}
+@media (max-width:980px){.menu{transform:translateX(-110%);transition:transform .2s}.menu.aberto{transform:none}.abre-menu{display:block;position:fixed;top:12px;left:12px;z-index:35}main{margin-left:0;padding:60px 16px 60px}}
+@media print{.menu,.abre-menu,aside.editor,.naoimprime,figcaption .bt,.prancha .ajuda{display:none!important}main{margin:0;padding:0;max-width:none}section.prancha{break-inside:avoid;border:0}body::before,.fundo-formulas{display:none}}
+/* ===== painel simples: uma seção por vez ===== */
+main > section.prancha{display:none} main > section.prancha.ativa{display:block}
+.abas{display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid var(--tinta);margin:4px 0 16px}
+.abas button{border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;padding:8px 14px;font-size:.92em;color:var(--tinta-2)}
+.abas button[aria-pressed="true"]{border-bottom-color:var(--acento);color:var(--tinta);font-weight:600}
+.figr{margin:6px 0 18px}
+.figr .topo{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.figr .topo .tit{font:italic 1.02em var(--f-titulo)}
+.figr .topo .acs{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.figr .topo .acs button,.figr .topo .acs a button{font-size:.8em;padding:3px 8px;background:transparent}
+.rel{display:inline-flex;align-items:center;gap:6px;font-size:.82em;border:1px solid var(--fio);padding:3px 9px;border-radius:3px;cursor:pointer;user-select:none;background:var(--cartao)}
+.rel.on{background:var(--tinta);color:var(--papel);border-color:var(--tinta)}
+.rel input{margin:0}
+.figr .quadro{border:1px solid var(--fio);background:#fff;padding:6px;position:relative}
+.figr .quadro img{display:block;width:100%;height:auto;max-height:640px;object-fit:contain}
+.figr .quadro.refazendo img{opacity:.3;filter:grayscale(1)}
+.figr .quadro .aviso-r{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font:italic 1.05em var(--f-titulo)}
+.figr .quadro.refazendo .aviso-r{display:flex}
+.formas{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--fio)}
+.formas.aberta{display:block}
+.formas .lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.formas button{display:block;text-align:left;padding:5px;background:var(--papel);border:1px solid var(--fio);border-radius:2px}
+.formas button img{display:block;width:100%;background:#fff}
+.formas button span{display:block;font:italic .8em/1.3 var(--f-titulo);margin-top:4px;color:var(--tinta-2)}
+.formas button.atual{border:2px solid var(--acento)}
+.resultado{border-left:3px solid var(--acento);padding:6px 12px;margin:8px 0;background:var(--papel)}
+.resultado b{font:italic 1em var(--f-titulo);color:var(--acento);margin-right:6px}
+details.sentido{margin:6px 0 12px;font-size:.92em}
+details.sentido summary{cursor:pointer;color:var(--acento-2);font-size:.92em}
+details.sentido div{padding:6px 0 0 0} details.sentido p{margin:4px 0} details.sentido b{font:italic 1em var(--f-titulo)}
+.tabbox{margin:8px 0 18px}
+.tabbox .topo{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.tabbox .topo .tit{font:italic .98em var(--f-titulo);color:var(--tinta-2)}
+.semapp{border:1px dashed var(--fio);padding:8px 12px;font-size:.85em;color:var(--tinta-2);margin-top:6px}
+.relitem{display:grid;grid-template-columns:40px 70px 1fr auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--fio-2)}
+.relitem img{width:70px;border:1px solid var(--fio);background:#fff}
+.relitem .n{font:italic 1.05em var(--f-titulo);color:var(--acento)}
+</style>
+</head>
+<body>
+<div class="fundo-formulas" aria-hidden="true">
+  <span style="left:58%;top:6%">H′ = − Σ pᵢ ln pᵢ</span>
+  <span style="left:72%;top:42%;font-size:24px">S<sub>Chao2</sub> = S<sub>obs</sub> + Q₁² / 2Q₂</span>
+  <span style="left:44%;top:78%;font-size:22px">S<sub>jack1</sub> = S<sub>obs</sub> + Q₁ (m − 1)/m</span>
+</div>
+<button class="abre-menu" id="abreMenu">Menu</button>
+<aside class="menu" id="menu" aria-label="Menu do painel">
+  <a class="marca" href="/" id="marcaLink" title="Voltar ao início">
+    <svg viewBox="0 0 230 92" aria-hidden="true"><defs><pattern id="hm" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="currentColor" stroke-width=".8"/></pattern></defs>
+      <g style="color:var(--tinta)"><line x1="8" y1="78" x2="214" y2="78" stroke="currentColor"/>
+      <path d="M14 76 C 34 30, 70 20, 110 18 S 180 15, 212 15 L212 26 C 180 27, 140 30, 110 34 S 40 60, 14 77 Z" fill="url(#hm)" opacity=".5"/>
+      <path d="M14 76 C 34 34, 70 24, 110 22 S 180 19, 212 19" fill="none" stroke="currentColor" stroke-width="4"/>
+      <line x1="14" y1="9" x2="212" y2="9" stroke="var(--acento)" stroke-width="2" stroke-dasharray="6 6"/>
+      <circle cx="110" cy="22" r="15" fill="var(--cartao)" stroke="currentColor" stroke-width="3.5"/><ellipse cx="110" cy="22" rx="9" ry="3.6" fill="currentColor"/></g></svg>
+    <b>Herpeto<span>dados</span></b>
+  </a>
+  <div class="lev"><div class="t" id="levTitulo"></div>
+    <label class="rotulo" style="display:block;margin-top:8px">Grupo<select id="selGrupo"></select></label></div>
+  <nav id="indice"></nav>
+  <div class="acoes">
+    <button id="btEditor"><b>Aparência</b>cores e letras</button>
+    <button id="btPasta"><b>Pasta</b>dos arquivos</button>
+  </div>
+</aside>
+<main id="main"></main>
+
+<aside class="editor" id="editor" aria-label="Aparência dos gráficos">
+  <div style="display:flex;justify-content:space-between;align-items:center"><span class="rotulo">Aparência dos gráficos</span><button id="fechaEditor">Fechar</button></div>
+  <p class="nota">Os gráficos são desenhados pelo R. Mude aqui e clique em <b>Redesenhar no R</b> (cerca de 2 minutos). Isso só redesenha: os resultados continuam os mesmos. Para recalcular com a planilha corrigida, use <b>Planilha → Atualizar planilha</b>.</p>
+  <h3>Estilo</h3>
+  <div class="linha">Tema <select id="selTemaR"><option value="prancha">Prancha (papel)</option><option value="ggplot">ggplot2 padrão (cinza)</option><option value="bw">theme_bw</option><option value="classic">theme_classic</option><option value="minimal">theme_minimal</option></select></div>
+  <div class="linha">Fundo <div class="seg" id="segTema"><button data-v="claro">Branco</button><button data-v="escuro">Lousa</button></div></div>
+  <div class="linha">Cores <select id="selPaleta"><option value="prancha">Prancha</option><option value="hue">R padrão</option><option value="okabe">Okabe-Ito</option><option value="cerrado">Cerrado</option><option value="cinza">Tons de cinza</option><option value="livre">Personalizada</option></select></div>
+  <div class="cores" id="cores"></div>
+  <div class="linha">Letra dos títulos <select id="selFTitulo"><option>Georgia Pro</option><option>Sitka Heading</option><option>Cambria</option><option>Bahnschrift</option><option>Arial</option><option>Times New Roman</option></select></div>
+  <div class="linha">Letra do texto <select id="selFTexto"><option>Bahnschrift</option><option>Segoe UI</option><option>Arial</option><option>Calibri</option><option>Times New Roman</option></select></div>
+  <div class="linha">Tamanho da letra <input type="number" id="nFonte" min="8" max="18" step="1" style="width:70px"></div>
+  <div class="linha">Espessura das linhas <input type="number" id="nLinha" min="0.3" max="3" step="0.1" style="width:70px"></div>
+  <div class="linha">Tamanho dos pontos <input type="number" id="nPonto" min="0.5" max="6" step="0.5" style="width:70px"></div>
+  <div class="linha">Legenda <select id="selLegenda"><option value="bottom">Embaixo</option><option value="right">À direita</option><option value="top">Em cima</option><option value="none">Sem legenda</option></select></div>
+  <div class="marcar">
+    <label><input type="checkbox" id="ckFaixa"> Faixa de confiança (IC 95%)</label>
+    <label><input type="checkbox" id="ckGrade"> Linhas de grade</label>
+    <label><input type="checkbox" id="ckTitulo"> Título dentro da figura</label>
+  </div>
+  <h3>Título e eixos de uma figura</h3>
+  <div class="linha">Figura <select id="selFig"></select></div>
+  <label class="campo">Título <input type="text" id="tTitulo" placeholder="(padrão)"></label>
+  <label class="campo">Eixo horizontal <input type="text" id="tX" placeholder="(padrão)"></label>
+  <label class="campo">Eixo vertical <input type="text" id="tY" placeholder="(padrão)"></label>
+  <label class="campo">Nota de rodapé <input type="text" id="tNota" placeholder="(padrão)"></label>
+  <h3>Tamanho no laudo</h3>
+  <div class="linha">Largura (cm) <input type="number" id="nLarg" min="8" max="30" step="0.5" style="width:80px"></div>
+  <div class="linha">Altura (cm) <input type="number" id="nAlt" min="6" max="25" step="0.5" style="width:80px"></div>
+  <div class="linha">Resolução (dpi) <select id="selDpi"><option>150</option><option>300</option><option>600</option></select></div>
+  <h3>Painel</h3>
+  <div class="linha">Fundo do painel <div class="seg" id="segPainel"><button data-v="claro">Papel</button><button data-v="escuro">Lousa</button></div></div>
+  <div style="display:grid;gap:8px;margin-top:16px">
+    <button class="acento" id="btAplicarR">Redesenhar no R</button>
+    <div class="tarefa" id="tarefaEstilo"></div>
+    <button id="btPadrao">Voltar ao padrão</button>
+  </div>
+</aside>
+<div id="tip"></div>
+
+<script>
+"use strict";
+const H = window.HERP;
+const $ = (s, el=document) => el.querySelector(s);
+const el = (tag, attrs={}, html) => { const e = document.createElement(tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (html != null) e.innerHTML = html; return e; };
+const nf = (x, d=2) => x == null || isNaN(x) ? "–" : Number(x).toLocaleString("pt-BR", {minimumFractionDigits:d, maximumFractionDigits:d});
+const ni = x => x == null ? "–" : Number(x).toLocaleString("pt-BR");
+const pc = (x, d=0) => x == null ? "–" : (100*x).toLocaleString("pt-BR",{maximumFractionDigits: (x > 0 && x < .01) ? 1 : d}) + "%";
+const arr = x => x == null ? [] : Array.isArray(x) ? x : [x];
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const store = { get(k, d){ try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
+const LID = (location.pathname.match(/^\/l\/([a-z0-9-]+)\//) || [])[1] || null;
+const api = (acao, corpo) => fetch(`/api/l/${LID}/${acao}`, {method:"POST", headers:{"Content-Type":"application/json"}, body: typeof corpo === "string" ? corpo : JSON.stringify(corpo || {})}).then(r => r.json());
+if (!H) { document.body.innerHTML = "<p style='padding:40px;font-family:Georgia'>Não achei o arquivo <b>dados.js</b> ao lado deste painel. Rode o Herpetodados de novo.</p>"; throw new Error("sem dados"); }
+
+/* ---------------- estilo do R ---------------- */
+const PALETAS = {
+  prancha: ["#2a5cab","#d0482a","#00897b","#c28a00","#9a3f8f","#5c8a00","#3d8fdc","#ad4f19"],
+  hue:     ["#F8766D","#00BA38","#619CFF","#B79F00","#00BFC4","#F564E3","#C49A00","#53B400"],
+  okabe:   ["#0072B2","#D55E00","#009E73","#E69F00","#CC79A7","#56B4E9","#F0E442","#000000"],
+  cerrado: ["#6b7d2e","#c9772b","#2f6f5e","#a8463b","#8c6d3f","#3d6aa8","#b58b2a","#5e4b6b"],
+  cinza:   ["#1e1c19","#57524a","#8a8375","#b3ab9a","#3c3a35","#6f6a60","#9c9585","#c9c1b0"]
+};
+const CAT = H.catalogo || {};
+const PADRAO = { tema_r:"prancha", tema:"claro", paleta:"prancha", cores:null, fonte:11, familia:"Bahnschrift", familia_titulo:"Georgia Pro", linha:1, ponto:2.5, legenda:"bottom",
+  faixa:true, grade:true, mostrar_titulo:true, mostrar_grupo:true, titulos:{}, formas:{}, largura:18, altura:11.5, dpi:300, painel:"claro" };
+const doR = H.estilo && typeof H.estilo === "object" ? H.estilo : {};
+let E = Object.assign(JSON.parse(JSON.stringify(PADRAO)), store.get("herp.estilo4", {}));
+if (doR._painel) Object.assign(E, doR._painel);
+for (const k of ["titulos","formas"]) if (doR[k] && !Array.isArray(doR[k])) E[k] = doR[k]; else if (!E[k] || Array.isArray(E[k])) E[k] = {};
+const salvaE = () => store.set("herp.estilo4", E);
+const cores = () => E.paleta === "livre" && E.cores ? E.cores : (PALETAS[E.paleta] || PALETAS.prancha);
+function estiloR(){
+  const cm = v => Math.round(v / 2.54 * 100) / 100;
+  return {paleta: cores(), tema_r: E.tema_r, tema: E.tema, fonte: +E.fonte, familia: E.familia, familia_titulo: E.familia_titulo, faixa: E.faixa, grade: E.grade,
+    linha: +E.linha, ponto: +E.ponto, legenda: E.legenda, mostrar_titulo: E.mostrar_titulo, mostrar_grupo: E.mostrar_grupo !== false, largura: cm(E.largura), altura: cm(E.altura), dpi: +E.dpi,
+    titulos: E.titulos, formas: E.formas, _painel: Object.fromEntries(Object.keys(PADRAO).filter(k => k !== "titulos" && k !== "formas").map(k => [k, E[k]]))};
+}
+
+/* ---------------- estado ---------------- */
+let grupo = store.get("herp.grupo", "Anuros"), aba = (location.hash || "#inicio").slice(1), curva = store.get("herp.curva", "acumulacao"), versao = Date.now();
+const kSel = "herp.sel." + H.meta.planilha;
+let SEL = store.get(kSel, []);       // itens do relatório: {tipo:"fig"|"tab", id, titulo, arquivo?}
+const salvaSel = () => { store.set(kSel, SEL); if (LID) api("selecao", SEL); };
+const naSel = id => SEL.some(s => s.id === id);
+
+/* ---------------- tarefas do R ---------------- */
+function barra(caixa, t){
+  let b = caixa.previousElementSibling; if (!b || !b.classList.contains("barra")) { b = document.createElement("div"); b.className = "barra"; b.innerHTML = '<div class="trilho"><div class="enche"></div></div><div class="info"><span class="et"></span><span class="pc"></span></div>'; caixa.parentNode.insertBefore(b, caixa); }
+  const p = t.estado === "pronto" ? 100 : (t.pct || 0), s = Math.max(0, Math.round(Date.now() / 1000 - (t.inicio || Date.now() / 1000)));
+  b.style.display = "block"; b.querySelector(".enche").style.width = p + "%"; b.querySelector(".pc").textContent = p + "%";
+  b.querySelector(".et").textContent = (t.etapa || "Rodando no R") + (t.estado === "rodando" ? ` · ${Math.floor(s / 60)} min ${s % 60} s` : "");
+}
+function acompanhar(tid, caixa, fim){
+  if (caixa) { caixa.style.display = "block"; caixa.textContent = "Rodando no R..."; }
+  const passo = () => fetch("/api/tarefa/" + tid).then(r => r.json()).then(t => {
+    if (caixa) barra(caixa, t);
+    if (caixa) caixa.textContent = (t.log || []).filter(l => !/scale|Scale|Adding/.test(l)).slice(-5).join("\n") || "Rodando no R...";
+    if (t.estado === "rodando") setTimeout(passo, 900); else fim && fim(t);
+  });
+  passo();
+}
+function redesenhar(so, depois){
+  salvaE();
+  if (!LID) { alert("Para o R redesenhar, abra o painel pelo Herpetodados (abrir_herpetodados.cmd)."); return null; }
+  document.querySelectorAll(so ? `.figr[data-chave="${so}"] .quadro` : ".figr .quadro").forEach(q => q.classList.add("refazendo"));
+  return api("estilo" + (so ? "?so=" + so : ""), JSON.stringify(estiloR())).then(r => acompanhar(r.tarefa, so ? null : $("#tarefaEstilo"), t => { versao = Date.now(); render(); depois && depois(t); }));
+}
+
+/* ---------------- peças ---------------- */
+const TAG = g => g.normalize("NFD").replace(/[^A-Za-z]/g, "");
+function marcaRel(id, item){
+  const lb = el("label", {class:"rel naoimprime" + (naSel(id) ? " on" : "")}); const ck = el("input", {type:"checkbox"}); ck.checked = naSel(id);
+  ck.onchange = () => { if (ck.checked) SEL.push(Object.assign({id}, item)); else SEL = SEL.filter(s => s.id !== id); lb.classList.toggle("on", ck.checked); salvaSel(); montaMenu(); };
+  lb.append(ck, "No relatório"); return lb;
+}
+function figuraR(alvo, chave, legenda){
+  const tag = TAG(grupo), arq = `${tag}_${chave}.png`;
+  if (!arr((H.figuras || {})[grupo]).includes(arq)) { alvo.appendChild(el("p", {class:"semapp"}, "Esta figura não foi feita para este grupo (poucos dados).")); return; }
+  const f = el("div", {class:"figr", "data-chave":chave}), tit = (E.titulos[chave] || {}).titulo || legenda;
+  const topo = el("div", {class:"topo"}); topo.appendChild(el("span", {class:"tit"}, esc(tit)));
+  const acs = el("span", {class:"acs naoimprime"});
+  const formas = arr(((H.formas || {})[grupo] || {})[chave]), info = CAT[chave] || {formas:{}}, atual = E.formas[chave] || info.padrao;
+  if (formas.length > 1){ const b = el("button", {}, "Outras formas"); b.onclick = () => f.querySelector(".formas").classList.toggle("aberta"); acs.appendChild(b); }
+  const be = el("button", {}, "Editar títulos"); be.onclick = () => { const ed = f.querySelector(".edtit"); ed.classList.toggle("aberta"); if (ed.classList.contains("aberta")) ed.querySelector("input").focus(); }; acs.appendChild(be);
+  const ba = el("a", {href:`figuras/${arq}`, target:"_blank"}); ba.appendChild(el("button", {}, "Abrir")); acs.appendChild(ba);
+  acs.appendChild(marcaRel("fig:" + tag + ":" + chave, {tipo:"fig", titulo:tit, arquivo:`figuras/${arq}`}));
+  topo.appendChild(acs); f.appendChild(topo);
+  f.appendChild(editorTitulos(chave));
+  const q = el("div", {class:"quadro"}); q.innerHTML = `<img src="figuras/${arq}?v=${versao}" alt="${esc(tit)}"><div class="aviso-r">O R está redesenhando...</div>`; f.appendChild(q);
+  if (formas.length > 1){
+    const fz = el("div", {class:"formas naoimprime"}), lista = el("div", {class:"lista"});
+    fz.appendChild(el("div", {class:"rotulo", style:"margin-bottom:8px"}, "O mesmo resultado desenhado de outro jeito pelo R. Clique para usar."));
+    for (const fm of formas){ const b = el("button", {class: fm === atual ? "atual" : ""}, `<img loading="lazy" src="formas/${tag}_${chave}__${fm}.png?v=${versao}" alt=""><span>${esc((info.formas || {})[fm] || fm)}</span>`);
+      b.onclick = () => { if (fm !== atual) { E.formas[chave] = fm; redesenhar(chave); } }; lista.appendChild(b); }
+    fz.appendChild(lista); f.appendChild(fz);
+  }
+  alvo.appendChild(f);
+}
+// títulos e eixos de uma figura, editados ali mesmo; o R redesenha só ela
+function editorTitulos(chave){
+  const pad = (((H.titulos_padrao || {})[grupo] || {})[chave]) || {}, atual = E.titulos[chave] || {};
+  const ed = el("div", {class:"edtit naoimprime"});
+  const campos = [["titulo", "Título"], ["x", "Eixo horizontal"], ["y", "Eixo vertical"], ["nota", "Nota de rodapé"]];
+  ed.innerHTML = `<div class="rotulo">Escreva por cima. Deixe em branco para voltar ao texto padrão.</div><div class="grade-ed">` +
+    campos.map(([k, n]) => `<label>${n}<input type="text" data-k="${k}" value="${esc(atual[k] || "")}" placeholder="${esc(pad[k] || "(sem)")}"></label>`).join("") +
+    `</div><label class="ck"><input type="checkbox" data-g ${E.mostrar_grupo !== false ? "checked" : ""}> Mostrar o grupo (${esc(grupo)}) abaixo do título em todas as figuras</label>`;
+  const ap = el("button", {class:"forte"}, "Aplicar e redesenhar"), vt = el("button", {}, "Voltar ao padrão");
+  const grava = limpa => { const t = {}; ed.querySelectorAll("input[data-k]").forEach(i => { if (limpa) i.value = ""; if (i.value.trim()) t[i.dataset.k] = i.value.trim(); });
+    if (Object.keys(t).length) E.titulos[chave] = t; else delete E.titulos[chave];
+    const g = ed.querySelector("[data-g]").checked; const todas = g !== (E.mostrar_grupo !== false); E.mostrar_grupo = g;
+    redesenhar(todas ? null : chave); };
+  ap.onclick = () => grava(false); vt.onclick = () => grava(true);
+  ed.querySelectorAll("input[type=text]").forEach(i => i.onkeydown = ev => { if (ev.key === "Enter") grava(false); });
+  const bx = el("div", {class:"bts"}); bx.append(ap, vt); ed.appendChild(bx);
+  return ed;
+}
+function texto(alvo, t, aberto){
+  if (!t) return;
+  alvo.appendChild(el("div", {class:"resultado"}, "<b>Resultado</b>" + esc(t.resultado)));
+  const d = el("details", {class:"sentido"}); if (aberto) d.open = true;
+  d.innerHTML = `<summary>O que mede, como interpretar e limites</summary><div><p><b>O que mede.</b> ${esc(t.mede)}</p><p><b>Como interpretar.</b> ${esc(t.interpretacao)}</p><p><b>Limites.</b> ${esc(t.limites)}</p></div>`;
+  alvo.appendChild(d);
+}
+function tabela(alvo, id, titulo, cols, linhas, alto){
+  const box = el("div", {class:"tabbox"}), topo = el("div", {class:"topo"});
+  topo.appendChild(el("span", {class:"tit"}, esc(titulo)));
+  topo.appendChild(marcaRel("tab:" + TAG(grupo) + ":" + id, {tipo:"tab", titulo, cols:cols.map(c => c.t), linhas:linhas.map(r => cols.map(c => String(c.csv ? c.csv(r) : c.f ? c.f(r) : r[c.k] ?? "").replace(/<[^>]+>/g, "")))}));
+  box.appendChild(topo);
+  const wrap = el("div", {class: alto ? "rolagem" : ""}); const t = el("table");
+  t.innerHTML = "<thead><tr>" + cols.map(c => `<th class="${c.num ? "num" : ""}">${esc(c.t)}</th>`).join("") + "</tr></thead>";
+  const tb = el("tbody"); for (const r of linhas) tb.insertAdjacentHTML("beforeend", "<tr>" + cols.map(c => { const v = c.f ? c.f(r) : r[c.k]; return `<td class="${c.num ? "num" : ""}${c.esp ? " esp" : ""}">${v ?? "–"}</td>`; }).join("") + "</tr>");
+  t.appendChild(tb); wrap.appendChild(t); box.appendChild(wrap); alvo.appendChild(box);
+}
+function abas(alvo, opcoes, valor, ao){ const a = el("div", {class:"abas naoimprime"}); for (const [v, t] of opcoes){ const b = el("button", {"aria-pressed": String(v === valor)}, t); b.onclick = () => ao(v); a.appendChild(b); } alvo.appendChild(a); }
+function md(txt){
+  const ls = esc(txt).split(/\r?\n/); let h = "", li = false;
+  for (let l of ls){ l = l.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\*(.+?)\*/g, "<i>$1</i>");
+    if (/^#{1,3}\s/.test(l)) { if (li) { h += "</ul>"; li = false; } h += "<h3>" + l.replace(/^#+\s/, "") + "</h3>"; }
+    else if (/^\s*[-•]\s/.test(l)) { if (!li) { h += "<ul>"; li = true; } h += "<li>" + l.replace(/^\s*[-•]\s/, "") + "</li>"; }
+    else if (!l.trim()) { if (li) { h += "</ul>"; li = false; } } else { if (li) { h += "</ul>"; li = false; } h += "<p>" + l + "</p>"; } }
+  return h + (li ? "</ul>" : "");
+}
+
+/* ---------------- seções ---------------- */
+const SECOES = [
+  ["inicio", "Resumo", "números e leitura do ambiente"],
+  ["planilha", "Planilha", "conferência, campo e limites"],
+  ["descritiva", "Descritiva", "famílias, espécies, pontos"],
+  ["riqueza", "Riqueza", "curvas e estimadores"],
+  ["diversidade", "Diversidade", "índices por ponto"],
+  ["similaridade", "Similaridade", "pontos parecidos e beta"],
+  ["fitofisionomias", "Fitofisionomias", "o que cada ambiente tem"],
+  ["dominancia", "Dominância", "ranque das espécies"],
+  ["campanhas", "Campanhas", "o que mudou entre campanhas"],
+  ["relatorio", "Relatório", "o que você marcou"]
+];
+function secao(id, titulo, pergunta){
+  const s = el("section", {class:"prancha" + (aba === id ? " ativa" : ""), id});
+  const n = SECOES.findIndex(x => x[0] === id);
+  s.innerHTML = `<div class="cab"><span class="rotulo">Prancha ${n} · ${esc(SECOES[n][1])}</span><span class="rotulo">${esc(grupo)}</span></div><h2>${titulo}</h2>${pergunta ? `<p class="pergunta">${pergunta}</p>` : ""}`;
+  $("#main").appendChild(s); return s;
+}
+
+function render(){
+  document.documentElement.dataset.theme = E.painel === "escuro" ? "dark" : "light";
+  $("#main").innerHTML = "";
+  const G = H.grupos[grupo] || {};
+  $("#levTitulo").textContent = H.meta.planilha.replace(/\.(xlsx|xls)$/i, "");
+  const est = arr((G.acumulacao || {}).estimadores), D = G.descritiva;
+
+  // ---- Resumo
+  const s0 = secao("inicio", `Resumo: ${esc(grupo)}`, "");
+  if (est.length){
+    const v = n => (est.find(e => e.estimador === n) || {}).valor;
+    const n4 = el("div", {class:"numeros"});
+    n4.innerHTML = [[G.riqueza, "espécies", `${D ? D.familias.length : "–"} famílias`], [ni(G.n_individuos), "indivíduos", ""], [G.n_pontos, "pontos", ""],
+      [`${nf(Math.min(...est.slice(1).map(e => e.valor)), 0)} a ${nf(Math.max(...est.slice(1).map(e => e.valor)), 0)}`, "espécies estimadas", `Chao 2 ${nf(v("Chao 2"), 1)} · Jack 1 ${nf(v("Jackknife 1"), 1)} · Boot ${nf(v("Bootstrap"), 1)}`]]
+      .map(([a, b, c], i) => `<div><div class="v ${i === 3 ? "ac" : ""}">${a}</div><div class="r">${b}</div><div class="nn">${c}</div></div>`).join("");
+    s0.appendChild(n4);
+  }
+  const lt = el("div", {class:"leitura", style:"margin-top:16px"}, H.leitura ? md(H.leitura) : "<p class='ital'>Sem leitura escrita ainda.</p>"); s0.appendChild(lt);
+  if (LID){ const be = el("button", {class:"naoimprime"}, "Editar a leitura"), ta = el("textarea", {style:"min-height:320px;display:none;font-family:var(--f-mono);font-size:.85em"}), bs = el("button", {class:"forte naoimprime", style:"display:none;margin-left:8px"}, "Salvar");
+    ta.value = H.leitura || ""; be.onclick = () => { const ed = ta.style.display === "none"; ta.style.display = ed ? "block" : "none"; lt.style.display = ed ? "none" : ""; bs.style.display = ed ? "inline-block" : "none"; };
+    bs.onclick = () => api("leitura", ta.value).then(() => { H.leitura = ta.value; render(); }); s0.append(be, bs, ta); }
+
+  // ---- Planilha
+  const s1 = secao("planilha", "Planilha e campo", "");
+  const sub1 = store.get("herp.sub1", "conf");
+  abas(s1, [["conf","Conferência"],["campo","Sobre o campo"],["limites","Limites dos dados"]], sub1, v => { store.set("herp.sub1", v); render(); });
+  if (sub1 === "conf"){
+    const cf = arr(H.conferencia), nErr = cf.filter(x => x.nivel === "erro").length, nAt = cf.filter(x => x.nivel === "atenção").length;
+    s1.appendChild(el("p", {class:"resultado"}, nErr ? `<b>${nErr} erros</b> na planilha: corrija e envie de novo. ${nAt} pontos de atenção.` : `<b>Sem erros.</b> Os registros batem com a aba consolidada. ${nAt} pontos de atenção para conferir.`));
+    if (LID){ const bu = el("button", {class:"acento naoimprime"}, "Atualizar planilha (enviar a corrigida e recalcular tudo)"), cx = el("div", {class:"tarefa"});
+      bu.onclick = () => { const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".xlsx,.xls";
+        inp.onchange = () => { const f = inp.files[0]; if (!f) return; bu.disabled = true; bu.textContent = "Recalculando no R...";
+          fetch(`/api/l/${LID}/planilha?nome=${encodeURIComponent(f.name)}`, {method:"POST", body:f}).then(r => r.json()).then(j => {
+            if (j.erro) { alert(j.erro); bu.disabled = false; return; }
+            acompanhar(j.tarefa, cx, t => { if (t.estado === "pronto") location.reload(); else { bu.disabled = false; bu.textContent = "Deu erro: veja acima"; } }); }); };
+        inp.click(); };
+      s1.append(bu, cx);
+      s1.appendChild(el("p", {class:"pergunta naoimprime"}, "A planilha anterior fica guardada na pasta do levantamento (planilha_anterior_data.xlsx). O painel recarrega sozinho no fim."));
+    }
+    tabela(s1, "conferencia", "Conferência da planilha", [{t:"Nível", f:r => `<span class="pill ${r.nivel}">${r.nivel}</span>`, csv:r => r.nivel}, {t:"Aba", k:"aba"}, {t:"Linha", k:"linha"}, {t:"Problema", f:r => esc(r.problema), csv:r => r.problema}, {t:"O que fazer", f:r => esc(r.sugestao), csv:r => r.sugestao}], cf, true);
+  } else if (sub1 === "campo"){
+    const kC = "herp.ctx." + H.meta.planilha, ctx = H.contexto_json || store.get(kC, null) || {campo: H.contexto || "", finalidade: ""};
+    const d2 = el("div", {class:"duas"}), ta1 = el("textarea", {placeholder:"Datas, estação, chuva e lua, horário, pessoas, tempo por ponto, métodos..."}), ta2 = el("textarea", {placeholder:"Licenciamento de quê, fase (diagnóstico, monitoramento), o que comparar..."});
+    ta1.value = ctx.campo || ""; ta2.value = ctx.finalidade || "";
+    const c1 = el("div", {}, "<div class='rotulo'>Como foi o campo</div>"), c2 = el("div", {}, "<div class='rotulo'>Finalidade</div>"); c1.appendChild(ta1); c2.appendChild(ta2); d2.append(c1, c2); s1.appendChild(d2);
+    const ok = el("span", {class:"salvo"}); let tm; const salva = () => { const v = {campo:ta1.value, finalidade:ta2.value}; H.contexto_json = v; store.set(kC, v); clearTimeout(tm); tm = setTimeout(() => { if (LID) api("contexto", v).then(() => ok.textContent = "guardado"); else ok.textContent = "guardado neste navegador"; }, 700); };
+    ta1.oninput = salva; ta2.oninput = salva; s1.appendChild(ok);
+  } else for (const a of arr(H.avisos)) s1.insertAdjacentHTML("beforeend", `<div class="aviso"><span><span class="pill ${a.nivel}">${a.nivel}</span></span><div><b>${esc(a.tema)}</b>${esc(a.texto)}</div></div>`);
+
+  // ---- Descritiva
+  const s2 = secao("descritiva", "Descrição da comunidade", "Sem testes estatísticos: o que foi encontrado, onde e em que quantidade.");
+  if (D){
+    texto(s2, D.texto);
+    const sub2 = store.get("herp.sub2", "familias");
+    abas(s2, [["familias","Famílias"],["pontos","Pontos"],["lista","Lista de espécies"],["registro","Forma de registro"],["atributos","Atributos"]], sub2, v => { store.set("herp.sub2", v); render(); });
+    if (sub2 === "familias"){ figuraR(s2, "familias", "Riqueza e abundância por família");
+      tabela(s2, "familias", "Riqueza e abundância por família", [{t:"Família", k:"familia"}, {t:"Espécies", k:"riqueza", num:1}, {t:"%", f:r => pc(r.riqueza_pct), num:1}, {t:"Indivíduos", k:"abundancia", num:1}, {t:"%", f:r => pc(r.abundancia_pct, 1), num:1}], arr(D.familias)); }
+    if (sub2 === "pontos"){ figuraR(s2, "descritiva_pontos", "Riqueza e abundância por ponto"); figuraR(s2, "familias_pontos", "Espécies de cada família por ponto");
+      tabela(s2, "pontos_desc", "Riqueza e abundância por ponto", [{t:"Ponto", k:"ponto"}, {t:"Espécies", k:"riqueza", num:1}, {t:"Indivíduos", k:"abundancia", num:1}, {t:"Famílias", k:"familias", num:1}, {t:"Espécies registradas", f:r => `<span class="esp">${esc(r.especies)}</span>`, csv:r => r.especies}], arr(D.pontos)); }
+    if (sub2 === "lista"){ const pts = arr(G.matriz && G.matriz.pontos);
+      tabela(s2, "lista_especies", "Lista de espécies", [{t:"Família", k:"familia"}, {t:"Espécie", f:r => esc(r.especie_completa || r.especie), csv:r => r.especie_completa || r.especie, esp:1}, {t:"Nome comum", k:"nome_comum"}].concat(pts.map(p => ({t:p, f:r => r[p] || "–", num:1})))
+        .concat([{t:"Total", k:"total", num:1}, {t:"End.", k:"endemismo"}, {t:"Háb.", k:"habito"}, {t:"Sens.", k:"sensibilidade"}, {t:"Registro", k:"forma_registro"}, {t:"SALVE", k:"salve"}, {t:"IUCN", k:"iucn"}]), arr(D.especies), true); }
+    if (sub2 === "registro"){ figuraR(s2, "forma_registro", "Indivíduos por forma de registro");
+      tabela(s2, "forma_registro", "Forma de registro", [{t:"Forma", k:"forma"}, {t:"Descrição", k:"descricao"}, {t:"Indivíduos", k:"individuos", num:1}, {t:"%", f:r => pc(r.pct, 1), num:1}], arr(D.forma_registro)); }
+    if (sub2 === "atributos"){ const tag = TAG(grupo);
+      Object.keys(CAT).filter(k => k.startsWith("atributo_") && arr((H.figuras || {})[grupo]).includes(`${tag}_${k}.png`)).forEach(k => figuraR(s2, k, CAT[k].nome.replace(/^Atributo: /, "")));
+      tabela(s2, "atributos", "Atributos das espécies", [{t:"Atributo", k:"categoria"}, {t:"Classe", k:"classe"}, {t:"Espécies", k:"especies_n", num:1}, {t:"%", f:r => pc(r.especies_pct), num:1}, {t:"Indivíduos", k:"abundancia", num:1}, {t:"Quais", f:r => `<span class="esp">${esc(r.especies)}</span>`, csv:r => r.especies}],
+        Object.values(D.categorias || {}).flatMap(arr), true); }
+  }
+
+  if (!G.acumulacao){ montaMenu(); mostraAba(); return; }
+
+  // ---- Riqueza: uma curva por vez
+  const s3 = secao("riqueza", "Quantas espécies a área tem", "Escolha a curva. Cada uma tem o seu resultado e a sua explicação.");
+  const CURVAS = [["acumulacao","Acumulação"],["curva_S","Observada"],["curva_chao","Chao 2"],["curva_jack1","Jackknife 1"],["curva_jack2","Jackknife 2"],["curva_boot","Bootstrap"],["curva_jack1_boot","Jack 1 + Boot + Observada"],["estimadores","Todas juntas"],["inext","iNEXT"]];
+  abas(s3, CURVAS, curva, v => { curva = v; store.set("herp.curva", v); render(); });
+  const TX = G.acumulacao.textos || {}, pool = arr(G.acumulacao.poolaccum), K = {curva_S:"S", curva_chao:"chao", curva_jack1:"jack1", curva_jack2:"jack2", curva_boot:"boot"};
+  if (curva === "acumulacao"){ figuraR(s3, "acumulacao", "Curva de acumulação de espécies"); texto(s3, G.acumulacao.texto); }
+  else if (K[curva]){ const k = K[curva], nome = CURVAS.find(c => c[0] === curva)[1];
+    figuraR(s3, curva, `${nome} por número de pontos`); texto(s3, TX[k], true);
+    const z = k === "S" ? arr(G.acumulacao.curva).map(r => ({pontos:r.pontos, media:r.riqueza, li:r.li, ls:r.ls})) : pool.filter(r => r.estimador === k);
+    tabela(s3, "curva_" + k, `${nome}: valor a cada número de pontos`, [{t:"Pontos", k:"pontos", num:1}, {t:"Espécies", f:r => nf(r.media, 1), num:1}, {t:"IC 95%", f:r => `${nf(r.li, 1)} a ${nf(r.ls, 1)}`, num:1}], z); }
+  else if (curva === "curva_jack1_boot"){ figuraR(s3, "curva_jack1_boot", "Riqueza observada, Jackknife 1 e Bootstrap");
+    texto(s3, TX.jack1, true); texto(s3, TX.boot);
+    const ob = arr(G.acumulacao.curva), j1 = pool.filter(r => r.estimador === "jack1"), bo = pool.filter(r => r.estimador === "boot");
+    tabela(s3, "curva_jack1_boot", "Observada, Jackknife 1 e Bootstrap a cada número de pontos", [{t:"Pontos", k:"pontos", num:1}, {t:"Observada", f:r => nf(r.riqueza, 1), num:1}, {t:"Jackknife 1", f:r => nf((j1.find(x => x.pontos === r.pontos) || {}).media, 1), num:1}, {t:"Bootstrap", f:r => nf((bo.find(x => x.pontos === r.pontos) || {}).media, 1), num:1}], ob); }
+  else if (curva === "estimadores"){ figuraR(s3, "estimadores", "Riqueza observada e estimadores");
+    tabela(s3, "estimadores", "Estimadores com todos os pontos", [{t:"Estimador", k:"estimador"}, {t:"Espécies", f:r => nf(r.valor, 1), num:1}, {t:"Erro padrão", f:r => r.ep == null ? "–" : nf(r.ep, 2), num:1}, {t:"Completude", f:r => pc(r.completude), num:1}], est); }
+  else { const sub = store.get("herp.subi", "inext_individuos");
+    abas(s3, [["inext_individuos","Por indivíduos"],["inext_pontos","Por pontos"],["rarefacao_pontos","Cada ponto"]], sub, v => { store.set("herp.subi", v); render(); });
+    figuraR(s3, sub, {inext_individuos:"Rarefação e extrapolação por indivíduos", inext_pontos:"Rarefação e extrapolação por pontos", rarefacao_pontos:"Rarefação de cada ponto"}[sub]);
+    texto(s3, G.inext.texto);
+    const NM = {"Species richness":"Riqueza (q0)", "Shannon diversity":"Shannon (q1)", "Simpson diversity":"Simpson (q2)"};
+    tabela(s3, "inext", "iNEXT: valores observados e estimados", [{t:"Base", k:"base"}, {t:"Medida", f:r => NM[r.medida] || r.medida}, {t:"Observado", f:r => nf(r.observado, 1), num:1}, {t:"Estimado", f:r => nf(r.estimado, 1), num:1}, {t:"IC 95%", f:r => nf(r.li, 1) + " a " + nf(r.ls, 1), num:1}],
+      arr(G.inext.assintotico_abund).map(r => Object.assign({base:"Indivíduos"}, r)).concat(arr(G.inext.assintotico_inc).map(r => Object.assign({base:"Pontos"}, r)))); }
+
+  // ---- Diversidade
+  const s4 = secao("diversidade", "Diversidade em cada ponto", "Qual ponto é mais diverso e qual é dominado por poucas espécies.");
+  const sub4 = store.get("herp.sub4", "indices");
+  abas(s4, [["indices","Índices"],["shannon","Shannon e teste de Hutcheson"]], sub4, v => { store.set("herp.sub4", v); render(); });
+  if (sub4 === "indices"){ figuraR(s4, "indices_pontos", "Índices de diversidade por ponto"); texto(s4, G.indices.texto);
+    tabela(s4, "indices", "Índices por ponto", [{t:"Ponto", k:"ponto"}, {t:"Fitofisionomia", k:"fitofisionomia"}, {t:"S", k:"S", num:1}, {t:"N", k:"N", num:1}, {t:"Shannon H′", f:r => nf(r.shannon, 3), num:1}, {t:"Simpson 1−D", f:r => nf(r.simpson, 3), num:1}, {t:"Pielou J′", f:r => nf(r.pielou, 3), num:1}, {t:"Riqueza rarefeita", f:r => nf(r.S_rarefeita, 1), num:1}, {t:"Cobertura", f:r => pc(r.cobertura, 1), num:1}, {t:"Exclusivas", k:"exclusivas", num:1}], arr(G.indices.tabela)); }
+  else if (G.hutcheson){ figuraR(s4, "shannon_ic", "Shannon por ponto com IC 95%"); texto(s4, G.hutcheson.texto);
+    tabela(s4, "hutcheson", "Teste t de Hutcheson entre pares de pontos", [{t:"Par", f:r => `${r.ponto_a} × ${r.ponto_b}`}, {t:"H′ a", f:r => nf(r.H_a, 3), num:1}, {t:"H′ b", f:r => nf(r.H_b, 3), num:1}, {t:"t", f:r => nf(r.t, 2), num:1}, {t:"gl", f:r => nf(r.gl, 0), num:1}, {t:"p (Holm)", f:r => r.p_holm < .001 ? "< 0,001" : nf(r.p_holm, 3), num:1}, {t:"Resultado", k:"diferenca"}], arr(G.hutcheson.pares), true); }
+
+  // ---- Similaridade
+  const s5 = secao("similaridade", "Quanto os pontos se parecem", "Se cada ponto tem espécies próprias ou se todos repetem as mesmas.");
+  if (G.similaridade){
+    const sub5 = store.get("herp.sub5", "pares");
+    abas(s5, [["pares","Pares de pontos"],["dendro","Agrupamento"],["beta","Diversidade beta"]], sub5, v => { store.set("herp.sub5", v); render(); });
+    if (sub5 === "pares"){ figuraR(s5, "similaridade_pares", "Similaridade entre pares de pontos"); texto(s5, G.similaridade.texto);
+      tabela(s5, "similaridade", "Similaridade entre pares de pontos", [{t:"Par", k:"par"}, {t:"Distância (m)", f:r => r.distancia_m == null ? "–" : ni(r.distancia_m), num:1}, {t:"Espécies em comum", k:"compartilhadas", num:1}, {t:"Jaccard", f:r => nf(r.jaccard, 2), num:1}, {t:"Bray-Curtis", f:r => nf(r.bray_curtis, 2), num:1}, {t:"Complementaridade", f:r => nf(r.complementaridade, 2), num:1}], arr(G.similaridade.pares)); }
+    else if (sub5 === "dendro"){ const ix = store.get("herp.dendro", "jaccard");
+      abas(s5, [["jaccard","Jaccard (lista de espécies)"],["bray","Bray-Curtis (quantidades)"],["mapa","Mapa com dendrogramas"]], ix, v => { store.set("herp.dendro", v); render(); });
+      if (ix === "mapa") figuraR(s5, "similaridade", "Mapa de similaridade com dendrogramas"); else figuraR(s5, "dendrograma_" + ix, `Dendrograma de ${ix === "bray" ? "Bray-Curtis" : "Jaccard"} (UPGMA)`);
+      s5.appendChild(el("p", {class:"pergunta"}, `Correlação cofenética: Jaccard ${nf(G.similaridade.dendro_jaccard.cofenetica, 2)}, Bray-Curtis ${nf(G.similaridade.dendro_bray.cofenetica, 2)} (acima de 0,8 o desenho representa bem as distâncias). Fitofisionomias: ` + arr(H.pontos).map(p => `<b>${esc(p.ponto)}</b> ${esc(p.fitofisionomia || "")}`).join(" · "))); }
+    else if (G.beta){ figuraR(s5, "beta", "Partição da diversidade beta"); texto(s5, G.beta.texto);
+      tabela(s5, "beta", "Diversidade beta", [{t:"Medida", k:"m"}, {t:"Valor", f:r => nf(r.v, 2), num:1}], [{m:"Riqueza total (gama)", v:G.beta.gama}, {m:"Riqueza média por ponto (alfa)", v:G.beta.alfa_media}, {m:"Beta de Whittaker", v:G.beta.whittaker}, {m:"Diferença total (Sørensen)", v:G.beta.sorensen}, {m:"Substituição (turnover)", v:G.beta.turnover}, {m:"Aninhamento", v:G.beta.aninhamento}]); }
+  }
+
+  // ---- Fitofisionomias
+  if (G.fitofisionomias){
+    const F = G.fitofisionomias;
+    const s9 = secao("fitofisionomias", "O que cada fitofisionomia tem", "Pontos juntados pelo ambiente da aba de pontos: espécies, indivíduos e espécies só daquele ambiente.");
+    const sub9 = store.get("herp.sub9", "resumo");
+    abas(s9, [["resumo","Resumo"],["especies","Espécies em cada uma"],["pares","Quanto se parecem"]], sub9, v => { store.set("herp.sub9", v); render(); });
+    const colsT = [{t:"Sigla", k:"fitofisionomia"}, {t:"Fitofisionomia", k:"nome"}, {t:"Pontos", k:"pontos"}, {t:"Espécies", k:"riqueza", num:1}, {t:"Média por ponto", f:r => nf(r.riqueza_media_por_ponto, 1), num:1}, {t:"Indivíduos", k:"abundancia", num:1}, {t:"Exclusivas", k:"exclusivas", num:1}, {t:"Quais são exclusivas", f:r => `<span class="esp">${esc(r.especies_exclusivas)}</span>`, csv:r => r.especies_exclusivas}];
+    if (sub9 === "resumo"){ figuraR(s9, "fitofisionomias", "Espécies e indivíduos por fitofisionomia"); texto(s9, F.texto, true);
+      tabela(s9, "fito", "Por fitofisionomia (como escrita na planilha)", colsT, arr(F.classes.tabela));
+      if (F.componentes) tabela(s9, "fito_siglas", "Cada sigla separada (pontos mistos contam nas duas)", colsT, arr(F.componentes.tabela)); }
+    else if (sub9 === "especies"){ figuraR(s9, "fitofisionomias_especies", "Espécies em cada fitofisionomia");
+      const fs = arr(F.classes.tabela).map(r => r.fitofisionomia);
+      tabela(s9, "fito_especies", "Espécies por fitofisionomia (indivíduos)", [{t:"Família", k:"familia"}, {t:"Espécie", f:r => esc(r.especie), csv:r => r.especie, esp:1}].concat(fs.map(f => ({t:f, f:r => r[f] || "–", num:1}))).concat([{t:"Em", k:"em"}]), arr(F.classes.especies), true); }
+    else { const pp = arr(F.classes.pares);
+      if (!pp.length) s9.appendChild(el("p", {class:"pergunta"}, "Só há uma fitofisionomia."));
+      else tabela(s9, "fito_pares", "Similaridade entre fitofisionomias (Jaccard)", [{t:"Par", f:r => `${esc(r.fito_a)} × ${esc(r.fito_b)}`, csv:r => r.fito_a + " x " + r.fito_b}, {t:"Em comum", k:"comuns", num:1}, {t:"Só na 1ª", k:"so_a", num:1}, {t:"Só na 2ª", k:"so_b", num:1}, {t:"Jaccard", f:r => nf(r.jaccard, 2), num:1}], pp);
+      if (F.componentes && arr(F.componentes.pares).length) tabela(s9, "fito_pares_siglas", "Similaridade entre siglas (Jaccard)", [{t:"Par", f:r => `${esc(r.fito_a)} × ${esc(r.fito_b)}`, csv:r => r.fito_a + " x " + r.fito_b}, {t:"Em comum", k:"comuns", num:1}, {t:"Só na 1ª", k:"so_a", num:1}, {t:"Só na 2ª", k:"so_b", num:1}, {t:"Jaccard", f:r => nf(r.jaccard, 2), num:1}], arr(F.componentes.pares)); }
+  }
+
+  // ---- Dominância
+  const s6 = secao("dominancia", "Quem domina e quem é raro", "Espécies da mais para a menos abundante.");
+  figuraR(s6, "whittaker", "Curva de dominância"); texto(s6, G.abundancia.texto);
+  tabela(s6, "dominancia", "Ranque de abundância", [{t:"#", k:"posicao", num:1}, {t:"Espécie", f:r => esc(r.especie), esp:1}, {t:"Indivíduos", k:"n", num:1}, {t:"Relativa", f:r => pc(r.relativa, 1), num:1}, {t:"Pontos", k:"pontos", num:1}, {t:"Constância", k:"constancia"}], arr(G.abundancia.tabela), true);
+
+  // ---- Campanhas (só com 2 ou mais)
+  if (G.campanhas){
+    const C = G.campanhas, cods = arr(C.resumo).map(c => c.codigo);
+    const s8 = secao("campanhas", "O que mudou entre as campanhas", "Cada ponto em cada campanha conta como uma unidade amostral (" + arr(C.resumo).map(c => `<b>${esc(c.codigo)}</b> ${esc(c.campanha)}`).join(" · ") + ").");
+    const sub8 = store.get("herp.sub8", "composicao");
+    abas(s8, [["composicao","Espécies em comum"],["pontos","Cada ponto"],["especies","Lista por campanha"],["nmds","Ordenação e PERMANOVA"]], sub8, v => { store.set("herp.sub8", v); render(); });
+    if (sub8 === "composicao"){ figuraR(s8, "campanhas", "Comparação entre campanhas"); texto(s8, C.texto);
+      tabela(s8, "campanhas_resumo", "Resumo por campanha", [{t:"Código", k:"codigo"}, {t:"Campanha", k:"campanha"}, {t:"Espécies", k:"riqueza", num:1}, {t:"Indivíduos", k:"individuos", num:1}, {t:"Pontos com registro", k:"pontos_com_registro", num:1}, {t:"Exclusivas", k:"exclusivas", num:1}], arr(C.resumo));
+      tabela(s8, "campanhas_pares", "Pares de campanhas", [{t:"Par", f:r => `${r.campanha_a} × ${r.campanha_b}`}, {t:"Em comum", k:"comuns", num:1}, {t:"Só na 1ª", k:"so_a", num:1}, {t:"Só na 2ª", k:"so_b", num:1}, {t:"Jaccard", f:r => nf(r.jaccard, 2), num:1}, {t:"Sørensen", f:r => nf(r.sorensen, 2), num:1}, {t:"Bray-Curtis (sim.)", f:r => nf(r.bray_curtis_sim, 2), num:1}], arr(C.pares)); }
+    else if (sub8 === "pontos"){ figuraR(s8, "campanhas_pontos", "Riqueza de cada ponto nas campanhas");
+      tabela(s8, "campanhas_pontos", "Cada ponto nas campanhas", [{t:"Ponto", k:"ponto"}].concat(cods.flatMap(c => [{t:"Espécies " + c, k:"S_" + c, num:1}, {t:"Indivíduos " + c, k:"N_" + c, num:1}])).concat([{t:"Em comum", k:"comuns", num:1}, {t:"Jaccard", f:r => nf(r.jaccard, 2), num:1}]), arr(C.por_ponto)); }
+    else if (sub8 === "especies"){ figuraR(s8, "campanhas_especies", "Espécies registradas em cada campanha");
+      tabela(s8, "campanhas_especies", "Espécies por campanha", [{t:"Família", k:"familia"}, {t:"Espécie", f:r => esc(r.especie), csv:r => r.especie, esp:1}].concat(cods.map(c => ({t:c, f:r => r[c] || "–", num:1}))).concat([{t:"Em", k:"em"}]), arr(C.especies), true); }
+    else { if (G.nmds && G.nmds.pontos){ figuraR(s8, "nmds", "Ordenação NMDS"); texto(s8, G.nmds.texto); } else s8.appendChild(el("p", {class:"pergunta"}, esc((G.nmds || {}).pulado || "")));
+      if (G.permanova && G.permanova.texto){ s8.appendChild(el("h3", {}, "PERMANOVA")); texto(s8, G.permanova.texto); } else if (G.permanova) s8.appendChild(el("p", {class:"pergunta"}, esc(G.permanova.pulado || ""))); }
+  }
+
+  // ---- Relatório
+  const s7 = secao("relatorio", "Relatório", "As figuras e tabelas marcadas com “No relatório”, na ordem em que foram marcadas.");
+  if (!SEL.length) s7.appendChild(el("p", {class:"semapp"}, "Nada marcado ainda. Em cada figura ou tabela, clique em “No relatório”."));
+  let nf_ = 0, nt_ = 0;
+  SEL.forEach((s, i) => {
+    const it = el("div", {class:"relitem"}), num = s.tipo === "fig" ? `Fig. ${++nf_}` : `Tab. ${++nt_}`;
+    it.innerHTML = `<span class="n">${num}</span>${s.tipo === "fig" ? `<img src="${s.arquivo}?v=${versao}" alt="">` : "<span class='rotulo'>tabela</span>"}<span>${esc(s.titulo)}</span>`;
+    const bx = el("span", {class:"naoimprime"}); const up = el("button", {}, "↑"), rm = el("button", {}, "Tirar");
+    up.onclick = () => { if (i) { [SEL[i-1], SEL[i]] = [SEL[i], SEL[i-1]]; salvaSel(); render(); } }; rm.onclick = () => { SEL.splice(i, 1); salvaSel(); render(); };
+    bx.append(up, rm); it.appendChild(bx); s7.appendChild(it);
+  });
+  if (SEL.length){
+    const b = el("button", {class:"acento naoimprime", style:"margin-top:14px"}, "Montar a pasta do relatório"), log = el("div", {class:"tarefa"});
+    b.onclick = () => { if (!LID) { alert("Abra pelo Herpetodados para montar a pasta."); return; } api("relatorio", SEL).then(r => { log.style.display = "block"; log.textContent = r.erro || `Pronto: ${r.figuras} figuras e ${r.tabelas} tabelas em\n${r.pasta}`; if (!r.erro) api("pasta?sub=relatorio"); }); };
+    s7.append(b, log);
+    s7.appendChild(el("p", {class:"pergunta", style:"margin-top:10px"}, "A pasta <span class='mono'>relatorio</span> fica separada: figuras numeradas (Fig01, Fig02...) e tabelas numeradas em Excel, prontas para colar no laudo."));
+  }
+  s7.insertAdjacentHTML("beforeend", `<details class="sentido" style="margin-top:20px"><summary>Métodos e como citar</summary><div><p>Análises no ${esc(H.meta.r)} com vegan ${H.meta.pacotes.vegan}, iNEXT ${H.meta.pacotes.iNEXT} e ggplot2 ${H.meta.pacotes.ggplot2}. Acumulação: specaccum (999 permutações). Estimadores: specpool e poolaccum (Chao 2, Jackknife 1 e 2, Bootstrap; 199 permutações). Índices: diversity, rarefy, renyi. Números de Hill: iNEXT (200 réplicas). Similaridade: vegdist (Bray-Curtis; Jaccard binário), UPGMA. Beta: partição de Baselga (Sørensen). Shannon: teste t de Hutcheson com correção de Holm. Dominância: radfit.</p><p class="ital">Chao et al. 2014 Ecol. Monogr. 84:45–67 · Hsieh, Ma &amp; Chao 2016 Methods Ecol. Evol. 7:1451–1456 · Colwell &amp; Coddington 1994 Phil. Trans. R. Soc. B 345:101–118 · Baselga 2010 Global Ecol. Biogeogr. 19:134–143 · Hutcheson 1970 J. Theor. Biol. 29:151–154 · Oksanen et al. vegan (CRAN).</p></div></details>`);
+  montaMenu(); mostraAba();
+}
+function mostraAba(){ document.querySelectorAll("main > section.prancha").forEach(s => s.classList.toggle("ativa", s.id === aba)); if (!document.querySelector("main > section.ativa")) { aba = "inicio"; mostraAba(); } }
+function montaMenu(){
+  const nav = $("#indice"); nav.innerHTML = "";
+  SECOES.filter(([id]) => (id !== "campanhas" || (H.grupos[grupo] || {}).campanhas) && (id !== "fitofisionomias" || (H.grupos[grupo] || {}).fitofisionomias)).forEach(([id, nome, faz], i) => {
+    const extra = id === "relatorio" && SEL.length ? ` (${SEL.length})` : "";
+    const a = el("a", {href:"#" + id, class: id === aba ? "ativo" : ""}, `<span class="n">${i}</span><span class="nome">${esc(nome)}${extra}<small>${esc(faz)}</small></span>`);
+    a.onclick = ev => { ev.preventDefault(); aba = id; history.replaceState(null, "", "#" + id); $("#menu").classList.remove("aberto"); montaMenu(); mostraAba(); scrollTo(0, 0); };
+    nav.appendChild(a);
+  });
+}
+
+/* ---------------- aparência ---------------- */
+function carregaTitulos(){ const k = $("#selFig").value, t = E.titulos[k] || {}; $("#tTitulo").value = t.titulo || ""; $("#tX").value = t.x || ""; $("#tY").value = t.y || ""; $("#tNota").value = t.nota || ""; }
+function montaEditor(){
+  $("#btEditor").onclick = () => $("#editor").classList.toggle("aberto"); $("#fechaEditor").onclick = () => $("#editor").classList.remove("aberto");
+  $("#btPasta").onclick = () => { if (LID) api("pasta"); else alert("Os arquivos estão na mesma pasta deste painel."); };
+  $("#abreMenu").onclick = () => $("#menu").classList.toggle("aberto");
+  if (!LID) $("#marcaLink").removeAttribute("href");
+  const liga = (id, k, conv = v => v) => { $("#" + id).onchange = e => { E[k] = conv(e.target.type === "checkbox" ? e.target.checked : e.target.value); salvaE(); if (k === "paleta") sincroniza(); }; };
+  liga("selTemaR", "tema_r"); liga("selPaleta", "paleta"); liga("selFTitulo", "familia_titulo"); liga("selFTexto", "familia"); liga("nFonte", "fonte", Number); liga("nLinha", "linha", Number); liga("nPonto", "ponto", Number);
+  liga("selLegenda", "legenda"); liga("ckFaixa", "faixa"); liga("ckGrade", "grade"); liga("ckTitulo", "mostrar_titulo"); liga("nLarg", "largura", Number); liga("nAlt", "altura", Number); liga("selDpi", "dpi", Number);
+  $("#segTema").querySelectorAll("button").forEach(b => b.onclick = () => { E.tema = b.dataset.v; salvaE(); sincroniza(); });
+  $("#segPainel").querySelectorAll("button").forEach(b => b.onclick = () => { E.painel = b.dataset.v; salvaE(); render(); sincroniza(); });
+  const sf = $("#selFig"); for (const k in CAT) sf.appendChild(el("option", {value:k}, CAT[k].nome)); sf.onchange = carregaTitulos;
+  for (const [id, c] of [["tTitulo","titulo"],["tX","x"],["tY","y"],["tNota","nota"]]) $("#" + id).onchange = ev => { const k = sf.value; E.titulos[k] = Object.assign({}, E.titulos[k], {[c]: ev.target.value}); salvaE(); };
+  $("#btPadrao").onclick = () => { E = JSON.parse(JSON.stringify(PADRAO)); salvaE(); render(); sincroniza(); carregaTitulos(); };
+  $("#btAplicarR").onclick = () => { const b = $("#btAplicarR"); b.disabled = true; b.textContent = "O R está redesenhando...";
+    if (!redesenhar(null, t => { b.disabled = false; b.textContent = t.estado === "pronto" ? "Pronto. Redesenhar de novo" : "Deu erro (veja acima)"; })) { b.disabled = false; b.textContent = "Redesenhar no R"; } };
+  const sg = $("#selGrupo"); for (const g in H.grupos) sg.appendChild(el("option", {value:g}, g)); if (!H.grupos[grupo]) grupo = Object.keys(H.grupos)[0]; sg.value = grupo;
+  sg.onchange = () => { grupo = sg.value; store.set("herp.grupo", grupo); render(); };
+  carregaTitulos();
+}
+function sincroniza(){
+  $("#selTemaR").value = E.tema_r; $("#selPaleta").value = E.paleta; $("#selFTitulo").value = E.familia_titulo; $("#selFTexto").value = E.familia; $("#nFonte").value = E.fonte; $("#nLinha").value = E.linha; $("#nPonto").value = E.ponto;
+  $("#selLegenda").value = E.legenda; $("#ckFaixa").checked = E.faixa; $("#ckGrade").checked = E.grade; $("#ckTitulo").checked = E.mostrar_titulo; $("#nLarg").value = E.largura; $("#nAlt").value = E.altura; $("#selDpi").value = String(E.dpi);
+  $("#segTema").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === E.tema)));
+  $("#segPainel").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === E.painel)));
+  const cx = $("#cores"); cx.innerHTML = ""; cores().forEach((c, i) => { const inp = el("input", {type:"color", value:c}); inp.onchange = () => { E.cores = cores().slice(); E.cores[i] = inp.value; E.paleta = "livre"; salvaE(); sincroniza(); }; cx.appendChild(inp); });
+}
+const iniciar = () => { montaEditor(); render(); sincroniza(); };
+if (LID) Promise.all([fetch(`/l/${LID}/contexto.json`).then(r => r.ok ? r.json() : null).catch(() => null), fetch(`/l/${LID}/selecao.json`).then(r => r.ok ? r.json() : null).catch(() => null)])
+  .then(([c, s]) => { if (c) H.contexto_json = c; if (Array.isArray(s)) SEL = s; }).finally(iniciar);
+else iniciar();
+</script>
+</body>
+</html>

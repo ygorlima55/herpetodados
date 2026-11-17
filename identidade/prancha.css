@@ -1,0 +1,32 @@
+/* Herpetodados · sistema visual "Prancha"
+   Tema claro "papel" (prancha gravada, pôster técnico) e tema escuro "lousa" (diagramas de giz).
+   Letras locais do Windows, as mesmas usadas nas figuras do R: Georgia Pro (títulos e legendas),
+   Bahnschrift (interface e números), Consolas (códigos, coordenadas).
+   Paletas validadas para daltonismo (validate_palette.js): clara sobre #f2ede1 e escura sobre #23282b. */
+:root{
+  color-scheme: light;
+  --papel:#f2ede1; --papel-2:#e9e2d2; --papel-3:#ddd4bf; --cartao:#f8f5ee;
+  --tinta:#1e1c19; --tinta-2:#57524a; --tinta-3:#8a8375; --fio:#cbbfa6; --fio-2:#ddd3bd;
+  --acento:#d0482a; --acento-2:#2a5cab;
+  --s1:#2a5cab; --s2:#d0482a; --s3:#00897b; --s4:#c28a00; --s5:#9a3f8f; --s6:#5c8a00; --s7:#3d8fdc; --s8:#ad4f19;
+  --seq-lo:#e6ecf5; --seq-hi:#1d3f78;
+  --erro:#b0321c; --erro-bg:#f6dccf; --aten:#8a5a00; --aten-bg:#f3e3bd; --info:#2a5cab; --info-bg:#dce5f2; --ok:#3c6e12;
+  --vidro: rgba(248,245,238,.62); --vidro-borda: rgba(30,28,25,.12); --vidro-brilho: rgba(255,255,255,.55);
+  --sombra: 0 1px 0 rgba(30,28,25,.04), 0 10px 30px -18px rgba(30,28,25,.35);
+  --f-titulo: "Georgia Pro", Georgia, "Sitka Heading", serif;
+  --f-texto: "Bahnschrift", "Segoe UI", system-ui, sans-serif;
+  --f-mono: Consolas, "Cascadia Mono", monospace;
+  --raio: 3px;
+  --grade-papel: linear-gradient(var(--fio-2) 1px, transparent 1px) 0 0/24px 24px, linear-gradient(90deg, var(--fio-2) 1px, transparent 1px) 0 0/24px 24px;
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --papel:#23282b; --papel-2:#2b3134; --papel-3:#353c40; --cartao:#272d30;
+  --tinta:#ecebe3; --tinta-2:#b8bab3; --tinta-3:#8b8f8a; --fio:#4a5257; --fio-2:#30373b;
+  --acento:#e05a3b; --acento-2:#5385d4;
+  --s1:#5385d4; --s2:#e05a3b; --s3:#16a08f; --s4:#bb8708; --s5:#ad5fa4; --s6:#6f9e24; --s7:#4596e0; --s8:#c4692f;
+  --seq-lo:#2d3438; --seq-hi:#9cc0ee;
+  --erro:#f0937c; --erro-bg:#4a2a22; --aten:#e9bf6a; --aten-bg:#3f3420; --info:#9cc0ee; --info-bg:#24364c; --ok:#a9cf6a;
+  --vidro: rgba(43,49,52,.58); --vidro-borda: rgba(236,235,227,.14); --vidro-brilho: rgba(255,255,255,.06);
+  --sombra: 0 10px 30px -16px rgba(0,0,0,.6);
+}

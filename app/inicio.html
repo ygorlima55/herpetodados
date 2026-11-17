@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Herpetodados</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%231e1c19'/%3E%3Cpath d='M8 50 C 16 24, 30 18, 40 17 S 52 16, 58 16' fill='none' stroke='%23f2ede1' stroke-width='4'/%3E%3Ccircle cx='36' cy='17.5' r='7.5' fill='%231e1c19' stroke='%23f2ede1' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/identidade/prancha.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;color:var(--tinta);font:15px/1.55 var(--f-texto);background:var(--papel)}
+body::before{content:"";position:fixed;inset:0;z-index:-1;opacity:.55;background:var(--grade-papel)}
+.formulas{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.07;font:italic 30px var(--f-titulo)}
+.formulas span{position:absolute;white-space:nowrap}
+button{font:inherit;font-size:.9em;color:var(--tinta);background:var(--cartao);border:1px solid var(--fio);border-radius:3px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--tinta-2)}
+.rotulo{font-size:.72em;letter-spacing:.14em;text-transform:uppercase;color:var(--tinta-2)}
+.ital{font-family:var(--f-titulo);font-style:italic}
+.mono{font-family:var(--f-mono)}
+.menu{position:fixed;left:16px;top:16px;bottom:16px;width:260px;display:flex;flex-direction:column;background:var(--vidro);backdrop-filter:blur(16px) saturate(1.25);-webkit-backdrop-filter:blur(16px) saturate(1.25);
+  border:1px solid var(--vidro-borda);border-radius:8px;box-shadow:inset 0 1px 0 var(--vidro-brilho), var(--sombra);padding:16px 10px}
+.menu svg{width:200px;margin:4px 14px 0}
+.menu .nomep{font:italic 1.6em/1 var(--f-titulo);margin:6px 16px 2px} .menu .nomep span{font:600 .9em var(--f-texto);font-style:normal}
+.menu .sub{margin:0 16px 14px}
+.menu a{display:grid;grid-template-columns:28px 1fr;gap:6px;padding:7px 8px;border-radius:4px;text-decoration:none;color:var(--tinta)}
+.menu a:hover{background:var(--vidro-brilho);box-shadow:inset 2px 0 0 var(--acento)}
+.menu a .n{font:italic 1em var(--f-titulo);color:var(--acento);text-align:right}
+.menu a small{display:block;color:var(--tinta-3);font-size:.8em}
+.menu .pe{margin-top:auto;padding:10px 12px 0;border-top:1px solid var(--vidro-borda);font-size:.78em;color:var(--tinta-3)}
+main{margin-left:296px;padding:28px 34px 80px 0;max-width:1100px}
+section{background:var(--cartao);border:1px solid var(--fio);padding:22px 26px;margin-bottom:22px}
+.cab{display:flex;justify-content:space-between;border-bottom:1px solid var(--tinta);padding-bottom:6px;margin-bottom:12px}
+h1{font:italic 400 2.1em/1.1 var(--f-titulo);margin:4px 0 6px}
+h2{font:italic 400 1.5em/1.15 var(--f-titulo);margin:4px 0 6px}
+.lead{color:var(--tinta-2);max-width:760px;margin:0 0 6px}
+.passos{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--fio);margin-top:16px}
+.passos div{padding:12px 14px;border-right:1px solid var(--fio)} .passos div:last-child{border:0}
+.passos b{display:block;font:italic 1.6em var(--f-titulo);color:var(--acento)}
+.solta{border:1.5px dashed var(--tinta-2);background:var(--papel);padding:34px 20px;text-align:center;position:relative;transition:background .15s}
+.solta.sobre{background:var(--papel-2);border-color:var(--acento)}
+.solta .grande{font:italic 1.4em var(--f-titulo)}
+.solta input{display:none}
+.formato{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px;font-size:.92em}
+.formato table{border-collapse:collapse;width:100%;font-size:.88em}
+.formato td,.formato th{border:1px solid var(--fio);padding:3px 6px;text-align:left}
+.formato th{background:var(--papel-2);font-weight:600}
+.log{font:12.5px/1.45 var(--f-mono);background:var(--papel-2);border-left:2px solid var(--acento-2);padding:10px 14px;margin-top:14px;white-space:pre-wrap;max-height:260px;overflow:auto;display:none}
+.barra{display:none;margin-top:14px}.barra .trilho{height:10px;background:var(--papel-2);border:1px solid var(--linha,#d9d4c7);border-radius:2px;overflow:hidden}
+.barra .enche{height:100%;width:0;background:var(--acento-2,#2a5cab);transition:width .6s}.barra .info{display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-top:5px}.barra .pc{font-variant-numeric:tabular-nums;font-weight:700}
+.log.erro{border-left-color:var(--erro)}
+table.lev{border-collapse:collapse;width:100%;font-size:.92em;font-variant-numeric:tabular-nums}
+table.lev th{text-align:left;font-weight:600;color:var(--tinta-2);border-bottom:1px solid var(--tinta);padding:6px 8px;font-size:.9em}
+table.lev td{border-bottom:1px solid var(--fio-2);padding:9px 8px;vertical-align:middle}
+table.lev td.num{text-align:right}
+table.lev .t{font:italic 1.08em var(--f-titulo)} table.lev .t small{display:block;font:12px var(--f-mono);font-style:normal;color:var(--tinta-3)}
+table.lev .acs{white-space:nowrap;text-align:right} table.lev .acs button{margin-left:4px}
+.abrir{background:var(--tinta)!important;color:var(--papel)!important;border-color:var(--tinta)!important}
+.vazio{color:var(--tinta-2);font-style:italic;font-family:var(--f-titulo)}
+.guia{display:grid;grid-template-columns:repeat(2,1fr);gap:0;border-top:1px solid var(--fio)}
+.guia div{padding:12px 16px 12px 0;border-bottom:1px solid var(--fio-2)}
+.guia div:nth-child(odd){border-right:1px solid var(--fio-2)} .guia div:nth-child(even){padding-left:16px}
+.guia b{font:italic 1.05em var(--f-titulo)} .guia b span{color:var(--acento);margin-right:6px}
+details.ajuda{margin-top:14px}
+details.ajuda summary{cursor:pointer;color:var(--acento-2);font-size:.95em;margin-bottom:8px}
+.arvore{font:13px/1.6 var(--f-mono);background:var(--papel);border:1px solid var(--fio);padding:12px 16px;white-space:pre;overflow:auto}
+@media (max-width:980px){.menu{display:none}main{margin:0;padding:16px}.passos,.formato,.guia{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="formulas" aria-hidden="true"><span style="left:62%;top:8%">H′ = − Σ pᵢ ln pᵢ</span><span style="left:74%;top:46%;font-size:24px">S<sub>Chao2</sub> = S<sub>obs</sub> + Q₁² / 2Q₂</span><span style="left:44%;top:78%;font-size:24px">S<sub>jack1</sub> = S<sub>obs</sub> + Q₁ (m − 1)/m</span></div>
+<aside class="menu">
+  <svg viewBox="0 0 230 92" aria-hidden="true"><defs><pattern id="h1" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#1e1c19" stroke-width=".8"/></pattern></defs>
+    <line x1="8" y1="78" x2="214" y2="78" stroke="#1e1c19"/><g stroke="#1e1c19"><line x1="30" y1="78" x2="30" y2="82"/><line x1="70" y1="78" x2="70" y2="82"/><line x1="110" y1="78" x2="110" y2="82"/><line x1="150" y1="78" x2="150" y2="82"/><line x1="190" y1="78" x2="190" y2="82"/></g>
+    <path d="M14 76 C 34 30, 70 20, 110 18 S 180 15, 212 15 L212 26 C 180 27, 140 30, 110 34 S 40 60, 14 77 Z" fill="url(#h1)" opacity=".5"/>
+    <path d="M14 76 C 34 34, 70 24, 110 22 S 180 19, 212 19" fill="none" stroke="#1e1c19" stroke-width="3"/>
+    <line x1="14" y1="9" x2="212" y2="9" stroke="#d0482a" stroke-width="1.5" stroke-dasharray="5 5"/>
+    <circle cx="110" cy="22" r="13" fill="#f8f5ee" stroke="#1e1c19" stroke-width="2.5"/><ellipse cx="110" cy="22" rx="8" ry="3.2" fill="#1e1c19"/><circle cx="107" cy="20.5" r="1.2" fill="#f8f5ee"/></svg>
+  <div class="nomep">Herpeto<span>dados</span></div>
+  <div class="sub rotulo">análise de comunidades · R</div>
+  <a href="#inserir"><span class="n">1</span><span>Inserir planilha<small>soltar o arquivo e rodar no R</small></span></a>
+  <a href="#levantamentos"><span class="n">2</span><span>Levantamentos<small>abrir painéis já feitos</small></span></a>
+  <a href="#guia"><span class="n">3</span><span>Ajuda<small>o que faz cada parte, onde ficam os arquivos</small></span></a>
+  <div class="pe">Roda só neste computador. R 4.6.2 · vegan · iNEXT · ggplot2.<br>Para fechar o programa, feche a janela preta.</div>
+</aside>
+<main>
+  <section id="inserir">
+    <div class="cab"><span class="rotulo">Prancha 1 · Inserir planilha</span><span class="rotulo">entrada</span></div>
+    <h1>Da planilha de campo ao laudo</h1>
+    <p class="lead">Solte a planilha do levantamento aqui. O R confere os dados, monta as matrizes, roda as análises de comunidade e desenha as figuras; depois o painel abre sozinho.</p>
+    <div class="solta" id="solta">
+      <div class="grande">Solte a planilha .xlsx aqui</div>
+      <p class="lead" style="margin:6px auto 12px">ou</p>
+      <button id="escolher">Escolher arquivo no computador</button>
+      <input type="file" id="arquivo" accept=".xlsx,.xls">
+    </div>
+    <div class="log" id="log"></div>
+    <details class="ajuda"><summary>Como a planilha deve estar</summary>
+    <div class="passos">
+      <div><b>1</b>Confere a planilha e aponta linha e coluna de cada erro.</div>
+      <div><b>2</b>Monta as matrizes ponto × espécie (abundância e presença).</div>
+      <div><b>3</b>Roda no R: acumulação, Chao, Jackknife, Bootstrap, iNEXT, Shannon, Simpson, Bray-Curtis, Jaccard.</div>
+      <div><b>4</b>Abre o painel com figuras do R, tabelas e explicação.</div>
+    </div>
+    <div class="formato">
+      <div><div class="rotulo" style="margin-bottom:6px">A planilha precisa ter</div>
+        Uma aba com <b>“brutos”</b> ou <b>“registros”</b> no nome, com um registro por linha:
+        <table style="margin-top:6px"><tr><th>Ponto</th><th>Espécie</th><th>Família</th><th>Grupo</th><th>VO</th><th>AV</th><th>Total</th></tr>
+        <tr><td>Ponto 01</td><td class="ital">Rhinella diptycha</td><td>Bufonidae</td><td>Anuros</td><td>38</td><td>2</td><td>40</td></tr></table>
+        <p class="ital" style="color:var(--tinta-3);font-size:.9em">Obrigatórias: Ponto, Espécie e Total (ou Abundância). As outras ajudam.</p>
+        <p style="font-size:.92em;margin-top:6px"><b>Serve para qualquer grupo.</b> Na coluna <b>Grupo</b> escreva Anuros, Répteis, Aves, Mamíferos, Peixes, Insetos (ou outro nome): cada grupo é analisado à parte, e todos juntos num conjunto só. Coluna <b>Campanha</b> (opcional) separa campanhas.</p></div>
+      <div><div class="rotulo" style="margin-bottom:6px">E, se tiver, melhor</div>
+        Uma aba <b>“Pontos”</b> com fitofisionomia e coordenadas (calcula a distância entre pontos), uma coluna <b>Esforço (h)</b> e uma coluna <b>Grupo amostral</b> (mata, área aberta...), que libera a PERMANOVA. Uma aba <b>“Dados consolidados”</b> é comparada com os registros pelo corretor.</div>
+    </div>
+    </details>
+  </section>
+
+  <section id="levantamentos">
+    <div class="cab"><span class="rotulo">Prancha 2 · Levantamentos</span><span class="rotulo">resultados</span></div>
+    <h2>Levantamentos analisados</h2>
+    <div id="lista"><p class="vazio">Carregando...</p></div>
+  </section>
+
+  <section id="guia"><details class="ajuda"><summary>O que faz cada parte do painel</summary>
+    <div class="cab"><span class="rotulo">Prancha 3 · Guia</span><span class="rotulo">o que faz cada parte</span></div>
+    <h2>O que faz cada parte do painel</h2>
+    <div class="guia">
+      <div><b><span>I</span>Sobre o campo</b><br>Espaço para escrever como foi a campanha e a finalidade. Fica salvo na pasta e sai na impressão.</div>
+      <div><b><span>I</span>Conferência da planilha</b><br>O corretor: erros e pontos de atenção com aba, linha e o que fazer.</div>
+      <div><b><span>I</span>Pressupostos e limites</b><br>O que os dados permitem concluir: número de pontos, esforço, coros, independência.</div>
+      <div><b><span>II</span>Resumo e leitura</b><br>Números principais e a interpretação do que eles dizem sobre o ambiente (editável).</div>
+      <div><b><span>III</span>Riqueza</b><br>Curva de acumulação (vegan) e curvas de Chao 2, Jackknife 1 e 2 e Bootstrap ponto a ponto.</div>
+      <div><b><span>III</span>Rarefação</b><br>iNEXT com números de Hill, por indivíduos e por pontos; rarefação de cada ponto (rarecurve).</div>
+      <div><b><span>III</span>Diversidade</b><br>Shannon, Simpson, Pielou e perfil de Rényi em cada ponto.</div>
+      <div><b><span>III</span>Similaridade e dominância</b><br>Jaccard e Bray-Curtis (heatmap e dendrogramas) e curva de dominância com radfit.</div>
+      <div><b><span>⟳</span>Outras formas</b><br>Embaixo de cada figura: o mesmo resultado desenhado de 2 a 4 jeitos pelo R. Clique para trocar.</div>
+      <div><b><span>✎</span>Aparência</b><br>Tema do ggplot (papel, cinza, bw, classic), cores, letras, títulos, eixos e tamanho para o laudo. O R redesenha.</div>
+    </div>
+  </details></section>
+
+  <section id="arquivos"><details class="ajuda"><summary>Onde ficam os arquivos</summary>
+    <div class="cab"><span class="rotulo">Prancha 4 · Arquivos</span><span class="rotulo">onde fica cada coisa</span></div>
+    <h2>Onde ficam os arquivos</h2>
+    <p class="lead">Cada levantamento tem uma pasta própria. O botão <b>Pasta</b> na lista acima abre ela no Explorer.</p>
+    <div class="arvore">herpetodados\levantamentos\&lt;levantamento&gt;\
+  planilha.xlsx               cópia da planilha enviada (a original não é alterada)
+  figuras\                    FIGURAS: PNG do laudo, no tamanho e resolução escolhidos
+  tabelas\                    PLANILHAS de resultado, uma por tema (01 descritiva ... 06 dominância)
+  relatorio\                  só o que você marcou "No relatório", numerado (Fig01, Tab01...)
+  formas\                     miniaturas das outras formas de cada figura
+  contexto_campo.txt          o que você escreveu em "Sobre o campo"
+  leitura_especialista.md     a leitura do ambiente
+  estilo.json                 a aparência escolhida
+  log.txt                     tudo o que o R fez</div>
+  </details></section>
+</main>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const nf = (x, d=1) => x == null ? "–" : Number(x).toLocaleString("pt-BR", {maximumFractionDigits:d});
+function lista(){
+  fetch("/api/levantamentos").then(r => r.json()).then(L => {
+    if (!L.length) { $("#lista").innerHTML = "<p class='vazio'>Nenhum levantamento ainda. Solte uma planilha na prancha 1.</p>"; return; }
+    let h = "<table class='lev'><tr><th>Levantamento</th><th>Analisado em</th><th class='num'>Espécies</th><th class='num'>Indivíduos</th><th class='num'>Pontos</th><th class='num'>Chao 2</th><th>Conferência</th><th></th></tr>";
+    for (const l of L){
+      const r = l.resumo || {}, o = l.origem || {};
+      const conf = l.rodando ? "<span class='ital'>rodando no R...</span>" : r.erros == null ? "–" : (r.erros ? `<span style="color:var(--erro)">${r.erros} erros</span>` : `<span style="color:var(--ok)">sem erros</span>`) + (r.atencao ? ` · ${r.atencao} atenção` : "");
+      h += `<tr><td class="t">${esc(o.titulo || l.id)}<small>${esc(o.nome || "")}</small></td><td>${esc(r.gerado_em || "–")}</td><td class="num">${r.riqueza ?? "–"}</td><td class="num">${r.individuos ?? "–"}</td><td class="num">${r.pontos ?? "–"}</td><td class="num">${nf(r.chao2)}</td><td>${conf}</td>
+        <td class="acs">${l.tem_painel ? `<button class="abrir" data-a="${l.id}">Abrir</button>` : ""}<button data-p="${l.id}">Pasta</button><button data-u="${l.id}" title="Enviar a planilha corrigida e rodar tudo de novo">Atualizar planilha</button><button data-r="${l.id}" title="Rodar de novo com a mesma planilha">Rodar de novo</button></td></tr>`;
+    }
+    $("#lista").innerHTML = h + "</table>";
+    document.querySelectorAll("[data-a]").forEach(b => b.onclick = () => location.href = `/l/${b.dataset.a}/`);
+    document.querySelectorAll("[data-p]").forEach(b => b.onclick = () => fetch(`/api/l/${b.dataset.p}/pasta`, {method:"POST"}));
+    document.querySelectorAll("[data-u]").forEach(b => b.onclick = () => { const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".xlsx,.xls";
+      inp.onchange = () => { const f = inp.files[0]; if (!f) return; fetch(`/api/l/${b.dataset.u}/planilha?nome=${encodeURIComponent(f.name)}`, {method:"POST", body:f}).then(r => r.json()).then(j => { if (j.erro) { alert(j.erro); return; } acompanhar(j.tarefa, b.dataset.u); }); };
+      inp.click(); });
+    document.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { if (!confirm("Rodar as análises de novo com a mesma planilha?")) return; fetch(`/api/l/${b.dataset.r}/refazer`, {method:"POST"}).then(r => r.json()).then(j => acompanhar(j.tarefa, b.dataset.r)); });
+  });
+}
+function barra(caixa, t){
+  let b = caixa.previousElementSibling; if (!b || !b.classList.contains("barra")) { b = document.createElement("div"); b.className = "barra"; b.innerHTML = '<div class="trilho"><div class="enche"></div></div><div class="info"><span class="et"></span><span class="pc"></span></div>'; caixa.parentNode.insertBefore(b, caixa); }
+  const p = t.estado === "pronto" ? 100 : (t.pct || 0), s = Math.max(0, Math.round(Date.now() / 1000 - (t.inicio || Date.now() / 1000)));
+  b.style.display = "block"; b.querySelector(".enche").style.width = p + "%"; b.querySelector(".pc").textContent = p + "%";
+  b.querySelector(".et").textContent = (t.etapa || "Rodando no R") + (t.estado === "rodando" ? ` · ${Math.floor(s / 60)} min ${s % 60} s` : "");
+}
+function acompanhar(tid, id){
+  const log = $("#log"); log.style.display = "block"; log.classList.remove("erro"); log.textContent = "Rodando no R...";
+  location.hash = "inserir";
+  const passo = () => fetch("/api/tarefa/" + tid).then(r => r.json()).then(t => {
+    barra(log, t); log.textContent = (t.log || []).filter(l => !/scale|Scale|Adding another/.test(l)).join("\n");
+    log.scrollTop = log.scrollHeight;
+    if (t.estado === "rodando") setTimeout(passo, 1000);
+    else if (t.estado === "pronto") { log.textContent += "\n\nPronto. Abrindo o painel..."; lista(); setTimeout(() => location.href = `/l/${id}/`, 900); }
+    else { log.classList.add("erro"); log.textContent += "\n\nDeu erro. A mensagem acima diz onde está o problema."; lista(); }
+  });
+  passo();
+}
+function enviar(f){
+  if (!f) return;
+  if (!/\.(xlsx|xls)$/i.test(f.name)) { alert("Envie uma planilha .xlsx ou .xls."); return; }
+  const log = $("#log"); log.style.display = "block"; log.textContent = `Enviando ${f.name}...`;
+  fetch("/api/enviar?nome=" + encodeURIComponent(f.name), {method:"POST", body:f}).then(r => r.json()).then(j => {
+    if (j.erro) { log.classList.add("erro"); log.textContent = j.erro; return; }
+    acompanhar(j.tarefa, j.id); lista();
+  });
+}
+const z = $("#solta");
+["dragenter","dragover"].forEach(ev => z.addEventListener(ev, e => { e.preventDefault(); z.classList.add("sobre"); }));
+["dragleave","drop"].forEach(ev => z.addEventListener(ev, e => { e.preventDefault(); z.classList.remove("sobre"); }));
+z.addEventListener("drop", e => enviar(e.dataTransfer.files[0]));
+$("#escolher").onclick = () => $("#arquivo").click();
+$("#arquivo").onchange = e => enviar(e.target.files[0]);
+lista();
+</script>
+</body>
+</html>

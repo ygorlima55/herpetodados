@@ -1,0 +1,7 @@
+levantamentos/*
+!levantamentos/LEIA-ME.txt
+r-pacotes/
+__pycache__/
+*.pyc
+estilo.json
+~$*.xlsx

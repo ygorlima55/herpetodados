@@ -1,0 +1,99 @@
+# Herpetodados: análise de comunidades de fauna no R a partir da planilha de campo.
+# Uso: Rscript herpetodados.R "<planilha.xlsx>" ["<pasta de saída>"]
+# Saída: painel.html (abre no navegador), figuras/ (PNG 300 dpi para o laudo), tabelas_herpetodados.xlsx, dados.js.
+
+# pacotes do R: pasta r-pacotes do programa (criada pelo instalar.cmd), ou HERP_RLIB, ou a biblioteca da máquina
+local({ raiz <- dirname(dirname(normalizePath(sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE)[1]))))
+  libs <- c(Sys.getenv("HERP_RLIB"), file.path(raiz, "r-pacotes"), "C:/DadosBio/envs/R-herpetodados")
+  .libPaths(c(libs[nzchar(libs) & dir.exists(libs)], .libPaths())) })
+suppressPackageStartupMessages({ library(vegan); library(iNEXT); library(ggplot2); library(readxl); library(writexl); library(jsonlite) })
+set.seed(20261117)
+
+args <- commandArgs(TRUE)
+aqui <- dirname(normalizePath(sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE)[1])))
+for (f in c("ler.R", "conferir.R", "analises.R", "descritiva.R", "saida.R", "saida_extra.R", "saida_novas.R", "campanhas.R", "fitofisionomias.R")) source(file.path(aqui, f), encoding = "UTF-8")
+if (!length(args)) stop("Informe a planilha: Rscript herpetodados.R planilha.xlsx")
+planilha <- normalizePath(args[1], mustWork = TRUE)
+base <- tools::file_path_sans_ext(basename(planilha))
+saida <- if (length(args) >= 2) args[2] else file.path(dirname(planilha), paste0("Herpetodados_", base))
+dir.create(file.path(saida, "figuras"), recursive = TRUE, showWarnings = FALSE)
+msg <- function(...) cat(format(Sys.time(), "%H:%M:%S"), ..., "\n")
+
+progresso(2, "Lendo a planilha")
+msg("Lendo a planilha:", basename(planilha))
+L <- ler_planilha(planilha)
+msg(nrow(L$registros), "registros na aba", L$aba_registros)
+
+progresso(6, "Conferindo a planilha (corretor)")
+msg("Conferindo os dados (corretor)...")
+conf <- conferir_planilha(L)
+msg(sum(conf$nivel == "erro"), "erros,", sum(conf$nivel == "atenção"), "pontos de atenção,", sum(conf$nivel == "informação"), "informações")
+
+if (length(unique(L$registros$campanha)) >= 2) {
+  L <- unidades_campanha(L)
+  msg(nrow(L$campanhas), "campanhas:", paste(L$campanhas$codigo, L$campanhas$campanha, sep = " = ", collapse = "; "), "| unidade amostral = ponto x campanha")
+}
+# um conjunto de análises por grupo de fauna (Anuros, Répteis, Aves, Mamíferos, Insetos... ou o que vier na coluna Grupo)
+gs <- unique(L$registros$grupo_pad); ordem <- c("Anuros", "Répteis", "Aves", "Mamíferos", "Peixes", "Insetos", "Aracnídeos")
+gs <- gs[order(match(gs, ordem, nomatch = 99), gs)]
+grupos <- setNames(as.list(gs), gs)
+if (length(gs) > 1) grupos[[if (all(gs %in% c("Anuros", "Répteis"))) "Herpetofauna" else "Todos os grupos"]] <- gs
+R <- list()
+for (g in names(grupos)) {
+  reg <- L$registros[L$registros$grupo_pad %in% grupos[[g]], ]
+  if (!nrow(reg)) next
+  progresso(10 + 50 * (match(g, names(grupos)) - 1) / length(grupos), paste0("Análises de ", g, " (acumulação, estimadores, iNEXT, similaridade)"))
+  msg("Analisando:", g)
+  i <- match(g, names(grupos)); R[[g]] <- analisar_grupo(reg, g, L$pontos, L$consolidada, L$campanhas, faixa = 10 + 50 * c(i - 1, i) / length(grupos))
+}
+avisos <- avisos_pressupostos(L, R)
+dist <- distancias_pontos(L$pontos_campo %||% L$pontos)
+if (!is.null(dist)) {
+  d <- dist; diag(d) <- NA; k <- which(d == min(d, na.rm = TRUE), arr.ind = TRUE)[1, ]
+  avisos[[length(avisos) + 1]] <- list(tema = "Distância entre pontos", nivel = if (min(d, na.rm = TRUE) < 500) "atenção" else "informação",
+    texto = sprintf("A menor distância entre pontos é %s m (%s e %s); a maior é %s m. %s", format(min(d, na.rm = TRUE), big.mark = ".", decimal.mark = ","), rownames(d)[k[1]], colnames(d)[k[2]],
+                    format(max(d, na.rm = TRUE), big.mark = ".", decimal.mark = ","), if (min(d, na.rm = TRUE) < 500) "Cantos (anuros, aves) são ouvidos a várias centenas de metros e animais que se deslocam podem passar por mais de um ponto: pontos tão próximos podem registrar os mesmos indivíduos." else "Distâncias suficientes para tratar os pontos como independentes para a maioria das espécies."))
+}
+
+if (!is.null(dist)) for (g in names(R)) if (!is.null(R[[g]]$similaridade$pares)) {
+  pp <- R[[g]]$similaridade$pares; pa <- sub(" C[0-9]+$", "", pp$ponto_a); pb <- sub(" C[0-9]+$", "", pp$ponto_b)
+  ok <- pa %in% rownames(dist) & pb %in% rownames(dist)
+  pp$distancia_m[ok] <- dist[cbind(pa[ok], pb[ok])]; R[[g]]$similaridade$pares <- pp
+}
+estilo <- ler_estilo(c(file.path(saida, "estilo.json"), file.path(dirname(aqui), "estilo.json")))
+msg("Gerando figuras (ggplot2)...")
+figs <- gerar_figuras(R, lapply(R, attr, "objs"), saida, estilo)
+tit_padrao <- titulos_padrao()  # antes das miniaturas, que desenham as outras formas
+formas <- tryCatch(gerar_formas(R, lapply(R, attr, "objs"), saida, estilo), error = function(x) { msg("miniaturas falharam:", conditionMessage(x)); list() })
+saveRDS(list(R = R, objs = lapply(R, attr, "objs")), file.path(saida, "resultados.rds"))
+for (g in names(R)) attr(R[[g]], "objs") <- NULL
+
+progresso(96, "Gravando as tabelas em Excel")
+msg("Gravando tabelas em Excel...")
+tabs <- exportar_tabelas(L, conf, R, saida); unlink(file.path(saida, "tabelas_herpetodados.xlsx"))
+
+ctx_arq <- file.path(saida, "contexto_campo.txt")
+contexto <- if (file.exists(ctx_arq)) paste(readLines(ctx_arq, encoding = "UTF-8", warn = FALSE), collapse = "\n") else ""
+interp_arq <- file.path(saida, "leitura_especialista.md")
+leitura <- if (file.exists(interp_arq)) paste(readLines(interp_arq, encoding = "UTF-8", warn = FALSE), collapse = "\n") else ""
+
+pacotes <- sapply(c("vegan", "iNEXT", "ggplot2", "readxl"), function(p) as.character(packageVersion(p)))
+out <- list(
+  meta = list(planilha = if (nzchar(Sys.getenv("HERP_NOME"))) Sys.getenv("HERP_NOME") else basename(planilha), caminho = planilha, gerado_em = format(Sys.time(), "%d/%m/%Y %H:%M"),
+              r = R.version.string, pacotes = as.list(pacotes), abas = list(registros = L$aba_registros, pontos = L$aba_pontos, consolidada = L$aba_consolidada)),
+  campanhas = L$campanhas, pontos = L$pontos, distancias = dist, conferencia = conf, avisos = avisos, grupos = R, figuras = figs, formas = formas, catalogo = catalogo_todo(), tabelas = tabs,
+  estilo = estilo, titulos_padrao = tit_padrao, contexto = contexto, leitura = leitura,
+  registros = L$registros[, c("linha_planilha", "ponto", "especie", "especie_completa", "familia", "grupo_pad", "vo", "av", "sem_forma", "total", if (!is.null(L$campanhas)) c("campanha", "ponto_campo"))]
+)
+js <- jsonlite::toJSON(out, auto_unbox = TRUE, na = "null", digits = NA, dataframe = "rows", pretty = FALSE)
+writeLines(c("window.HERP = ", js, ";"), file.path(saida, "dados.js"), useBytes = TRUE)
+file.copy(file.path(dirname(aqui), "painel", "painel.html"), file.path(saida, "painel.html"), overwrite = TRUE)
+A <- R[["Anuros"]] %||% R[[1]]
+resumo <- list(planilha = out$meta$planilha, gerado_em = out$meta$gerado_em, grupos = names(R),
+  riqueza = A$riqueza, individuos = A$n_individuos, pontos = A$n_pontos,
+  chao2 = if (!is.null(A$acumulacao)) A$acumulacao$estimadores$valor[2] else NA,
+  erros = sum(conf$nivel == "erro"), atencao = sum(conf$nivel == "atenção"),
+  campanhas = length(unique(L$registros$campanha)))
+writeLines(jsonlite::toJSON(resumo, auto_unbox = TRUE, na = "null"), file.path(saida, "resumo.json"), useBytes = TRUE)
+progresso(100, "Pronto")
+msg("Pronto. Abra:", file.path(saida, "painel.html"))
