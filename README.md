@@ -8,13 +8,13 @@ Você solta a planilha numa página do navegador, o R confere os dados, roda as 
 ## O que ele faz
 | Tema | Como |
 |---|---|
-| Conferência da planilha | aponta erros e pontos de atenção (aba, linha e o que fazer) antes das análises |
+| Conferência da planilha | aponta erros e pontos de atenção (aba, linha e o que fazer); botão **Corrigir** pergunta o que falta e corrige; compara a aba consolidada com os registros e completa o que faltar; quadro para preencher atributos que faltam; gera a planilha corrigida com o histórico |
 | Descritiva | famílias, espécies, riqueza e abundância por família e por ponto, forma de registro, atributos das espécies |
-| Riqueza | curva de acumulação (`vegan::specaccum`), Chao 2, Jackknife 1 e 2, Bootstrap (`poolaccum`), uma curva por vez com os valores |
+| Riqueza | curva de acumulação (`vegan::specaccum`), Chao 2, Jackknife 1 e 2, Bootstrap (`poolaccum`), no estilo da curva do iNEXT (faixa, amostra real e linhas dos estimadores) |
 | Rarefação e extrapolação | iNEXT (números de Hill), com legenda que explica cada linha |
 | Diversidade por ponto | Shannon, Simpson, Pielou, números de Hill, teste t de Hutcheson |
 | Similaridade | Jaccard, Bray-Curtis, complementaridade, agrupamento (UPGMA), diversidade beta (Whittaker e Baselga) |
-| Fitofisionomias | o que cada ambiente tem: espécies, indivíduos e espécies exclusivas |
+| Fitofisionomias | espécies e exclusivas, indivíduos, diversidade (Hill), rarefação de cada ambiente, famílias e similaridade |
 | Campanhas | com a coluna Campanha: comparação entre campanhas, NMDS e PERMANOVA |
 | Dominância | ranque com o nome de cada espécie |
 

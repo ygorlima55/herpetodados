@@ -2,16 +2,16 @@
 # similaridade didática, diversidade beta e Shannon com IC. Ligadas ao catálogo de saida.R.
 
 catalogo_extra <- function() c(catalogo_camp(), catalogo_novas(), catalogo_fito(), list(
-  familias = list(nome = "Riqueza e abundância por família", padrao = "colunas", formas = list(
-    colunas = "Colunas, famílias lado a lado, com valores", duas = "Barras deitadas, riqueza e abundância", riqueza = "Só riqueza", abundancia = "Só abundância")),
+  familias = list(nome = "Riqueza e abundância por família", padrao = "lado_a_lado", formas = list(
+    lado_a_lado = "Um gráfico: riqueza e abundância lado a lado (% do total)", colunas = "Dois painéis: riqueza em cima, abundância embaixo", duas = "Barras deitadas, riqueza e abundância", riqueza = "Só riqueza", abundancia = "Só abundância")),
   descritiva_pontos = list(nome = "Riqueza e abundância por ponto", padrao = "duas", formas = list(
     duas = "Riqueza e abundância lado a lado")),
   forma_registro = list(nome = "Forma de registro", padrao = "colunas", formas = list(colunas = "Colunas com número e %", barras = "Barras deitadas com número e %")),
-  curva_S = list(nome = "Curva: riqueza observada", padrao = "linha", formas = list(linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
-  curva_chao = list(nome = "Curva: Chao 2", padrao = "linha", formas = list(linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
-  curva_jack1 = list(nome = "Curva: Jackknife 1", padrao = "linha", formas = list(linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
-  curva_jack2 = list(nome = "Curva: Jackknife 2", padrao = "linha", formas = list(linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
-  curva_boot = list(nome = "Curva: Bootstrap", padrao = "linha", formas = list(linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
+  curva_S = list(nome = "Curva: riqueza observada", padrao = "inext", formas = list(inext = "Estilo iNEXT: curva com faixa, amostra real e linhas pontilhadas", linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
+  curva_chao = list(nome = "Curva: Chao 2", padrao = "inext", formas = list(inext = "Estilo iNEXT: curva com faixa, amostra real e linhas pontilhadas", linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
+  curva_jack1 = list(nome = "Curva: Jackknife 1", padrao = "inext", formas = list(inext = "Estilo iNEXT: curva com faixa, amostra real e linhas pontilhadas", linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
+  curva_jack2 = list(nome = "Curva: Jackknife 2", padrao = "inext", formas = list(inext = "Estilo iNEXT: curva com faixa, amostra real e linhas pontilhadas", linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
+  curva_boot = list(nome = "Curva: Bootstrap", padrao = "inext", formas = list(inext = "Estilo iNEXT: curva com faixa, amostra real e linhas pontilhadas", linha = "Linha com valores e IC 95%", barras = "Barras com valores")),
   similaridade_pares = list(nome = "Similaridade entre pares de pontos", padrao = "pares", formas = list(
     pares = "Pares ordenados: Jaccard e Bray-Curtis", triangulo = "Matriz em triângulo com valores")),
   beta = list(nome = "Diversidade beta (Baselga)", padrao = "barras", formas = list(barras = "Substituição e aninhamento", pares = "Substituição entre pares de pontos")),
@@ -28,6 +28,19 @@ desenhar_extra <- function(chave, forma, G, O, e, arq, w, h, dpi, gg, pal, k) {
   rotx <- ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 40, hjust = 1))
   if (chave == "familias" && !is.null(D)) {
     tf <- D$familias; tf$familia <- factor(tf$familia, levels = rev(tf$familia))
+    if (forma == "lado_a_lado") {
+      d <- rbind(data.frame(familia = tf$familia, medida = "Riqueza (espécies)", v = tf$riqueza, p = tf$riqueza_pct),
+                 data.frame(familia = tf$familia, medida = "Abundância (indivíduos)", v = tf$abundancia, p = tf$abundancia_pct))
+      d$medida <- factor(d$medida, levels = unique(d$medida)); d$familia <- factor(d$familia, levels = rev(levels(tf$familia)))
+      return(gg(ggplot2::ggplot(d, ggplot2::aes(familia, p, fill = medida)) + ggplot2::geom_col(position = ggplot2::position_dodge(.8), width = .75) +
+        ggplot2::geom_text(ggplot2::aes(label = paste0(v, "\n(", fmt1(100 * p, 0), "%)")), position = ggplot2::position_dodge(.8), vjust = -.25, lineheight = .9,
+                           family = e$familia, size = tam * .85, colour = k$tinta) +
+        ggplot2::scale_fill_manual(values = pal[1:2], name = NULL) +
+        ggplot2::scale_y_continuous(labels = function(x) paste0(round(100 * x), "%"), expand = ggplot2::expansion(mult = c(0, .22))) +
+        titulos_gg(e, chave, "Riqueza e abundância por família", NULL, "Porcentagem do total",
+                   sprintf("Altura = %% do total de espécies (%d) e de indivíduos (%d); o número em cima é a contagem.", sum(tf$riqueza), sum(tf$abundancia))) +
+        tema_gg(e) + rotx, w * 1.15, h * 1.1))
+    }
     if (forma == "colunas") {
       d <- rbind(data.frame(familia = tf$familia, medida = "Riqueza (número de espécies)", v = tf$riqueza, p = tf$riqueza_pct),
                  data.frame(familia = tf$familia, medida = "Abundância (número de indivíduos)", v = tf$abundancia, p = tf$abundancia_pct))
@@ -94,6 +107,7 @@ desenhar_extra <- function(chave, forma, G, O, e, arq, w, h, dpi, gg, pal, k) {
     cor <- c(S = k$tinta, chao = pal[1], jack1 = pal[2], jack2 = pal[3], boot = pal[4])[[est]]
     obs <- tail(G$acumulacao$curva$riqueza, 1)
     tt <- paste0(NOMES_EST[[est]], " por número de pontos: ", gr)
+    if (forma == "inext") return(curvas_estilo_inext(chave, list(z), NOMES_EST[[est]], cor, G, e, gg, pal, k, w, h))
     if (forma == "barras") return(gg(ggplot2::ggplot(z, ggplot2::aes(factor(pontos), media)) + ggplot2::geom_col(fill = cor, width = .6) +
       { if (isTRUE(e$faixa)) ggplot2::geom_errorbar(ggplot2::aes(ymin = li, ymax = ls), width = .15, colour = k$tinta2) } +
       ggplot2::geom_text(ggplot2::aes(y = if (isTRUE(e$faixa)) ls else media, label = fmt1(media)), vjust = -.6, family = e$familia, size = tam * 1.15, colour = k$tinta, fontface = "bold") +

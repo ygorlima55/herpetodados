@@ -135,6 +135,13 @@ textarea{width:100%;min-height:120px;font:inherit;font-size:.95em;color:var(--ti
 .edtit{display:none;border:1px solid var(--linha,#d9d4c7);background:var(--papel-2);padding:10px 12px;margin:6px 0 10px}.edtit.aberta{display:block}
 .edtit .grade-ed{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 14px;margin:8px 0}.edtit label{display:flex;flex-direction:column;font-size:12.5px;gap:3px}
 .edtit input[type=text]{font:inherit;font-size:14px;padding:5px 7px;border:1px solid var(--linha,#cfc9ba);background:var(--papel,#fff);color:inherit}.edtit .ck{flex-direction:row;align-items:center;gap:6px;margin:4px 0 8px}.edtit .bts{display:flex;gap:8px}
+.corr,.corrlista{border:1px solid var(--linha,#d9d4c7);background:var(--papel-2);padding:12px 14px;margin:12px 0}
+.corr .oque{margin:4px 0 10px}.corr .cp{display:flex;flex-direction:column;gap:4px;margin:8px 0;font-size:14px}.corr .cp>span:first-child{font-size:12.5px;color:var(--tinta-2,#5d5a52)}
+.corr input[type=text],.corr input[type=number],.corr select{font:inherit;padding:5px 7px;border:1px solid var(--linha,#cfc9ba);background:var(--papel,#fff);color:inherit;max-width:520px}
+.corr .ops{display:flex;flex-wrap:wrap;gap:6px 16px}.corr .tres input{width:70px;margin:0 10px 0 4px}.corr .bts{display:flex;gap:8px;margin-top:10px}.corr .dica{font-size:12.5px;margin:2px 0}
+.corrlista .it{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-bottom:1px dotted var(--linha,#d9d4c7)}.corrlista .it small{display:block;color:var(--tinta-2,#5d5a52)}
+.tabatr{border-collapse:collapse;font-size:13.5px}.tabatr th,.tabatr td{padding:4px 8px;border-bottom:1px solid var(--linha,#e1dccf);text-align:left}.tabatr select{font:inherit;font-size:13px;padding:2px 4px}.tabatr td.ok{color:var(--tinta-2,#8a867c);font-size:12px}
+button.bcorr{padding:3px 9px;font-size:12.5px}
 .tarefa{font:12.5px/1.45 var(--f-mono);background:var(--papel-2);border-left:2px solid var(--acento-2);padding:8px 12px;margin:10px 0;white-space:pre-wrap;max-height:160px;overflow:auto;display:none}
 #tip{position:fixed;pointer-events:none;z-index:60;background:var(--tinta);color:var(--papel);font-size:.8em;padding:6px 9px;border-radius:2px;max-width:300px;opacity:0;transition:opacity .08s;line-height:1.4}
 #tip i{font-family:var(--f-titulo)}
@@ -375,6 +382,142 @@ function editorTitulos(chave){
   const bx = el("div", {class:"bts"}); bx.append(ap, vt); ed.appendChild(bx);
   return ed;
 }
+
+/* ---------------- correções pelo painel (botão Corrigir) ---------------- */
+let PEND = [];
+const CORRIGIVEL = new Set(["consolidada_ponto", "falta_na_consolidada", "consolidada_total", "contagem", "total_zero", "ponto", "nome", "familia", "grupo"]);
+const novaId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const agora = () => new Date().toLocaleString("pt-BR");
+const regsEsp = (esp, pt) => arr(H.registros).filter(r => r.especie === esp && (!pt || r.ponto === pt));
+const soNum = v => /^\d+$/.test(String(v));
+function formCorrecao(c, alvo){
+  alvo.innerHTML = ""; alvo.style.display = "block";
+  const f = el("div", {class:"corr"}), q = el("div", {class:"perg"});
+  f.append(el("div", {class:"rotulo"}, "Corrigir"), el("p", {class:"oque"}, esc(c.problema)), q);
+  const cp = (rot, html) => { const l = el("label", {class:"cp"}, `<span>${rot}</span>${html}`); q.appendChild(l); return l; };
+  const val = n => { const i = q.querySelector(`[name="${n}"]`); return i ? i.value.trim() : ""; };
+  const radio = n => { const i = q.querySelector(`[name="${n}"]:checked`); return i ? i.value : ""; };
+  const N = v => v === "" ? null : Number(String(v).replace(",", "."));
+  const linhas = String(c.linha || "").split(/,\s*/).filter(soNum);
+  const ex = regsEsp(c.especie)[0] || {};
+  let montar = () => "Nada a corrigir aqui.";
+  const tresCampos = (r, tit) => { cp(tit || "Quantos por forma de registro", `<span class="tres">VO <input name="vo" type="number" min="0" value="${r.vo ?? ""}"> AV <input name="av" type="number" min="0" value="${r.av ?? ""}"> sem forma <input name="sf" type="number" min="0" value="${r.sem_forma ?? ""}"></span>`); };
+  const somaTres = () => ["vo", "av", "sf"].map(n => N(val(n)) || 0).reduce((a, b) => a + b, 0);
+  if (c.tipo === "consolidada_ponto"){
+    const [vc, vr] = String(c.dados).split("|").map(Number);
+    cp(`Quantos indivíduos de <i>${esc(c.especie)}</i> no ${esc(c.ponto)} estão certos?`,
+      `<span class="ops"><label><input type="radio" name="v" value="${vr}"> ${vr} (registros de campo)</label><label><input type="radio" name="v" value="${vc}" checked> ${vc} (consolidada)</label><label><input type="radio" name="v" value="outro"> outro: <input name="vo2" type="number" min="0" style="width:70px"></label></span>`);
+    cp("Forma de registro dos indivíduos que faltam nos registros de campo", `<select name="forma"><option value="vo">VO (vocalização)</option><option value="av">AV (avistamento)</option><option value="sf" selected>não anotada</option></select>`);
+    montar = () => {
+      let V = radio("v"); V = V === "outro" ? N(val("vo2")) : Number(V); if (V == null || isNaN(V) || V < 0) return "Escolha ou escreva o número certo.";
+      const out = [];
+      if (V > vr){ const d = V - vr, fm = val("forma"); const o = {tipo:"incluir_registro", ponto: (arr(H.registros).find(r => r.ponto === c.ponto && soNum(r.linha_planilha)) || {}).ponto_original || c.ponto, especie_completa: ex.especie_completa || c.especie, familia: ex.familia || null, grupo: ex.grupo || ex.grupo_pad || null};
+        o.vo = fm === "vo" ? d : null; o.av = fm === "av" ? d : null; o.sem_forma = fm === "sf" ? d : null; out.push(o); }
+      if (V < vr){ const rs = regsEsp(c.especie, c.ponto).filter(r => soNum(r.linha_planilha)); if (rs.length !== 1) return "Há mais de uma linha dessa espécie nesse ponto: corrija pela planilha (Atualizar planilha).";
+        out.push({tipo:"editar_registro", linhas:[String(rs[0].linha_planilha)], total: V, vo: null, av: null, sem_forma: V}); }
+      if (V !== vc) out.push({tipo:"editar_consolidada", especie: c.especie, ponto: c.ponto, valor: V});
+      return out.length ? out : "Os números já estão iguais.";
+    };
+  } else if (c.tipo === "falta_na_consolidada"){
+    cp(`Incluir <i>${esc(c.especie)}</i> na consolidada com os números dos registros de campo?`, `<span class="ops"><label><input type="radio" name="s" value="sim" checked> Sim</label></span>`);
+    montar = () => [{tipo:"incluir_na_consolidada", especie: c.especie}];
+  } else if (c.tipo === "consolidada_total"){
+    cp(`Total certo de <i>${esc(c.especie)}</i> na consolidada`, `<input name="t" type="number" min="0" value="${esc(c.dados)}">`);
+    montar = () => { const t = N(val("t")); return t == null ? "Escreva o total." : [{tipo:"editar_consolidada", especie: c.especie, total_informado: t}]; };
+  } else if (c.tipo === "contagem" || c.tipo === "total_zero"){
+    const r = arr(H.registros).find(x => String(x.linha_planilha) === linhas[0]) || {};
+    if (c.tipo === "total_zero") cp("O que fazer com esta linha?", `<span class="ops"><label><input type="radio" name="acao" value="corrigir" checked> corrigir a contagem</label><label><input type="radio" name="acao" value="apagar"> apagar a linha</label></span>`);
+    tresCampos(r, `Contagem certa (linha ${linhas.join(", ")}): o total é a soma`);
+    montar = () => { if (radio("acao") === "apagar") return [{tipo:"remover_registro", linhas}];
+      const t = somaTres(); if (!t) return "Escreva pelo menos um número.";
+      return [{tipo:"editar_registro", linhas, vo: N(val("vo")), av: N(val("av")), sem_forma: N(val("sf")), total: t}]; };
+  } else if (c.tipo === "ponto"){
+    const ops = arr(H.pontos).map(p => `<option value="${esc(p.nome)}">${esc(p.nome)}${p.fitofisionomia ? " · " + esc(p.fitofisionomia) : ""}</option>`).join("");
+    cp(`Ponto certo das linhas ${linhas.join(", ")}`, `<select name="p">${ops}</select>`);
+    montar = () => [{tipo:"editar_registro", linhas, ponto: val("p")}];
+  } else if (c.tipo === "nome"){
+    const sug = String(c.dados || "").split(" | ").filter(Boolean);
+    cp(`Nome certo (com autoria) para <i>${esc(c.especie)}</i>`, `<input name="n" type="text" list="dlnomes" value="${esc(ex.especie_completa || c.especie)}"><datalist id="dlnomes">${sug.map(s => `<option value="${esc(s)}">`).join("")}</datalist>`);
+    if (sug.length) q.appendChild(el("p", {class:"dica"}, "Sugestões: " + sug.map(esc).join(" · ")));
+    montar = () => { const n = val("n"); return n ? [{tipo:"renomear", de: c.especie, para: n}] : "Escreva o nome."; };
+  } else if (c.tipo === "familia"){
+    const fams = [...new Set(arr(H.registros).map(r => r.familia).filter(Boolean))].sort();
+    cp(`Família de <i>${esc(c.especie)}</i>`, `<input name="f" type="text" list="dlfam" value="${esc((String(c.dados || "").split(" | ")[0]) || "")}"><datalist id="dlfam">${fams.map(s => `<option value="${esc(s)}">`).join("")}</datalist>`);
+    montar = () => { const v = val("f"); return v ? [{tipo:"definir_familia", especie: c.especie, familia: v}] : "Escreva a família."; };
+  } else if (c.tipo === "grupo"){
+    cp(`Grupo de <i>${esc(c.especie)}</i>`, `<input name="g" type="text" list="dlgr" value=""><datalist id="dlgr">${["Anuros","Répteis","Aves","Mamíferos","Peixes","Insetos"].map(s => `<option value="${s}">`).join("")}</datalist>`);
+    montar = () => { const v = val("g"); return v ? [{tipo:"definir_grupo", especie: c.especie, grupo: v}] : "Escreva o grupo."; };
+  }
+  const mot = el("input", {type:"text", placeholder:"ex.: conferido no caderno de campo, foto 123"});
+  const lm = el("label", {class:"cp"}, "<span>De onde veio a informação (opcional, vai para o histórico)</span>"); lm.appendChild(mot); f.appendChild(lm);
+  const bg = el("button", {class:"forte"}, "Guardar correção"), bc = el("button", {}, "Cancelar"), bx = el("div", {class:"bts"}); bx.append(bg, bc); f.appendChild(bx);
+  bg.onclick = () => { const r = montar(); if (typeof r === "string") { alert(r); return; }
+    r.forEach(x => Object.assign(x, {id: novaId(), data: agora(), motivo: mot.value.trim(), problema: c.problema})); PEND.push(...r); render(); };
+  bc.onclick = () => { alvo.style.display = "none"; };
+  alvo.appendChild(f); alvo.scrollIntoView({behavior:"smooth", block:"center"});
+}
+function enviaCorrecoes(lista, caixa, bt){
+  bt.disabled = true; bt.textContent = "Recalculando no R...";
+  fetch(`/api/l/${LID}/correcoes`, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(lista)}).then(r => r.json()).then(j => {
+    if (j.erro) { alert(j.erro); bt.disabled = false; return; }
+    acompanhar(j.tarefa, caixa, t => { if (t.estado === "pronto") { PEND = []; location.reload(); } else { bt.disabled = false; bt.textContent = "Deu erro: veja acima"; } }); });
+}
+
+// atributos que faltam: um quadro para responder todas as espécies de uma vez
+const OPC_ATRIB = {
+  habito: [["Tr","Terrícola"],["Arb.","Arborícola"],["Aq.","Aquática"],["Sa","Semiaquática"],["Fos","Fossorial"]],
+  endemismo: [["AD","Ampla distribuição"],["E","Endêmica do Cerrado"]],
+  dependencia: [["Baixa","Baixa"],["Méd","Média"],["Alta","Alta"]],
+  sensibilidade: [["Baixa","Baixa"],["Méd","Média"],["Alta","Alta"]],
+  salve: [["LC","Menos preocupante (LC)"],["NT","Quase ameaçada (NT)"],["VU","Vulnerável (VU)"],["EN","Em perigo (EN)"],["CR","Criticamente em perigo (CR)"],["DD","Dados insuficientes (DD)"],["NE","Não avaliada (NE)"]],
+  iucn: [["LC","Menos preocupante (LC)"],["NT","Quase ameaçada (NT)"],["VU","Vulnerável (VU)"],["EN","Em perigo (EN)"],["CR","Criticamente em perigo (CR)"],["DD","Dados insuficientes (DD)"],["NE","Não avaliada (NE)"]]
+};
+const NOME_ATRIB = {habito:"Hábito", endemismo:"Endemismo", dependencia:"Dependência", sensibilidade:"Sensibilidade", salve:"SALVE", iucn:"IUCN"};
+function blocoAtributos(s1, cf){
+  const fal = cf.filter(c => c.tipo === "atributos" && !PEND.some(p => p.tipo === "definir_atributos" && p.especie === c.especie));
+  if (!fal.length || !LID) return;
+  const cols = Object.keys(NOME_ATRIB).filter(a => fal.some(c => String(c.dados).split("|").includes(a)));
+  const b = el("div", {class:"corr"});
+  b.appendChild(el("div", {class:"rotulo"}, `Informações que faltam (${fal.length} espécies)`));
+  b.appendChild(el("p", {class:"oque"}, "Estas espécies estão sem algum atributo. Escolha as respostas e clique em Guardar; elas entram nas análises e na planilha corrigida. O que ficar em branco continua faltando."));
+  const t = el("table", {class:"tabatr"});
+  t.innerHTML = "<thead><tr><th>Espécie</th>" + cols.map(a => `<th>${NOME_ATRIB[a]}</th>`).join("") + "</tr></thead>";
+  const tb = el("tbody");
+  fal.forEach(c => { const precisa = String(c.dados).split("|");
+    tb.insertAdjacentHTML("beforeend", `<tr data-esp="${esc(c.especie)}"><td class="esp"><i>${esc(c.especie)}</i></td>` + cols.map(a => precisa.includes(a)
+      ? `<td><select data-a="${a}"><option value="">—</option>${OPC_ATRIB[a].map(([v, n]) => `<option value="${esc(v)}">${esc(n)}</option>`).join("")}</select></td>` : `<td class="ok">ok</td>`).join("") + "</tr>"); });
+  t.appendChild(tb); const w = el("div", {class:"rolagem"}); w.appendChild(t); b.appendChild(w);
+  const mot = el("input", {type:"text", placeholder:"Fonte das respostas (ex.: SALVE/ICMBio 2024, Frost 2024, conhecimento de campo)"});
+  const lm = el("label", {class:"cp"}, "<span>Fonte (vai para o histórico)</span>"); lm.appendChild(mot); b.appendChild(lm);
+  const bg = el("button", {class:"forte"}, "Guardar estas respostas");
+  bg.onclick = () => { let n = 0;
+    tb.querySelectorAll("tr").forEach(tr => { const v = {}; tr.querySelectorAll("select").forEach(s => { if (s.value) v[s.dataset.a] = s.value; });
+      if (Object.keys(v).length) { n++; PEND.push({tipo:"definir_atributos", especie: tr.dataset.esp, valores: v, id: novaId(), data: agora(), motivo: mot.value.trim(), problema: `Atributos de ${tr.dataset.esp}: ${Object.entries(v).map(([a, x]) => NOME_ATRIB[a] + " " + x).join(", ")}`}); } });
+    if (!n) { alert("Escolha pelo menos uma resposta."); return; } render(); };
+  b.appendChild(bg); s1.appendChild(b);
+}
+function blocoCorrecoes(s1){
+  const feitas = arr(H.correcoes);
+  if (!PEND.length && !feitas.length && !H.tem_planilha_corrigida) return;
+  const b = el("div", {class:"corrlista"});
+  if (PEND.length){
+    b.appendChild(el("div", {class:"rotulo"}, `Correções prontas para aplicar (${PEND.length})`));
+    PEND.forEach((c, i) => { const it = el("div", {class:"it"}, `<span>${esc(c.problema || c.tipo)}</span>`); const x = el("button", {}, "Tirar"); x.onclick = () => { PEND.splice(i, 1); render(); }; it.appendChild(x); b.appendChild(it); });
+    const ap = el("button", {class:"acento"}, "Aplicar as correções e recalcular tudo"), cx = el("div", {class:"tarefa"});
+    ap.onclick = () => enviaCorrecoes(feitas.concat(PEND), cx, ap); b.append(ap, cx);
+  }
+  if (feitas.length){
+    const ap = arr(H.correcoes_aplicadas);
+    b.appendChild(el("div", {class:"rotulo", style:"margin-top:12px"}, `Correções já aplicadas (${feitas.length})`));
+    feitas.forEach(c => { const a = ap.find(x => x.id === c.id) || {};
+      const it = el("div", {class:"it"}, `<span>${esc(a.o_que || c.problema || c.tipo)} <small>${esc(c.data || "")}${c.motivo ? " · " + esc(c.motivo) : ""}${a.aplicada && a.aplicada !== "sim" ? " · <b>não aplicada</b>" : ""}</small></span>`);
+      const d = el("button", {}, "Desfazer"), cx = el("div", {class:"tarefa"});
+      d.onclick = () => { if (confirm("Desfazer esta correção e recalcular?")) enviaCorrecoes(feitas.filter(x => x.id !== c.id), cx, d); };
+      it.append(d); b.append(it, cx); });
+  }
+  if (H.tem_planilha_corrigida) b.appendChild(el("p", {style:"margin-top:10px"}, `<a href="planilha_corrigida.xlsx" download><button>Baixar a planilha corrigida</button></a> <span class="pergunta">registros como ficaram, com a coluna “Alterado no Herpetodados” e a lista das correções.</span>`));
+  s1.appendChild(b);
+}
 function texto(alvo, t, aberto){
   if (!t) return;
   alvo.appendChild(el("div", {class:"resultado"}, "<b>Resultado</b>" + esc(t.resultado)));
@@ -451,6 +594,8 @@ function render(){
   if (sub1 === "conf"){
     const cf = arr(H.conferencia), nErr = cf.filter(x => x.nivel === "erro").length, nAt = cf.filter(x => x.nivel === "atenção").length;
     s1.appendChild(el("p", {class:"resultado"}, nErr ? `<b>${nErr} erros</b> na planilha: corrija e envie de novo. ${nAt} pontos de atenção.` : `<b>Sem erros.</b> Os registros batem com a aba consolidada. ${nAt} pontos de atenção para conferir.`));
+    const cpl = arr(H.completados);
+    if (cpl.length){ s1.appendChild(el("div", {class:"aviso"}, `<span><span class="pill atenção">completado</span></span><div><b>${cpl.length} ${cpl.length > 1 ? "registros entraram" : "registro entrou"} nas análises pela aba consolidada</b>Estavam na consolidada e faltavam (ou estavam a menos) nos registros de campo: ${cpl.map(c => `<i>${esc(c.especie)}</i> no ${esc(c.ponto)} (+${c.adicionados})`).join("; ")}. Confira e, se estiver certo, inclua na aba de registros.</div>`)); }
     if (LID){ const bu = el("button", {class:"acento naoimprime"}, "Atualizar planilha (enviar a corrigida e recalcular tudo)"), cx = el("div", {class:"tarefa"});
       bu.onclick = () => { const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".xlsx,.xls";
         inp.onchange = () => { const f = inp.files[0]; if (!f) return; bu.disabled = true; bu.textContent = "Recalculando no R...";
@@ -461,7 +606,13 @@ function render(){
       s1.append(bu, cx);
       s1.appendChild(el("p", {class:"pergunta naoimprime"}, "A planilha anterior fica guardada na pasta do levantamento (planilha_anterior_data.xlsx). O painel recarrega sozinho no fim."));
     }
-    tabela(s1, "conferencia", "Conferência da planilha", [{t:"Nível", f:r => `<span class="pill ${r.nivel}">${r.nivel}</span>`, csv:r => r.nivel}, {t:"Aba", k:"aba"}, {t:"Linha", k:"linha"}, {t:"Problema", f:r => esc(r.problema), csv:r => r.problema}, {t:"O que fazer", f:r => esc(r.sugestao), csv:r => r.sugestao}], cf, true);
+    blocoCorrecoes(s1);
+    blocoAtributos(s1, cf);
+    const fc = el("div", {class:"naoimprime", style:"display:none"}); s1.appendChild(fc);
+    const cfi = cf.map((r, i) => Object.assign({_i: i}, r));
+    tabela(s1, "conferencia", "Conferência da planilha", [{t:"Nível", f:r => `<span class="pill ${r.nivel}">${r.nivel}</span>`, csv:r => r.nivel}, {t:"Aba", k:"aba"}, {t:"Linha", k:"linha"}, {t:"Problema", f:r => esc(r.problema), csv:r => r.problema}, {t:"O que fazer", f:r => esc(r.sugestao), csv:r => r.sugestao},
+      {t:"", f:r => LID && CORRIGIVEL.has(r.tipo) ? `<button class="bcorr" data-ci="${r._i}">Corrigir</button>` : "", csv:() => ""}], cfi, true);
+    s1.querySelectorAll("button.bcorr").forEach(b => b.onclick = () => formCorrecao(cf[+b.dataset.ci], fc));
   } else if (sub1 === "campo"){
     const kC = "herp.ctx." + H.meta.planilha, ctx = H.contexto_json || store.get(kC, null) || {campo: H.contexto || "", finalidade: ""};
     const d2 = el("div", {class:"duas"}), ta1 = el("textarea", {placeholder:"Datas, estação, chuva e lua, horário, pessoas, tempo por ponto, métodos..."}), ta2 = el("textarea", {placeholder:"Licenciamento de quê, fase (diagnóstico, monitoramento), o que comparar..."});
@@ -547,15 +698,17 @@ function render(){
     const F = G.fitofisionomias;
     const s9 = secao("fitofisionomias", "O que cada fitofisionomia tem", "Pontos juntados pelo ambiente da aba de pontos: espécies, indivíduos e espécies só daquele ambiente.");
     const sub9 = store.get("herp.sub9", "resumo");
-    abas(s9, [["resumo","Resumo"],["especies","Espécies em cada uma"],["pares","Quanto se parecem"]], sub9, v => { store.set("herp.sub9", v); render(); });
+    abas(s9, [["resumo","Resumo"],["diversidade","Diversidade e rarefação"],["especies","Espécies e famílias"],["pares","Quanto se parecem"]], sub9, v => { store.set("herp.sub9", v); render(); });
     const colsT = [{t:"Sigla", k:"fitofisionomia"}, {t:"Fitofisionomia", k:"nome"}, {t:"Pontos", k:"pontos"}, {t:"Espécies", k:"riqueza", num:1}, {t:"Média por ponto", f:r => nf(r.riqueza_media_por_ponto, 1), num:1}, {t:"Indivíduos", k:"abundancia", num:1}, {t:"Exclusivas", k:"exclusivas", num:1}, {t:"Quais são exclusivas", f:r => `<span class="esp">${esc(r.especies_exclusivas)}</span>`, csv:r => r.especies_exclusivas}];
-    if (sub9 === "resumo"){ figuraR(s9, "fitofisionomias", "Espécies e indivíduos por fitofisionomia"); texto(s9, F.texto, true);
+    if (sub9 === "resumo"){ figuraR(s9, "fito_riqueza", "Espécies por fitofisionomia"); figuraR(s9, "fito_abundancia", "Indivíduos por fitofisionomia"); texto(s9, F.texto, true);
       tabela(s9, "fito", "Por fitofisionomia (como escrita na planilha)", colsT, arr(F.classes.tabela));
       if (F.componentes) tabela(s9, "fito_siglas", "Cada sigla separada (pontos mistos contam nas duas)", colsT, arr(F.componentes.tabela)); }
-    else if (sub9 === "especies"){ figuraR(s9, "fitofisionomias_especies", "Espécies em cada fitofisionomia");
+    else if (sub9 === "diversidade"){ figuraR(s9, "fito_diversidade", "Diversidade de cada fitofisionomia"); figuraR(s9, "fito_rarefacao", "Rarefação de cada fitofisionomia");
+      tabela(s9, "fito_div", "Diversidade por fitofisionomia", [{t:"Fitofisionomia", k:"nome"}, {t:"Pontos", k:"pontos"}, {t:"Espécies", k:"riqueza", num:1}, {t:"Shannon H′", f:r => nf(r.shannon, 3), num:1}, {t:"Espécies comuns (q1)", f:r => nf(r.hill1, 1), num:1}, {t:"Espécies dominantes (q2)", f:r => nf(r.hill2, 1), num:1}, {t:"Pielou J′", f:r => nf(r.pielou, 3), num:1}, {t:"Chao 1 (iNEXT)", f:r => nf(r.chao1, 1), num:1}], arr(F.classes.tabela)); }
+    else if (sub9 === "especies"){ figuraR(s9, "fitofisionomias_especies", "Espécies em cada fitofisionomia"); figuraR(s9, "fito_familias", "Famílias em cada fitofisionomia");
       const fs = arr(F.classes.tabela).map(r => r.fitofisionomia);
       tabela(s9, "fito_especies", "Espécies por fitofisionomia (indivíduos)", [{t:"Família", k:"familia"}, {t:"Espécie", f:r => esc(r.especie), csv:r => r.especie, esp:1}].concat(fs.map(f => ({t:f, f:r => r[f] || "–", num:1}))).concat([{t:"Em", k:"em"}]), arr(F.classes.especies), true); }
-    else { const pp = arr(F.classes.pares);
+    else { const pp = arr(F.classes.pares); figuraR(s9, "fito_similaridade", "Similaridade entre fitofisionomias");
       if (!pp.length) s9.appendChild(el("p", {class:"pergunta"}, "Só há uma fitofisionomia."));
       else tabela(s9, "fito_pares", "Similaridade entre fitofisionomias (Jaccard)", [{t:"Par", f:r => `${esc(r.fito_a)} × ${esc(r.fito_b)}`, csv:r => r.fito_a + " x " + r.fito_b}, {t:"Em comum", k:"comuns", num:1}, {t:"Só na 1ª", k:"so_a", num:1}, {t:"Só na 2ª", k:"so_b", num:1}, {t:"Jaccard", f:r => nf(r.jaccard, 2), num:1}], pp);
       if (F.componentes && arr(F.componentes.pares).length) tabela(s9, "fito_pares_siglas", "Similaridade entre siglas (Jaccard)", [{t:"Par", f:r => `${esc(r.fito_a)} × ${esc(r.fito_b)}`, csv:r => r.fito_a + " x " + r.fito_b}, {t:"Em comum", k:"comuns", num:1}, {t:"Só na 1ª", k:"so_a", num:1}, {t:"Só na 2ª", k:"so_b", num:1}, {t:"Jaccard", f:r => nf(r.jaccard, 2), num:1}], arr(F.componentes.pares)); }

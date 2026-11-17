@@ -12,7 +12,8 @@ catalogo_novas <- function() c(
   list(
     familias_pontos = list(nome = "Espécies de cada família por ponto", padrao = "colunas", formas = list(
       colunas = "Uma coluna por família, com valores", empilhado = "Colunas empilhadas com valores")),
-    curva_jack1_boot = list(nome = "Curvas: Observada, Jackknife 1 e Bootstrap", padrao = "linhas", formas = list(
+    curva_jack1_boot = list(nome = "Curvas: Observada, Jackknife 1 e Bootstrap", padrao = "inext", formas = list(
+      inext = "Estilo iNEXT: curvas com faixa e linhas pontilhadas do valor final",
       linhas = "Três curvas com valores", final = "Só o valor final de cada uma"))
   ),
   setNames(lapply(names(ATRIBUTOS), function(a) list(nome = paste("Atributo:", ATRIBUTOS[[a]]), padrao = "colunas", formas = list(
@@ -53,6 +54,9 @@ desenhar_novas <- function(chave, forma, G, e, gg, pal, k, w, h) {
 
   if (startsWith(chave, "atributo_") && !is.null(D)) {
     a <- sub("^atributo_", "", chave); t <- D$categorias[[a]]; if (is.null(t) || !nrow(t)) return(invisible())
+    falta <- sum(t$especies_n[t$classe == "Sem informação"]); t <- t[t$classe != "Sem informação", , drop = FALSE]
+    if (!nrow(t)) return(invisible())
+    t$especies_pct <- t$especies_n / sum(t$especies_n)
     t$rot <- paste0(t$especies_n, " (", pc(t$especies_pct), ")")
     t$classe <- factor(t$classe, levels = t$classe[order(-t$especies_n)])
     tt <- paste(ATRIBUTOS[[a]], "das espécies registradas")
@@ -63,10 +67,17 @@ desenhar_novas <- function(chave, forma, G, e, gg, pal, k, w, h) {
     return(gg(ggplot2::ggplot(t, ggplot2::aes(classe, especies_n)) + ggplot2::geom_col(fill = pal[1], width = .55) +
       ggplot2::geom_text(ggplot2::aes(label = rot), vjust = -.5, family = e$familia, size = tam * 1.05, colour = k$tinta, fontface = "bold") +
       ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, .14))) +
-      titulos_gg(e, chave, tt, NULL, "Número de espécies", sprintf("%d espécies; porcentagem sobre o total.", sum(t$especies_n))) + tema_gg(e) +
+      titulos_gg(e, chave, tt, NULL, "Número de espécies", paste0(sprintf("%d espécies com a informação; porcentagem sobre elas.", sum(t$especies_n)),
+        if (falta) sprintf(" Faltam %d espécies: preencha em Planilha > Conferência.", falta) else "")) + tema_gg(e) +
       (if (nrow(t) > 4 || max(nchar(as.character(t$classe))) > 18) rotx), w * .85, h * .9))
   }
 
+  if (chave == "curva_jack1_boot" && !is.null(G$acumulacao$poolaccum) && forma == "inext") {
+    c1 <- G$acumulacao$curva; pool <- G$acumulacao$poolaccum
+    zs <- list(data.frame(pontos = c1$pontos, media = c1$riqueza, li = c1$li, ls = c1$ls),
+               pool[pool$estimador == "jack1", c("pontos", "media", "li", "ls")], pool[pool$estimador == "boot", c("pontos", "media", "li", "ls")])
+    return(curvas_estilo_inext(chave, zs, c("Riqueza observada", "Jackknife 1", "Bootstrap"), c(pal[1], pal[2], pal[4]), G, e, gg, pal, k, w, h))
+  }
   if (chave == "curva_jack1_boot" && !is.null(G$acumulacao$poolaccum)) {
     c1 <- G$acumulacao$curva; pool <- G$acumulacao$poolaccum
     d <- rbind(data.frame(serie = "Riqueza observada", pontos = c1$pontos, v = c1$riqueza, li = c1$li, ls = c1$ls),
@@ -141,4 +152,43 @@ inext_claro <- function(chave, forma, G, e, gg, pal, k, w, h) {
     ggplot2::guides(linetype = ggplot2::guide_legend(ncol = 1, order = 1), colour = ggplot2::guide_legend(ncol = 1, order = 2)) +
     titulos_gg(e, chave, paste("Riqueza por rarefação e extrapolação (por", if (por_ind) "indivíduos)" else "pontos)"), xlab, "Número de espécies",
                "Faixa = IC 95% da curva. Pontilhadas = riqueza observada e estimadores. iNEXT (Chao et al. 2014).") + tema_gg(e) + leg_v, w, h * 1.4))
+}
+
+
+# ---- curvas de acumulação e estimadores no estilo da figura do iNEXT ----
+# Linha suavizada (spline monótona) entre os valores de cada número de pontos, faixa do IC 95%,
+# ponto grande na amostra real com o valor, e linhas pontilhadas: riqueza observada e valor final de cada estimador.
+curvas_estilo_inext <- function(chave, zs, nomes, cores, G, e, gg, pal, k, w, h) {
+  fmt1 <- function(x, d = 1) formatC(x, format = "f", digits = d, decimal.mark = ","); tam <- e$fonte / 3.1
+  suave <- function(z, nome) {
+    z <- z[order(z$pontos), ]; z <- rbind(data.frame(pontos = 0, media = 0, li = 0, ls = 0), z[, c("pontos", "media", "li", "ls")])
+    xs <- seq(0, max(z$pontos), length.out = 120)
+    f <- function(y) { y[is.na(y)] <- approx(z$pontos[!is.na(y)], y[!is.na(y)], z$pontos[is.na(y)], rule = 2)$y; stats::splinefun(z$pontos, y, method = "monoH.FC")(xs) }
+    data.frame(serie = nome, x = xs, y = f(z$media), li = pmin(f(z$li), f(z$media)), ls = pmax(f(z$ls), f(z$media)))
+  }
+  d <- do.call(rbind, Map(suave, zs, nomes)); d$serie <- factor(d$serie, levels = nomes)
+  fim <- do.call(rbind, Map(function(z, nome) { z <- z[which.max(z$pontos), ]; data.frame(serie = nome, x = z$pontos, y = z$media) }, zs, nomes)); fim$serie <- factor(fim$serie, levels = nomes)
+  obs <- G$riqueza
+  ref <- data.frame(nome = paste0("Riqueza observada = ", obs), v = obs)
+  for (i in seq_along(nomes)) if (nomes[i] != "Riqueza observada") ref <- rbind(ref, data.frame(nome = paste0(nomes[i], " com todos os pontos = ", fmt1(fim$y[i])), v = fim$y[i]))
+  ref$nome <- factor(ref$nome, levels = ref$nome)
+  cs <- setNames(cores, nomes); cr <- setNames(c(k$tinta, cores[nomes != "Riqueza observada"])[seq_len(nrow(ref))], levels(ref$nome))
+  um <- length(nomes) == 1
+  rot <- if (um) paste0(if (nomes == "Riqueza observada") "amostra real: " else paste0(nomes, " com ", fim$x, " pontos: "), fmt1(fim$y, if (nomes == "Riqueza observada") 0 else 1), " espécies") else paste0(fim$serie, ": ", fmt1(fim$y))
+  p <- ggplot2::ggplot(d, ggplot2::aes(x, y)) +
+    { if (isTRUE(e$faixa)) ggplot2::geom_ribbon(ggplot2::aes(ymin = li, ymax = ls, fill = serie), alpha = .14, show.legend = FALSE) } +
+    ggplot2::geom_hline(data = ref, ggplot2::aes(yintercept = v, linetype = nome), colour = cr[as.character(ref$nome)], linewidth = e$linha * .9) +
+    ggplot2::geom_line(ggplot2::aes(colour = serie), linewidth = e$linha * 1.3) +
+    ggplot2::geom_point(data = fim, ggplot2::aes(colour = serie), size = e$ponto * 2) +
+    { if (um) ggplot2::geom_label(data = fim, ggplot2::aes(label = rot, colour = serie), vjust = 1.9, hjust = .95, family = e$familia, size = tam, fill = k$fundo, linewidth = 0, show.legend = FALSE) } +
+    ggplot2::scale_colour_manual(values = cs, name = if (um) NULL else "Curvas") + ggplot2::scale_fill_manual(values = cs) +
+    ggplot2::scale_linetype_manual(values = setNames(rep("dotted", nrow(ref)), levels(ref$nome)), name = "Linhas pontilhadas",
+      guide = ggplot2::guide_legend(ncol = 1, override.aes = list(colour = unname(cr), linewidth = e$linha))) +
+    ggplot2::scale_x_continuous(breaks = function(l) unique(round(pretty(l))), expand = ggplot2::expansion(mult = c(.02, .06))) +
+    ggplot2::scale_y_continuous(limits = c(0, NA), expand = ggplot2::expansion(mult = c(0, .08))) +
+    ggplot2::guides(colour = if (um) "none" else ggplot2::guide_legend(ncol = 1, order = 1)) +
+    titulos_gg(e, chave, if (um) paste(nomes, "por número de pontos") else "Riqueza observada e estimada por número de pontos", "Número de pontos amostrais", "Número de espécies",
+               "Faixa = IC 95%. Linha suavizada entre os valores de cada número de pontos (vegan::specaccum e poolaccum).") +
+    tema_gg(e) + ggplot2::theme(legend.box = "vertical", legend.box.just = "left", legend.position = "bottom", legend.justification = "left", legend.title.position = "top")
+  gg(p, w, h * 1.25)
 }

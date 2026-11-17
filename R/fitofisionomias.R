@@ -31,6 +31,10 @@ analisar_fito <- function(m, pontos_info, fam = NULL) {
     tab <- data.frame(fitofisionomia = nomes, nome = nome_fito(nomes), pontos = vapply(grupos, paste, "", collapse = ", "), n_pontos = lengths(grupos),
       riqueza = rowSums(pres), abundancia = rowSums(ab), riqueza_media_por_ponto = round(vapply(grupos, function(p) mean(rowSums(m[p, , drop = FALSE] > 0)), 1), 1),
       exclusivas = excl,
+      shannon = round(apply(ab, 1, function(v) vegan::diversity(v, "shannon")), 3),
+      hill1 = round(apply(ab, 1, function(v) exp(vegan::diversity(v, "shannon"))), 2),
+      hill2 = round(apply(ab, 1, function(v) if (sum(v) > 0) 1 / sum((v / sum(v))^2) else NA), 2),
+      pielou = round(apply(ab, 1, function(v) { s <- sum(v > 0); if (s > 1) vegan::diversity(v, "shannon") / log(s) else NA }), 3),
       especies_exclusivas = vapply(seq_along(nomes), function(i) paste(colnames(m)[pres[i, ] & colSums(pres[-i, , drop = FALSE]) == 0], collapse = "; "), ""),
       stringsAsFactors = FALSE)
     tab <- tab[order(-tab$riqueza), ]; rownames(tab) <- NULL
@@ -41,7 +45,21 @@ analisar_fito <- function(m, pontos_info, fam = NULL) {
       a <- pres[p[1], ]; b <- pres[p[2], ]; data.frame(fito_a = p[1], fito_b = p[2], comuns = sum(a & b), so_a = sum(a & !b), so_b = sum(b & !a),
         jaccard = round(sum(a & b) / max(1, sum(a | b)), 3), stringsAsFactors = FALSE) })) else NULL
     if (!is.null(pares)) pares <- pares[order(-pares$jaccard), ]
-    list(tabela = tab, especies = esp, pares = pares)
+    fams <- if (!is.null(fam)) do.call(rbind, lapply(nomes, function(nm) { e <- colnames(m)[pres[nm, ]]; if (!length(e)) return(NULL)
+      t <- table(fam[e]); data.frame(fitofisionomia = nm, familia = names(t), especies = as.integer(t), stringsAsFactors = FALSE) })) else NULL
+    jac <- matrix(1, length(nomes), length(nomes), dimnames = list(nomes, nomes))
+    for (i in seq_along(nomes)) for (j in seq_along(nomes)) if (i != j) jac[i, j] <- round(sum(pres[i, ] & pres[j, ]) / max(1, sum(pres[i, ] | pres[j, ])), 3)
+    rar <- NULL
+    vs <- lapply(nomes, function(nm) { v <- sort(ab[nm, ab[nm, ] > 0], decreasing = TRUE); v })
+    names(vs) <- nomes; vs <- vs[vapply(vs, function(v) length(v) >= 2 && sum(v) >= 4, TRUE)]
+    if (length(vs)) {
+      o <- tryCatch(suppressWarnings(iNEXT::iNEXT(vs, q = 0, datatype = "abundance", knots = 40, nboot = 50)), error = function(e) NULL)
+      if (!is.null(o)) { z <- o$iNextEst$size_based
+        rar <- data.frame(fitofisionomia = as.character(z$Assemblage), m = z$m, metodo = as.character(z$Method), qD = round(z$qD, 3), li = round(z$qD.LCL, 3), ls = round(z$qD.UCL, 3))
+        a <- o$AsyEst; a <- a[a$Diversity == "Species richness", ]
+        tab$chao1 <- round(a$Estimator[match(tab$fitofisionomia, a$Assemblage)], 1) }
+    }
+    list(tabela = tab, especies = esp, pares = pares, familias = fams, jaccard = jac, rarefacao = rar)
   }
   cls <- split(rownames(m), fito)
   comp_nomes <- unique(unlist(lapply(fito, partes_fito)))
@@ -62,13 +80,88 @@ analisar_fito <- function(m, pontos_info, fam = NULL) {
 }
 
 catalogo_fito <- function() list(
-  fitofisionomias = list(nome = "Fitofisionomias: espécies e indivíduos", padrao = "colunas", formas = list(
-    colunas = "Colunas por fitofisionomia (espécies, exclusivas e indivíduos)", componentes = "Cada sigla separada (pontos mistos contam nas duas)")),
+  fito_riqueza = list(nome = "Fitofisionomias: espécies e exclusivas", padrao = "classes", formas = list(
+    classes = "Fitofisionomia como escrita (MG/VR...)", componentes = "Cada sigla separada (pontos mistos contam nas duas)")),
+  fito_abundancia = list(nome = "Fitofisionomias: indivíduos", padrao = "classes", formas = list(
+    classes = "Fitofisionomia como escrita (MG/VR...)", componentes = "Cada sigla separada (pontos mistos contam nas duas)")),
+  fito_diversidade = list(nome = "Fitofisionomias: diversidade (Hill)", padrao = "hill", formas = list(hill = "Riqueza, espécies comuns e dominantes, com valores")),
+  fito_rarefacao = list(nome = "Fitofisionomias: rarefação (iNEXT)", padrao = "inext", formas = list(inext = "Curvas de cada fitofisionomia, estilo iNEXT")),
+  fito_familias = list(nome = "Fitofisionomias: famílias", padrao = "colunas", formas = list(colunas = "Espécies de cada família em cada fitofisionomia")),
+  fito_similaridade = list(nome = "Fitofisionomias: similaridade (Jaccard)", padrao = "ladrilhos", formas = list(ladrilhos = "Mapa com os valores de Jaccard")),
   fitofisionomias_especies = list(nome = "Fitofisionomias: espécies em cada uma", padrao = "matriz", formas = list(matriz = "Espécie x fitofisionomia, círculo do tamanho da abundância"))
 )
 
 desenhar_fito <- function(chave, forma, G, e, gg, pal, k, w, h) {
   F <- G$fitofisionomias; if (is.null(F)) return(invisible()); tam <- e$fonte / 3.1
+  fmt1 <- function(x, d = 1) formatC(x, format = "f", digits = d, decimal.mark = ",")
+  quebra <- function(x) gsub(" \\+ ", " +\n", x)
+  rotulo <- function(t) factor(paste0(quebra(t$nome %||% t$fitofisionomia), "\n(", ifelse(t$n_pontos == 1, t$pontos, paste(t$n_pontos, "pontos")), ")"), levels = unique(paste0(quebra(t$nome %||% t$fitofisionomia), "\n(", ifelse(t$n_pontos == 1, t$pontos, paste(t$n_pontos, "pontos")), ")")))
+  cores_f <- function(nomes) setNames(rep(pal, length.out = length(nomes)), nomes)
+  if (chave %in% c("fito_riqueza", "fito_abundancia")) {
+    X <- if (forma == "componentes" && !is.null(F$componentes)) F$componentes else F$classes; t <- X$tabela; t$rot <- rotulo(t)
+    if (chave == "fito_riqueza") {
+      d <- rbind(data.frame(rot = t$rot, medida = "Espécies", v = t$riqueza), data.frame(rot = t$rot, medida = "Espécies só desta fitofisionomia (exclusivas)", v = t$exclusivas))
+      d$medida <- factor(d$medida, levels = unique(d$medida))
+      return(gg(ggplot2::ggplot(d, ggplot2::aes(rot, v, fill = medida)) + ggplot2::geom_col(position = ggplot2::position_dodge(.8), width = .75) +
+        ggplot2::geom_text(ggplot2::aes(label = v), position = ggplot2::position_dodge(.8), vjust = -.4, family = e$familia, size = tam, colour = k$tinta) +
+        ggplot2::scale_fill_manual(values = c(pal[1], pal[4]), name = NULL) + ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, .14))) +
+        titulos_gg(e, chave, if (forma == "componentes") "Espécies por fitofisionomia (cada sigla separada)" else "Espécies por fitofisionomia", NULL, "Número de espécies",
+                   "Exclusivas = espécies registradas só naquela fitofisionomia.") + tema_gg(e), w, h))
+    }
+    return(gg(ggplot2::ggplot(t, ggplot2::aes(rot, abundancia)) + ggplot2::geom_col(fill = pal[2], width = .6) +
+      ggplot2::geom_text(ggplot2::aes(label = abundancia), vjust = -.4, family = e$familia, size = tam * 1.05, colour = k$tinta) +
+      ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, .14))) +
+      titulos_gg(e, chave, if (forma == "componentes") "Indivíduos por fitofisionomia (cada sigla separada)" else "Indivíduos por fitofisionomia", NULL, "Número de indivíduos") + tema_gg(e), w, h))
+  }
+  if (chave == "fito_diversidade") {
+    t <- F$classes$tabela; t$rot <- rotulo(t)
+    nh <- c("Riqueza (espécies)", "Espécies comuns (Shannon, q = 1)", "Espécies dominantes (Simpson, q = 2)")
+    d <- rbind(data.frame(rot = t$rot, h = nh[1], v = t$riqueza), data.frame(rot = t$rot, h = nh[2], v = t$hill1), data.frame(rot = t$rot, h = nh[3], v = t$hill2)); d$h <- factor(d$h, levels = nh)
+    return(gg(ggplot2::ggplot(d, ggplot2::aes(rot, v, fill = h)) + ggplot2::geom_col(position = ggplot2::position_dodge(.8), width = .75, na.rm = TRUE) +
+      ggplot2::geom_text(ggplot2::aes(label = fmt1(v)), position = ggplot2::position_dodge(.8), vjust = -.4, family = e$familia, size = tam * .9, colour = k$tinta, na.rm = TRUE) +
+      ggplot2::scale_fill_manual(values = pal[1:3], name = NULL) + ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, .14))) +
+      ggplot2::guides(fill = ggplot2::guide_legend(ncol = 1)) +
+      titulos_gg(e, chave, "Diversidade de cada fitofisionomia em número de espécies", NULL, "Número efetivo de espécies",
+                 "Colunas de Shannon e Simpson baixas em relação à riqueza = poucas espécies dominam.") + tema_gg(e), w, h * 1.1))
+  }
+  if (chave == "fito_rarefacao" && !is.null(F$classes$rarefacao)) {
+    z <- F$classes$rarefacao; t <- F$classes$tabela; nm <- setNames(t$nome %||% t$fitofisionomia, t$fitofisionomia)
+    z$fito <- factor(nm[z$fitofisionomia], levels = unique(nm[t$fitofisionomia]))
+    z$parte <- ifelse(z$metodo == "Extrapolation", "Extrapolação (projeção)", "Rarefação (dentro da amostra)")
+    lig <- z[z$metodo == "Observed", ]; ob <- lig; lig$parte <- "Extrapolação (projeção)"; z <- rbind(z, lig)
+    cs <- cores_f(levels(z$fito))
+    return(gg(ggplot2::ggplot(z, ggplot2::aes(m, qD, colour = fito, fill = fito)) +
+      { if (isTRUE(e$faixa)) ggplot2::geom_ribbon(ggplot2::aes(ymin = li, ymax = ls, group = fito), alpha = .1, colour = NA) } +
+      ggplot2::geom_line(ggplot2::aes(linetype = parte, group = interaction(fito, parte)), linewidth = e$linha * 1.2) +
+      ggplot2::geom_point(data = ob, size = e$ponto * 1.8) +
+      ggplot2::geom_text(data = ob, ggplot2::aes(label = fmt1(qD, 0)), vjust = -1, family = e$familia, size = tam, fontface = "bold", show.legend = FALSE) +
+      ggplot2::scale_colour_manual(values = cs, name = "Fitofisionomia") + ggplot2::scale_fill_manual(values = cs, guide = "none") +
+      ggplot2::scale_linetype_manual(values = c("Rarefação (dentro da amostra)" = "solid", "Extrapolação (projeção)" = "22"), name = "Curva") +
+      ggplot2::scale_y_continuous(limits = c(0, NA), expand = ggplot2::expansion(mult = c(0, .08))) +
+      ggplot2::guides(colour = ggplot2::guide_legend(ncol = 1, order = 1), linetype = ggplot2::guide_legend(ncol = 1, order = 2)) +
+      titulos_gg(e, chave, "Riqueza por número de indivíduos em cada fitofisionomia", "Número de indivíduos", "Número de espécies",
+                 "Ponto = amostra real. Compare as curvas no mesmo número de indivíduos (rarefação). iNEXT, faixas = IC 95%.") +
+      tema_gg(e) + ggplot2::theme(legend.box = "vertical", legend.box.just = "left", legend.title.position = "top"), w, h * 1.35))
+  }
+  if (chave == "fito_familias" && !is.null(F$classes$familias)) {
+    d <- F$classes$familias; t <- F$classes$tabela; nm <- setNames(quebra(t$nome %||% t$fitofisionomia), t$fitofisionomia)
+    d$fito <- factor(nm[d$fitofisionomia], levels = unique(nm[t$fitofisionomia]))
+    cf <- cores_familias(d$familia, pal)
+    return(gg(ggplot2::ggplot(d, ggplot2::aes(fito, especies, fill = familia)) +
+      ggplot2::geom_col(position = ggplot2::position_dodge2(preserve = "single", padding = .12), width = .85) +
+      ggplot2::geom_text(ggplot2::aes(label = especies, group = familia), position = ggplot2::position_dodge2(width = .85, preserve = "single", padding = .12), vjust = -.4, family = e$familia, size = tam * .9, colour = k$tinta) +
+      ggplot2::scale_fill_manual(values = cf, name = NULL) + ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, .12)), breaks = function(l) unique(floor(pretty(l)))) +
+      titulos_gg(e, chave, "Espécies de cada família em cada fitofisionomia", NULL, "Número de espécies") + tema_gg(e), w * 1.15, h))
+  }
+  if (chave == "fito_similaridade" && !is.null(F$classes$jaccard) && nrow(F$classes$jaccard) >= 2) {
+    J <- F$classes$jaccard; t <- F$classes$tabela; nm <- setNames(quebra(t$nome %||% t$fitofisionomia), t$fitofisionomia)
+    d <- expand.grid(a = rownames(J), b = colnames(J), stringsAsFactors = FALSE); d$v <- J[cbind(d$a, d$b)]
+    lv <- unname(nm[rownames(J)]); d$a <- factor(nm[d$a], levels = lv); d$b <- factor(nm[d$b], levels = rev(lv))
+    return(gg(ggplot2::ggplot(d, ggplot2::aes(a, b, fill = v)) + ggplot2::geom_tile(colour = k$fundo, linewidth = 1.2) +
+      ggplot2::geom_text(ggplot2::aes(label = fmt1(v, 2)), family = e$familia, size = tam * 1.1, colour = ifelse(d$v > .5, "white", k$tinta)) +
+      ggplot2::scale_fill_gradient(low = "#f1eee6", high = pal[1], limits = c(0, 1), name = "Jaccard") + ggplot2::coord_equal() +
+      titulos_gg(e, chave, "Quanto as fitofisionomias se parecem (Jaccard)", NULL, NULL, "1 = mesmas espécies; 0 = nenhuma em comum.") + tema_gg(e), h * 1.4, h * 1.2))
+  }
   rotx <- ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 30, hjust = 1, vjust = 1))
   if (chave == "fitofisionomias") {
     X <- if (forma == "componentes" && !is.null(F$componentes)) F$componentes else F$classes; t <- X$tabela

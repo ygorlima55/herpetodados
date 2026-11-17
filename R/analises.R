@@ -46,7 +46,8 @@ indices_por_ponto <- function(m) {
 }
 
 analisar_grupo <- function(reg, nome, pontos_info, consol = NULL, campanhas = NULL, faixa = NULL) {
-  passo <- function(f, etapa) if (!is.null(faixa) && exists("progresso")) progresso(faixa[1] + diff(faixa) * f, paste0(nome, ": ", etapa))
+  faixa_prog <- faixa   # faixa da barra de % (o nome "faixa" é usado mais abaixo para outra coisa)
+  passo <- function(f, etapa) if (!is.null(faixa_prog) && exists("progresso")) progresso(faixa_prog[1] + diff(faixa_prog) * f, paste0(nome, ": ", etapa))
   pts_todos <- if (!is.null(pontos_info)) pontos_info$ponto else unique(reg$ponto)
   M <- montar_matriz(reg, pts_todos)
   m <- M$abund; pr <- M$pres

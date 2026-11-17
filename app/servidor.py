@@ -10,6 +10,7 @@ e uma pequena API que roda o R:
   POST /api/l/<id>/leitura                 grava leitura_especialista.md
   POST /api/l/<id>/refazer                 roda as análises de novo (mesma planilha)
   POST /api/l/<id>/planilha?nome=          troca a planilha pela versão corrigida (guarda a anterior) e roda de novo
+  POST /api/l/<id>/correcoes               grava correcoes.json (correções feitas no painel) e roda de novo
   POST /api/l/<id>/pasta                   abre a pasta do levantamento no Explorer
 Só biblioteca padrão do Python. Rodar com:  python -I app/servidor.py
 """
@@ -247,7 +248,7 @@ class Manipulador(SimpleHTTPRequestHandler):
                 json.dump({"nome": nome, "enviado_em": time.strftime("%Y-%m-%d %H:%M:%S"), "titulo": re.sub(r"\.(xlsx|xls)$", "", nome, flags=re.I)},
                           open(os.path.join(p, "origem.json"), "w", encoding="utf-8"), ensure_ascii=False)
                 return self.json({"id": lid, "tarefa": analisar(lid)})
-            m = re.fullmatch(r"/api/l/([a-z0-9-]+)/(estilo|contexto|leitura|refazer|pasta|titulo|selecao|relatorio|planilha)", caminho)
+            m = re.fullmatch(r"/api/l/([a-z0-9-]+)/(estilo|contexto|leitura|refazer|pasta|titulo|selecao|relatorio|planilha|correcoes)", caminho)
             if not m:
                 return self.send_error(404)
             lid, acao = m.groups(); p = pasta_ok(lid)
@@ -283,6 +284,15 @@ class Manipulador(SimpleHTTPRequestHandler):
                     xlsx_simples(os.path.join(rel, "Tabelas_do_relatorio.xlsx"), [("Índice", indice)] + abas)
                 open(os.path.join(rel, "LEIA-ME.txt"), "w", encoding="utf-8").write("\n".join(leia) + "\n\nTodas as tabelas estão numa planilha só (Tabelas_do_relatorio.xlsx), uma aba por tabela; a aba Índice lista todas.\n")
                 return self.json({"figuras": nfig, "tabelas": ntab, "pasta": rel})
+            if acao == "correcoes":
+                try:
+                    lista = json.loads(self.corpo().decode("utf-8"))
+                except ValueError:
+                    return self.json({"erro": "Correções inválidas."}, 400)
+                if not isinstance(lista, list) or not all(isinstance(c, dict) and c.get("tipo") for c in lista):
+                    return self.json({"erro": "Correções inválidas."}, 400)
+                json.dump(lista, open(os.path.join(p, "correcoes.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+                return self.json({"tarefa": analisar(lid)})
             if acao == "planilha":
                 nome = os.path.basename(parse_qs(u.query).get("nome", ["planilha.xlsx"])[0])
                 dados = self.corpo()

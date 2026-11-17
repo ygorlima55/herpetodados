@@ -11,7 +11,7 @@ set.seed(20261117)
 
 args <- commandArgs(TRUE)
 aqui <- dirname(normalizePath(sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE)[1])))
-for (f in c("ler.R", "conferir.R", "analises.R", "descritiva.R", "saida.R", "saida_extra.R", "saida_novas.R", "campanhas.R", "fitofisionomias.R")) source(file.path(aqui, f), encoding = "UTF-8")
+for (f in c("ler.R", "conferir.R", "analises.R", "descritiva.R", "saida.R", "saida_extra.R", "saida_novas.R", "campanhas.R", "fitofisionomias.R", "correcoes.R")) source(file.path(aqui, f), encoding = "UTF-8")
 if (!length(args)) stop("Informe a planilha: Rscript herpetodados.R planilha.xlsx")
 planilha <- normalizePath(args[1], mustWork = TRUE)
 base <- tools::file_path_sans_ext(basename(planilha))
@@ -24,9 +24,18 @@ msg("Lendo a planilha:", basename(planilha))
 L <- ler_planilha(planilha)
 msg(nrow(L$registros), "registros na aba", L$aba_registros)
 
+# correções feitas no painel (botão Corrigir), guardadas em correcoes.json
+correcoes <- ler_correcoes(file.path(saida, "correcoes.json"))
+if (length(correcoes)) { L <- aplicar_correcoes(L, correcoes); msg(length(correcoes), "correções do painel aplicadas") }
 progresso(6, "Conferindo a planilha (corretor)")
 msg("Conferindo os dados (corretor)...")
 conf <- conferir_planilha(L)
+# o que só está na consolidada entra nas análises (e fica listado na conferência)
+L <- completar_com_consolidada(L)
+if (nrow(L$completados)) msg(nrow(L$completados), "registros completados pela aba consolidada:", paste(sprintf("%s %s (+%s)", L$completados$especie, L$completados$ponto, L$completados$adicionados), collapse = "; "))
+conf <- rbind(conferencia_completados(L), conf)
+unlink(file.path(saida, "planilha_corrigida.xlsx"))
+tryCatch(gravar_planilha_corrigida(L, saida), error = function(e) msg("planilha corrigida não gravada:", conditionMessage(e)))
 msg(sum(conf$nivel == "erro"), "erros,", sum(conf$nivel == "atenção"), "pontos de atenção,", sum(conf$nivel == "informação"), "informações")
 
 if (length(unique(L$registros$campanha)) >= 2) {
@@ -44,7 +53,7 @@ for (g in names(grupos)) {
   if (!nrow(reg)) next
   progresso(10 + 50 * (match(g, names(grupos)) - 1) / length(grupos), paste0("Análises de ", g, " (acumulação, estimadores, iNEXT, similaridade)"))
   msg("Analisando:", g)
-  i <- match(g, names(grupos)); R[[g]] <- analisar_grupo(reg, g, L$pontos, L$consolidada, L$campanhas, faixa = 10 + 50 * c(i - 1, i) / length(grupos))
+  i <- match(g, names(grupos)); R[[g]] <- analisar_grupo(reg, g, L$pontos, consol_atributos(L), L$campanhas, faixa = 10 + 50 * c(i - 1, i) / length(grupos))
 }
 avisos <- avisos_pressupostos(L, R)
 dist <- distancias_pontos(L$pontos_campo %||% L$pontos)
@@ -81,9 +90,10 @@ pacotes <- sapply(c("vegan", "iNEXT", "ggplot2", "readxl"), function(p) as.chara
 out <- list(
   meta = list(planilha = if (nzchar(Sys.getenv("HERP_NOME"))) Sys.getenv("HERP_NOME") else basename(planilha), caminho = planilha, gerado_em = format(Sys.time(), "%d/%m/%Y %H:%M"),
               r = R.version.string, pacotes = as.list(pacotes), abas = list(registros = L$aba_registros, pontos = L$aba_pontos, consolidada = L$aba_consolidada)),
-  campanhas = L$campanhas, pontos = L$pontos, distancias = dist, conferencia = conf, avisos = avisos, grupos = R, figuras = figs, formas = formas, catalogo = catalogo_todo(), tabelas = tabs,
+  campanhas = L$campanhas, completados = L$completados, correcoes = correcoes, correcoes_aplicadas = L$correcoes_aplicadas,
+  tem_planilha_corrigida = file.exists(file.path(saida, "planilha_corrigida.xlsx")), pontos = L$pontos, distancias = dist, conferencia = conf, avisos = avisos, grupos = R, figuras = figs, formas = formas, catalogo = catalogo_todo(), tabelas = tabs,
   estilo = estilo, titulos_padrao = tit_padrao, contexto = contexto, leitura = leitura,
-  registros = L$registros[, c("linha_planilha", "ponto", "especie", "especie_completa", "familia", "grupo_pad", "vo", "av", "sem_forma", "total", if (!is.null(L$campanhas)) c("campanha", "ponto_campo"))]
+  registros = L$registros[, c("linha_planilha", "ponto", "especie", "especie_completa", "familia", "grupo_pad", "vo", "av", "sem_forma", "total", "grupo", "ponto_original", intersect("alterado", names(L$registros)), if (!is.null(L$campanhas)) c("campanha", "ponto_campo"))]
 )
 js <- jsonlite::toJSON(out, auto_unbox = TRUE, na = "null", digits = NA, dataframe = "rows", pretty = FALSE)
 writeLines(c("window.HERP = ", js, ";"), file.path(saida, "dados.js"), useBytes = TRUE)

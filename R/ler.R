@@ -155,6 +155,7 @@ ler_planilha <- function(arquivo) {
   if (!is.null(consol)) {
     consol$familia <- reg$familia[match(consol$especie, reg$especie)]
     consol$grupo <- reg$grupo_pad[match(consol$especie, reg$especie)]
+    if (!is.null(consol$familia_cons)) { consol$familia <- ifelse(is.na(consol$familia), consol$familia_cons, consol$familia); consol$grupo <- ifelse(is.na(consol$grupo), consol$grupo_cons, consol$grupo) }
   }
   list(arquivo = arquivo, aba_registros = a_bru, aba_pontos = a_pt, aba_consolidada = a_con,
        registros = reg, pontos = pontos, consolidada = consol)
@@ -191,6 +192,17 @@ ler_consolidada <- function(tmp, a_con) {
         consol$forma_registro <- pega_at("forma")
         consol$salve <- pega_at("salve|icmbio|mma")
         consol$iucn <- pega_at("iucn")
+        # família e grupo pelas linhas de título acima de cada espécie (ex.: "Anuros", "Bufonidae")
+        fam <- grp <- NA_character_; fam_v <- grp_v <- rep(NA_character_, length(nomes))
+        g0 <- norm_txt(k[h, 1]); if (!is.na(g0) && !grepl(" ", g0)) { g0 <- grupo_padrao(g0); if (g0 != "Todas as espécies") grp <- g0 }
+        for (j in seq_along(nomes)) {
+          t <- nomes[j]; if (is.na(t) || t == "") next
+          if (tem[j]) { fam_v[j] <- fam; grp_v[j] <- grp; next }
+          if (!grepl(" ", t) || grepl("^[A-Z][a-z]+idae\\b|^[A-Z][a-z]+inae\\b", t)) {
+            if (grepl("idae\\b|inae\\b", t)) fam <- t else { g <- grupo_padrao(t); if (g != "Todas as espécies") grp <- g }
+          }
+        }
+        consol$familia_cons <- fam_v[tem]; consol$grupo_cons <- grp_v[tem]
       }
     }
   consol

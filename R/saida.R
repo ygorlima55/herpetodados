@@ -11,8 +11,8 @@ estilo_padrao <- list(
 )
 
 catalogo_formas <- function() list(
-  acumulacao = list(nome = "Curva de acumulação", padrao = "vegan", formas = list(
-    vegan = "vegan: plot(specaccum) com caixas", faixa = "ggplot: linha e faixa de 95%", estimadores = "Observada com Chao 2, Jackknife e Bootstrap")),
+  acumulacao = list(nome = "Curva de acumulação", padrao = "inext", formas = list(
+    inext = "Estilo iNEXT: curva com faixa, amostra real e linha pontilhada", vegan = "vegan: plot(specaccum) com caixas", faixa = "ggplot: linha e faixa de 95%", estimadores = "Observada com Chao 2, Jackknife e Bootstrap")),
   estimadores = list(nome = "Estimadores de riqueza", padrao = "curvas", formas = list(
     curvas = "Curvas dos estimadores por ponto (poolaccum)", lattice = "vegan: plot(poolaccum), um painel por estimador",
     barras = "Barras com erro padrão", pontos = "Pontos com erro padrão")),
@@ -118,6 +118,10 @@ desenhar <- function(chave, forma, G, O, e, arq, w, h, dpi) {
   if (chave == "whittaker" && forma == "nomes" && !is.null(G$descritiva)) return(dominancia_nomes(G, e, chave, gg, pal, k))
   nomes_est <- c(S = "Observada", chao = "Chao 2", jack1 = "Jackknife 1", jack2 = "Jackknife 2", boot = "Bootstrap")
 
+  if (chave == "acumulacao" && forma == "inext" && !is.null(G$acumulacao$curva)) {
+    c1 <- G$acumulacao$curva
+    return(curvas_estilo_inext(chave, list(data.frame(pontos = c1$pontos, media = c1$riqueza, li = c1$li, ls = c1$ls)), "Riqueza observada", pal[1], G, e, gg, pal, k, w, h))
+  }
   if (chave == "acumulacao") {
     tt <- paste("Curva de acumulação de espécies:", gr); xl <- rot(e, chave, "x", "Número de pontos amostrais"); yl <- rot(e, chave, "y", "Riqueza acumulada")
     if (forma == "vegan" && !is.null(O$sa)) return(base(function() {
@@ -357,7 +361,7 @@ exportar_tabelas <- function(L, conf, R, saida) {
   pasta <- file.path(saida, "tabelas"); dir.create(pasta, showWarnings = FALSE, recursive = TRUE)
   unlink(list.files(pasta, glob2rx("*.xlsx"), full.names = TRUE))
   esc <- function(sh, arq) { sh <- sh[!vapply(sh, is.null, TRUE)]; names(sh) <- substr(names(sh), 1, 31); if (length(sh)) writexl::write_xlsx(sh, file.path(pasta, arq)) }
-  esc(list("Conferência" = conf), "00_conferencia_da_planilha.xlsx")
+  esc(list("Conferência" = conf, "Completados pela consolidada" = if (!is.null(L$completados) && nrow(L$completados)) L$completados), "00_conferencia_da_planilha.xlsx")
   tudo <- list("Conferência" = conf)
   for (g in names(R)) {
     G <- R[[g]]; t <- tag_grupo(g); D <- G$descritiva
@@ -382,6 +386,7 @@ exportar_tabelas <- function(L, conf, R, saida) {
     esc(list("Ranque de abundância" = G$abundancia$tabela), sprintf("06_%s_dominancia.xlsx", t))
     if (!is.null(G$fitofisionomias)) { F <- G$fitofisionomias
       esc(list("Por fitofisionomia" = F$classes$tabela, "Espécies por fitofisionomia" = F$classes$especies, "Pares de fitofisionomias" = F$classes$pares,
+               "Famílias por fitofisionomia" = F$classes$familias, "Rarefação (iNEXT)" = F$classes$rarefacao,
                "Por sigla (componente)" = F$componentes$tabela, "Espécies por sigla" = F$componentes$especies, "Pares de siglas" = F$componentes$pares), sprintf("08_%s_fitofisionomias.xlsx", t)) }
     if (!is.null(G$campanhas)) esc(list("Resumo por campanha" = G$campanhas$resumo, "Espécies por campanha" = G$campanhas$especies,
       "Pares de campanhas" = G$campanhas$pares, "Cada ponto nas campanhas" = G$campanhas$por_ponto,
