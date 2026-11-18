@@ -289,5 +289,6 @@ lista();
   document.getElementById("btTema").onclick = () => { e.painel = e.painel === "escuro" ? "claro" : "escuro"; try { localStorage.setItem(k, JSON.stringify(e)); } catch (x) {} aplica(); };
 })();
 </script>
+<script>/* sinal de vida para o programa saber que a janela está aberta */ (function(){ const p = () => fetch("/api/ping", {cache:"no-store"}).catch(() => {}); if (location.protocol.startsWith("http")) { p(); setInterval(p, 10000); } })();</script>
 </body>
 </html>

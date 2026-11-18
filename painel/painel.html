@@ -1000,5 +1000,6 @@ if (LID) Promise.all([fetch(`/l/${LID}/contexto.json`).then(r => r.ok ? r.json()
   .then(([c, s]) => { if (c) H.contexto_json = c; if (Array.isArray(s)) SEL = s; }).finally(iniciar);
 else iniciar();
 </script>
+<script>/* sinal de vida para o programa saber que a janela está aberta */ (function(){ const p = () => fetch("/api/ping", {cache:"no-store"}).catch(() => {}); if (location.protocol.startsWith("http")) { p(); setInterval(p, 10000); } })();</script>
 </body>
 </html>

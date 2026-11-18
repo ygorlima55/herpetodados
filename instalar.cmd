@@ -41,7 +41,10 @@ echo [ 50%%] Instalando os pacotes do R na pasta r-pacotes (so na primeira vez; 
 if errorlevel 1 ( echo. & echo Os pacotes nao instalaram. Confira a internet e rode de novo. & pause & exit /b 1 )
 
 echo.
-echo [100%%] Tudo pronto. Para usar: dois cliques em "abrir_herpetodados.cmd".
+echo [ 98%%] Criando o atalho Herpetodados na area de trabalho...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$d=[Environment]::GetFolderPath('Desktop'); $w=New-Object -ComObject WScript.Shell; $s=$w.CreateShortcut((Join-Path $d 'Herpetodados.lnk')); $s.TargetPath='%AQUI%abrir_herpetodados.cmd'; $s.WorkingDirectory='%AQUI%'; $s.IconLocation='%AQUI%identidade\herpetodados.ico,0'; $s.WindowStyle=7; $s.Description='Herpetodados'; $s.Save()" >nul 2>nul
+echo [100%%] Tudo pronto. Para usar: dois cliques no atalho "Herpetodados" da area de trabalho
+echo        (ou em "abrir_herpetodados.cmd"). Ele abre numa janela propria; ao fechar, encerra sozinho.
 echo Para testar, solte a planilha da pasta "exemplo" na pagina que abrir.
 pause
 exit /b 0

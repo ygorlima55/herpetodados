@@ -42,6 +42,7 @@ MAX_UPLOAD = 60 * 1024 * 1024
 os.makedirs(LEV, exist_ok=True)
 
 TAREFAS = {}
+PING = {"ultimo": None}   # sinal de vida das páginas abertas (a janela do programa)
 TRAVA = threading.Lock()
 
 
@@ -209,6 +210,9 @@ class Manipulador(SimpleHTTPRequestHandler):
         u = urlparse(self.path); caminho = unquote(u.path)
         if caminho in ("/", "/index.html"):
             self.path = "/app/inicio.html"; return super().do_GET()
+        if caminho == "/api/ping":
+            PING["ultimo"] = time.time()
+            return self.json({"ok": True})
         if caminho == "/api/levantamentos":
             return self.json(listar())
         m = re.fullmatch(r"/api/tarefa/([a-f0-9]{10})", caminho)
@@ -339,12 +343,74 @@ class Manipulador(SimpleHTTPRequestHandler):
             return self.json({"erro": str(e)}, 400)
 
 
+def ja_aberto(url):
+    """True se o Herpetodados já está rodando nesta porta (segundo clique no atalho)."""
+    import urllib.request
+    try:
+        with urllib.request.urlopen(url + "api/levantamentos", timeout=2) as r:
+            return r.status == 200
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def acha_navegador_app():
+    """Edge (vem no Windows) ou Chrome, para abrir em janela de programa (--app), sem abas nem barra de endereço."""
+    import glob
+    cands = []
+    for base in [os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"), os.environ.get("ProgramFiles", r"C:\Program Files"), os.environ.get("LOCALAPPDATA", "")]:
+        cands += [os.path.join(base, "Microsoft", "Edge", "Application", "msedge.exe"), os.path.join(base, "Google", "Chrome", "Application", "chrome.exe")]
+    for c in cands:
+        if c and os.path.exists(c):
+            return c
+    return shutil.which("msedge") or shutil.which("chrome")
+
+
+def abre_janela(url):
+    """Abre o Herpetodados numa janela própria. Devolve o processo (quando dá para saber quando ela fecha) ou None."""
+    exe = acha_navegador_app()
+    if not exe:
+        webbrowser.open(url)
+        return None
+    perfil = os.path.join(os.environ.get("LOCALAPPDATA", RAIZ), "Herpetodados", "janela")   # perfil só do Herpetodados
+    os.makedirs(perfil, exist_ok=True)
+    try:
+        return subprocess.Popen([exe, f"--app={url}", f"--user-data-dir={perfil}", "--window-size=1440,920",
+                                 "--no-first-run", "--no-default-browser-check", "--disable-features=Translate"],
+                                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    except OSError:
+        webbrowser.open(url)
+        return None
+
+
 def main():
-    srv = ThreadingHTTPServer(("127.0.0.1", PORTA), Manipulador)
     url = f"http://127.0.0.1:{PORTA}/"
-    print(f"Herpetodados aberto em {url}  (feche esta janela para encerrar)")
+    if ja_aberto(url):
+        print("O Herpetodados já está aberto; abrindo a janela dele.")
+        if "--sem-navegador" not in sys.argv:
+            abre_janela(url)
+        time.sleep(1)
+        sys.exit(3)
+
+    class Servidor(ThreadingHTTPServer):
+        allow_reuse_address = False   # no Windows, True deixaria dois programas na mesma porta
+    srv = Servidor(("127.0.0.1", PORTA), Manipulador)
+    print(f"Herpetodados aberto em {url}  (fechar a janela do programa encerra tudo)")
     if "--sem-navegador" not in sys.argv:
-        threading.Timer(0.8, lambda: webbrowser.open(url)).start()
+        threading.Timer(0.6, lambda: abre_janela(url)).start()
+
+        def vigia():
+            # as páginas mandam um sinal a cada 10 s; sem sinal por 45 s (janela fechada) e sem R rodando, o programa encerra
+            while True:
+                time.sleep(5)
+                u = PING["ultimo"]
+                if u is None or time.time() - u < 45:
+                    continue
+                if any(t.get("estado") == "rodando" for t in TAREFAS.values()):
+                    continue
+                print("Janela fechada; encerrando o Herpetodados.")
+                srv.shutdown()
+                return
+        threading.Thread(target=vigia, daemon=True).start()
     srv.serve_forever()
 
 
