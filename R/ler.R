@@ -73,8 +73,16 @@ ler_planilha <- function(arquivo) {
   tmp <- copiar_planilha(arquivo)
   abas <- readxl::excel_sheets(tmp)
   a_bru <- abas[grepl("brut|registro", sem_acento(abas))][1]
-  if (is.na(a_bru)) stop("Não achei a aba de registros (nome com 'brutos' ou 'registros'). Abas: ",
-                          paste(abas, collapse = ", "))
+  if (is.na(a_bru)) {
+    # sem aba de registros: monta os registros a partir da consolidada (espécie x P1..Pn)
+    a_con0 <- abas[grepl("consolid", sem_acento(abas))][1]
+    if (is.na(a_con0)) stop("Não achei a aba de registros (nome com 'brutos' ou 'registros') nem a consolidada. Abas: ",
+                            paste(abas, collapse = ", "))
+    d <- registros_da_consolidada(ler_consolidada(tmp, a_con0))
+    if (is.null(d) || !nrow(d)) stop("A aba '", a_con0, "' não tem espécies com contagem nos pontos (colunas P1, P2...).")
+    cat("Sem aba de registros: os dados foram montados a partir da aba '", a_con0, "'.\n", sep = "")
+    a_bru <- paste0(a_con0, " (montada)")
+  } else
   d <- as.data.frame(readxl::read_excel(tmp, sheet = a_bru, col_types = "text"))
   nm <- names(d)
   col <- list(
@@ -176,6 +184,26 @@ ler_planilha <- function(arquivo) {
   }
   list(arquivo = arquivo, aba_registros = a_bru, aba_pontos = a_pt, aba_consolidada = a_con,
        registros = reg, pontos = pontos, consolidada = consol, secundarios = secundarios)
+}
+
+# transforma a consolidada (espécie x P1..Pn) em registros: uma linha por espécie e ponto com contagem > 0,
+# com as colunas da aba de registros (Ponto, Espécie, Família, Grupo, Total)
+registros_da_consolidada <- function(consol) {
+  if (is.null(consol) || !nrow(consol)) return(NULL)
+  cps <- grep("^P\\d+$", names(consol), value = TRUE)
+  out <- list()
+  for (i in seq_len(nrow(consol))) for (p in cps) {
+    n <- consol[[p]][i]
+    if (is.na(n) || n <= 0) next
+    # VO e AV ficam em branco: a consolidada não diz quantos indivíduos de cada forma (a forma vem da coluna dela)
+    out[[length(out) + 1]] <- data.frame(
+      Ponto = p, `Espécie` = consol$especie_completa[i],
+      `Família` = consol$familia_cons[i] %||% NA_character_, Grupo = consol$grupo_cons[i] %||% NA_character_,
+      Total = as.character(n), `Observação` = "montado da aba consolidada",
+      check.names = FALSE, stringsAsFactors = FALSE)
+  }
+  if (!length(out)) return(NULL)
+  do.call(rbind, out)
 }
 
 # lê a aba consolidada (espécie x P1..Pn, cabeçalho em duas linhas) com os atributos das espécies
