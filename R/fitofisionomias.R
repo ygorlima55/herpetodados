@@ -135,7 +135,7 @@ desenhar_fito <- function(chave, forma, G, e, gg, pal, k, w, h) {
     return(gg(ggplot2::ggplot(d, ggplot2::aes(rot, v, fill = h)) + ggplot2::geom_col(position = ggplot2::position_dodge(.8), width = .75, na.rm = TRUE) +
       ggplot2::geom_text(ggplot2::aes(label = fmt1(v)), position = ggplot2::position_dodge(.8), vjust = -.4, family = e$familia, size = tam * .9, colour = k$tinta, na.rm = TRUE) +
       ggplot2::scale_fill_manual(values = pal[1:3], name = NULL) + ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, .14))) +
-      ggplot2::guides(fill = ggplot2::guide_legend(ncol = 1)) +
+      ggplot2::guides(fill = ggplot2::guide_legend(nrow = 1)) +
       titulos_gg(e, chave, "Diversidade de cada fitofisionomia em número de espécies", NULL, "Número efetivo de espécies",
                  "Colunas de Shannon e Simpson baixas em relação à riqueza = poucas espécies dominam.") + tema_gg(e), w, h * 1.1))
   }

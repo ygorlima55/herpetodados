@@ -30,8 +30,16 @@ catalogo_novas <- function() c(
   list(
     familias_pontos = list(nome = "Espécies de cada família por ponto", padrao = "colunas", formas = list(
       colunas = "Uma coluna por família, com valores", empilhado = "Colunas empilhadas com valores")),
+    # 18/11/2026: mais descritiva
+    composicao_familias = list(nome = "Composição por família", padrao = "rosca", formas = list(
+      rosca = "Rosca: % das espécies em cada família", colunas = "Colunas: espécies por família, com número e %")),
+    especies_abundantes = list(nome = "Espécies mais abundantes", padrao = "todas", formas = list(
+      todas = "Todas as espécies, da mais para a menos abundante", top10 = "Só as 10 mais abundantes")),
+    exclusivas_pontos = list(nome = "Espécies exclusivas de cada ponto", padrao = "barras", formas = list(
+      barras = "Barras com o número e o nome das exclusivas", colunas = "Colunas: exclusivas e compartilhadas em cada ponto")),
     curva_jack1_boot = list(nome = "Curvas: Observada, Jackknife 1 e Bootstrap", padrao = "limpa", formas = list(
       limpa = "Limpa: só a curva, a faixa e a legenda no canto",
+      faixas = "As três curvas com a faixa sombreada de cada uma (só os pontos amostrados)",
       inext = "Estilo iNEXT: curvas com faixa e linhas pontilhadas do valor final",
       linhas = "Três curvas com valores", final = "Só o valor final de cada uma"))
   ),
@@ -71,6 +79,71 @@ desenhar_novas <- function(chave, forma, G, e, gg, pal, k, w, h) {
       titulos_gg(e, chave, "Número de espécies de cada família por ponto amostral", NULL, "Número de espécies") + tema_gg(e), w * 1.15, h))
   }
 
+  abrev <- function(x) sub("^(\\w)\\w*\\s+", "\\1. ", x)
+  leg_cima <- ggplot2::theme(legend.position = "top", legend.direction = "horizontal", legend.justification = "left")
+
+  if (chave == "composicao_familias" && !is.null(D)) {
+    tf <- D$familias; cf <- cores_familias(D$especies$familia, pal)
+    tf$familia <- factor(tf$familia, levels = tf$familia); tf$rot <- paste0(tf$riqueza, " (", pc(tf$riqueza_pct), ")")
+    if (forma == "colunas") return(gg(ggplot2::ggplot(tf, ggplot2::aes(familia, riqueza, fill = familia)) + ggplot2::geom_col(width = .6, show.legend = FALSE) +
+      ggplot2::geom_text(ggplot2::aes(label = rot), vjust = -.5, family = e$familia, size = tam, colour = k$tinta) +
+      ggplot2::scale_fill_manual(values = cf) + ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, .14)), breaks = function(l) unique(floor(pretty(l)))) +
+      titulos_gg(e, chave, "Número de espécies por família", NULL, "Número de espécies") + tema_gg(e) + (if (nrow(tf) > 5) rotx)))
+    tf$rot_fora <- ifelse(tf$riqueza_pct >= .06, tf$rot, "")
+    nl <- ceiling(nrow(tf) / 3)
+    return(gg(ggplot2::ggplot(tf, ggplot2::aes(x = 2, y = riqueza, fill = familia)) +
+      ggplot2::geom_col(width = 1, colour = k$fundo, linewidth = .8) +
+      ggplot2::geom_text(ggplot2::aes(label = rot_fora), position = ggplot2::position_stack(vjust = .5), family = e$familia, size = tam * .95, colour = "white", fontface = "bold") +
+      ggplot2::annotate("text", x = .5, y = 0, label = paste0(sum(tf$riqueza), "
+espécies"), family = e$familia, size = tam * 1.4, colour = k$tinta, lineheight = .9) +
+      ggplot2::coord_polar(theta = "y") + ggplot2::xlim(.5, 2.5) +
+      ggplot2::scale_fill_manual(values = cf, name = NULL, labels = paste0(tf$familia, " (", tf$riqueza, ")")) +
+      ggplot2::guides(fill = ggplot2::guide_legend(nrow = nl, byrow = TRUE)) +
+      titulos_gg(e, chave, "Composição de espécies por família", NULL, NULL) + tema_gg(e) + leg_cima +
+      ggplot2::theme(axis.text = ggplot2::element_blank(), axis.title = ggplot2::element_blank(), axis.line = ggplot2::element_blank(), axis.line.x = ggplot2::element_blank(),
+                     axis.ticks = ggplot2::element_blank(), panel.grid = ggplot2::element_blank(), panel.grid.major = ggplot2::element_blank(),
+                     legend.justification = "center"), w, h * 1.15))
+  }
+
+  if (chave == "especies_abundantes" && !is.null(D)) {
+    le <- D$especies; le <- le[le$total > 0, ]; le <- le[order(-le$total, le$especie), ]
+    if (forma == "top10") le <- utils::head(le, 10)
+    tot <- sum(D$especies$total); cf <- cores_familias(D$especies$familia, pal)
+    le$especie <- factor(le$especie, levels = rev(le$especie)); le$rot <- paste0(le$total, " (", fmt1(100 * le$total / tot, 1), "%)")
+    return(gg(ggplot2::ggplot(le, ggplot2::aes(total, especie, fill = familia)) + ggplot2::geom_col(width = .68) +
+      ggplot2::geom_text(ggplot2::aes(label = rot), hjust = -.08, family = e$familia, size = tam * .9, colour = k$tinta) +
+      ggplot2::scale_fill_manual(values = cf, name = NULL) + ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0, .16))) +
+      ggplot2::guides(fill = ggplot2::guide_legend(nrow = if (length(unique(le$familia)) > 4) 2 else 1, byrow = TRUE)) +
+      titulos_gg(e, chave, if (forma == "top10") "As 10 espécies mais abundantes" else "Abundância de cada espécie", "Número de indivíduos (abundância relativa)", NULL) +
+      tema_gg(e) + leg_cima + ggplot2::theme(axis.text.y = ggplot2::element_text(face = "italic", colour = k$tinta), panel.grid.major.y = ggplot2::element_blank(),
+                                             panel.grid.major.x = if (isTRUE(e$grade)) ggplot2::element_line(colour = k$grade, linewidth = .4) else ggplot2::element_blank()),
+      w, max(3, .26 * nrow(le) + 1.5)))
+  }
+
+  if (chave == "exclusivas_pontos" && !is.null(D)) {
+    le <- D$especies; pts <- D$pontos$ponto
+    d <- do.call(rbind, lapply(pts, function(p) { ex <- le$especie[le[[p]] > 0 & le$n_pontos == 1]; tot <- sum(le[[p]] > 0)
+      data.frame(ponto = p, exclusivas = length(ex), compartilhadas = tot - length(ex), nomes = paste(abrev(sort(ex)), collapse = ", "), stringsAsFactors = FALSE) }))
+    d$ponto <- factor(d$ponto, levels = rev(pts))
+    if (forma == "colunas") {
+      dd <- rbind(data.frame(ponto = d$ponto, tipo = "Exclusivas do ponto", n = d$exclusivas), data.frame(ponto = d$ponto, tipo = "Também em outros pontos", n = d$compartilhadas))
+      dd$ponto <- factor(dd$ponto, levels = pts); dd$tipo <- factor(dd$tipo, levels = c("Também em outros pontos", "Exclusivas do ponto"))
+      return(gg(ggplot2::ggplot(dd, ggplot2::aes(ponto, n, fill = tipo)) + ggplot2::geom_col(width = .62, colour = k$fundo, linewidth = .4) +
+        ggplot2::geom_text(ggplot2::aes(label = ifelse(n > 0, n, "")), position = ggplot2::position_stack(vjust = .5), family = e$familia, size = tam, colour = "white", fontface = "bold") +
+        ggplot2::scale_fill_manual(values = c("Exclusivas do ponto" = pal[2], "Também em outros pontos" = pal[1]), name = NULL, breaks = c("Exclusivas do ponto", "Também em outros pontos")) +
+        ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, .06)), breaks = function(l) unique(floor(pretty(l)))) +
+        titulos_gg(e, chave, "Espécies exclusivas e compartilhadas em cada ponto", NULL, "Número de espécies") + tema_gg(e) + leg_cima))
+    }
+    m <- max(1, d$exclusivas); passo <- m * .06
+    return(gg(ggplot2::ggplot(d, ggplot2::aes(exclusivas, ponto)) + ggplot2::geom_col(fill = pal[2], width = .55) +
+      ggplot2::geom_text(ggplot2::aes(x = exclusivas + passo, label = exclusivas), hjust = 0, family = e$familia, size = tam, colour = k$tinta, fontface = "bold") +
+      ggplot2::geom_text(ggplot2::aes(x = exclusivas + passo * 4, label = nomes), hjust = 0, family = e$familia, fontface = "italic", size = tam * .9, colour = k$tinta) +
+      ggplot2::scale_x_continuous(limits = c(0, m * 2.6 + 1), expand = ggplot2::expansion(mult = c(0, 0))) +
+      titulos_gg(e, chave, "Espécies registradas em um só ponto", NULL, NULL) + tema_gg(e) +
+      ggplot2::theme(panel.grid = ggplot2::element_blank(), panel.grid.major = ggplot2::element_blank(), panel.grid.major.y = ggplot2::element_blank(), axis.text.x = ggplot2::element_blank(), axis.line.x = ggplot2::element_blank(),
+                     axis.text.y = ggplot2::element_text(colour = k$tinta, size = ggplot2::rel(1.05))), w, max(2.6, .45 * length(pts) + 1.4)))
+  }
+
   if (startsWith(chave, "atributo_") && !is.null(D)) {
     a <- sub("^atributo_", "", chave); t <- D$categorias[[a]]; if (is.null(t) || !nrow(t)) return(invisible())
     falta <- sum(t$especies_n[t$classe == "Sem informação"]); t <- t[t$classe != "Sem informação", , drop = FALSE]
@@ -91,8 +164,9 @@ desenhar_novas <- function(chave, forma, G, e, gg, pal, k, w, h) {
       (if (nrow(t) > 4 || max(nchar(as.character(t$classe))) > 18) rotx), w * .85, h * .9))
   }
 
-  if (chave == "curva_jack1_boot" && !is.null(G$acumulacao$poolaccum) && forma == "limpa")
-    return(curvas_limpas(chave, list(curva_obs_inext(G), curva_estimador(G, "jack1"), curva_estimador(G, "boot")), c("Riqueza observada", "Jackknife 1", "Bootstrap"), c(pal[1], pal[2], pal[4]), e, gg, k, w, h))
+  if (chave == "curva_jack1_boot" && !is.null(G$acumulacao$poolaccum) && forma %in% c("limpa", "faixas"))
+    return(curvas_limpas(chave, list(curva_obs_inext(G), curva_estimador(G, "jack1"), curva_estimador(G, "boot")), c("Riqueza observada", "Jackknife 1", "Bootstrap"), c(pal[1], pal[2], pal[4]), e, gg, k, w, h,
+                         faixas = forma == "faixas"))
   if (chave == "curva_jack1_boot" && !is.null(G$acumulacao$poolaccum) && forma == "inext") {
     c1 <- G$acumulacao$curva; pool <- G$acumulacao$poolaccum
     zs <- list(data.frame(pontos = c1$pontos, media = c1$riqueza, li = c1$li, ls = c1$ls),
@@ -222,9 +296,9 @@ curvas_estilo_inext <- function(chave, zs, nomes, cores, G, e, gg, pal, k, w, h)
       guide = ggplot2::guide_legend(ncol = 1, override.aes = list(colour = unname(cr), linewidth = e$linha))) +
     ggplot2::scale_x_continuous(breaks = function(l) unique(round(pretty(l))), expand = ggplot2::expansion(mult = c(.02, .06))) +
     ggplot2::scale_y_continuous(limits = c(0, NA), expand = ggplot2::expansion(mult = c(0, .08))) +
-    ggplot2::guides(colour = if (um) "none" else ggplot2::guide_legend(nrow = 1, order = 1)) +
+    ggplot2::guides(colour = if (um) "none" else ggplot2::guide_legend(ncol = 1, order = 1)) +
     titulos_gg(e, chave, if (um) paste(nomes, "por número de pontos") else "Riqueza observada e estimada por número de pontos", "Número de pontos amostrais", "Número de espécies", nota) +
-    tema_gg(e) + ggplot2::theme(legend.box = "vertical", legend.box.just = "left", legend.position = "bottom", legend.justification = "left", legend.title.position = "top")
+    tema_gg(e) + ggplot2::theme(legend.box = "vertical", legend.box.just = "left", legend.position = "bottom", legend.title.position = "top", legend.justification = "left")
   gg(p, w, h * (if (um) 1.25 else 1.6))
 }
 
@@ -245,8 +319,17 @@ curva_estimador <- function(G, est) {
 
 # ---- curvas limpas (como as figuras de rarefação dos artigos): só a curva, a faixa estreita e a legenda dentro do gráfico ----
 # Sem título, subtítulo, nota, linhas pontilhadas nem rótulos. Linha cheia até a amostra real; tracejada na extrapolação.
-curvas_limpas <- function(chave, zs, nomes, cores, e, gg, k, w, h, xlab = "Número de pontos amostrais") {
+# rótulos do valor final ao lado da curva, afastados para não se sobreporem (mínimo de 5% da altura do gráfico)
+rotulos_afastados <- function(fim, folga = .05) {
+  o <- order(fim$y); y <- fim$y[o]; d <- folga * max(1, diff(range(c(0, fim$ls, fim$y)), na.rm = TRUE))
+  for (i in seq_along(y)[-1]) if (y[i] - y[i - 1] < d) y[i] <- y[i - 1] + d
+  fim$y_rot <- NA; fim$y_rot[o] <- y; fim
+}
+curvas_limpas <- function(chave, zs, nomes, cores, e, gg, k, w, h, xlab = "Número de pontos amostrais", faixas = FALSE) {
   varias <- length(zs) > 1
+  # faixas = TRUE (18/11/2026): várias curvas, cada uma com a sua faixa sombreada, só nos pontos amostrados (sem projeção)
+  if (faixas) zs <- lapply(zs, function(z) { if (!is.null(z$real)) z <- z[z$real, , drop = FALSE]; z$real <- NULL; z })
+  n_amostra <- max(unlist(lapply(zs, function(z) if (!is.null(z$real)) z$pontos[z$real] else z$pontos)))
   if (varias) {
     # todas começam no mesmo ponto (1 unidade amostral: Jackknife 1 e Bootstrap = riqueza observada) e vão até o fim da
     # extrapolação do iNEXT da observada; depois do último ponto amostrado, cada estimador segue no valor com todos os pontos.
@@ -278,11 +361,14 @@ curvas_limpas <- function(chave, zs, nomes, cores, e, gg, k, w, h, xlab = "Núme
   fmt_v <- function(v) ifelse(abs(v - round(v)) < .05, formatC(round(v), format = "d"), formatC(v, format = "f", digits = 1, decimal.mark = ","))
   fim_proj <- do.call(rbind, lapply(split(d, d$serie), function(q) q[which.max(q$x), ])); fim_proj <- fim_proj[fim_proj$x > fim_proj$T + 1e-9 & as.integer(fim_proj$serie) == 1, ]   # só a projeção da observada (os estimadores ficam retos)
   p <- ggplot2::ggplot(d2, ggplot2::aes(x, y, colour = serie, fill = serie)) +
-    { if (isTRUE(e$faixa) && !varias) ggplot2::geom_ribbon(data = d, ggplot2::aes(ymin = li, ymax = ls, group = serie), alpha = .22, colour = NA) } +
+    { if (isTRUE(e$faixa) && (!varias || faixas)) ggplot2::geom_ribbon(data = d, ggplot2::aes(ymin = li, ymax = ls, group = serie, alpha = serie), colour = NA, show.legend = FALSE) } +
+    ggplot2::scale_alpha_manual(values = setNames(if (varias) c(.30, rep(.16, length(nomes) - 1)) else .22, nomes), guide = "none") +
     ggplot2::geom_line(ggplot2::aes(linetype = parte, group = interaction(serie, parte)), linewidth = e$linha * 1.1) +
-    { if (varias) ggplot2::geom_point(data = fim, ggplot2::aes(shape = serie), size = e$ponto * 2.2) else ggplot2::geom_point(data = fim, size = e$ponto * 1.3, shape = 21, stroke = .8, show.legend = FALSE) } +
-    { if (varias) ggplot2::geom_text(data = fim, ggplot2::aes(label = ifelse(as.integer(serie) == 1, fmt_v(y), formatC(y, format = "f", digits = 1, decimal.mark = ",")), colour = serie), vjust = ifelse(as.integer(fim$serie) == 1, 2.2, -1.5),
+    { if (varias) ggplot2::geom_point(data = fim, ggplot2::aes(shape = serie), size = e$ponto * (if (faixas) 1.5 else 2.2)) else ggplot2::geom_point(data = fim, size = e$ponto * 1.3, shape = 21, stroke = .8, show.legend = FALSE) } +
+    { if (varias && !faixas) ggplot2::geom_text(data = fim, ggplot2::aes(label = ifelse(as.integer(serie) == 1, fmt_v(y), formatC(y, format = "f", digits = 1, decimal.mark = ",")), colour = serie), vjust = ifelse(as.integer(fim$serie) == 1, 2.2, -1.5),
                                      family = e$familia, size = e$fonte / 3.1, fontface = "bold", show.legend = FALSE) } +
+    { if (varias && faixas) ggplot2::geom_text(data = rotulos_afastados(fim), ggplot2::aes(x = x, y = y_rot, label = ifelse(as.integer(serie) == 1, fmt_v(y), formatC(y, format = "f", digits = 1, decimal.mark = ",")), colour = serie),
+                                     hjust = 0, nudge_x = .1, family = e$familia, size = e$fonte / 3.1, fontface = "bold", show.legend = FALSE) } +
     { if (varias && tem_extra) ggplot2::geom_text(data = fim_proj, ggplot2::aes(label = fmt_v(y), colour = serie), hjust = -.15, family = e$familia, size = e$fonte / 3.3, show.legend = FALSE) } +
     { if (varias) ggplot2::scale_shape_manual(values = setNames(c(16, 17, 15, 18, 1, 2)[seq_along(nomes)], nomes), name = "Curva") } +
     ggplot2::scale_colour_manual(values = cs, name = if (varias) "Curva" else NULL) + ggplot2::scale_fill_manual(values = cs, name = if (varias) "Curva" else NULL) +

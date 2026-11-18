@@ -279,6 +279,9 @@ class Manipulador(SimpleHTTPRequestHandler):
                             continue
                         nfig += 1; nome = f"Fig{nfig:02d}_{limpa(it.get('titulo', 'figura'))}.png"
                         shutil.copyfile(orig, os.path.join(rel, nome)); leia.append(f"Figura {nfig}. {it.get('titulo', '')}  ->  {nome}")
+                        jpg = orig[:-4] + ".jpg"   # JPEG de alta resolução (600 dpi), quando o R gravou
+                        if orig.lower().endswith(".png") and os.path.exists(jpg):
+                            shutil.copyfile(jpg, os.path.join(rel, nome[:-4] + ".jpg"))
                     elif it.get("tipo") == "tab":
                         ntab += 1
                         abas.append((f"Tab{ntab:02d} {it.get('titulo', 'tabela')}", [it.get("cols", [])] + it.get("linhas", [])))
@@ -396,14 +399,22 @@ def main():
     srv = Servidor(("127.0.0.1", PORTA), Manipulador)
     print(f"Herpetodados aberto em {url}  (fechar a janela do programa encerra tudo)")
     if "--sem-navegador" not in sys.argv:
-        threading.Timer(0.6, lambda: abre_janela(url)).start()
+        JANELA = {"proc": None}
+        threading.Timer(0.6, lambda: JANELA.update(proc=abre_janela(url))).start()
 
         def vigia():
-            # as páginas mandam um sinal a cada 10 s; sem sinal por 45 s (janela fechada) e sem R rodando, o programa encerra
+            # 18/11/2026: o navegador espaça os sinais (1 por minuto ou menos) quando a janela fica minimizada ou atrás de
+            # outra, e o programa se fechava com o painel ainda aberto ("O R está redesenhando..." travado).
+            # Agora: com a janela do programa aberta (processo vivo), nunca encerra; fechada, encerra 45 s depois do
+            # último sinal; sem como saber da janela (navegador comum), só depois de 15 min sem sinal.
             while True:
                 time.sleep(5)
                 u = PING["ultimo"]
-                if u is None or time.time() - u < 45:
+                proc = JANELA["proc"]
+                if proc is not None and proc.poll() is None:
+                    continue                      # janela do programa aberta
+                limite = 45 if proc is not None else 900
+                if u is None or time.time() - u < limite:
                     continue
                 if any(t.get("estado") == "rodando" for t in TAREFAS.values()):
                     continue

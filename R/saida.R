@@ -7,9 +7,11 @@ estilo_padrao <- list(
   # (escuro: #4fa274 #e05a3b #5385d4 #bb8708 #ad5fa4 #6f9e24 #4596e0 #c4692f sobre #1a1d1b).
   # A Direção C "Síntese" continua como tema_r = "sintese" (cópia em versoes/direcao-c-sintese-2026-11-17).
   paleta = c("#3f8c62", "#d0482a", "#2a5cab", "#a87700", "#9a3f8f", "#5c8a00", "#3d8fdc", "#ad4f19"),
-  tema_r = "salvia", fonte = 11, familia = "Segoe UI", familia_titulo = "Segoe UI Semibold",
+  # 18/11/2026: tudo em Times New Roman, legenda em cima e na horizontal, sem notas de rodapé
+  # explicativas (mostrar_nota), JPEG de alta resolução ao lado de cada PNG (dpi_jpeg).
+  tema_r = "salvia", fonte = 11, familia = "Times New Roman", familia_titulo = "Times New Roman",
   tema = "claro", faixa = TRUE, grade = TRUE, linha = 1, ponto = 2.5,
-  legenda = "bottom", largura = 7, altura = 4.5, dpi = 300, mostrar_titulo = TRUE, mostrar_grupo = TRUE,
+  legenda = "top", largura = 7, altura = 4.5, dpi = 300, dpi_jpeg = 600, mostrar_nota = FALSE, mostrar_titulo = TRUE, mostrar_grupo = TRUE,
   titulos = list(), formas = list()
 )
 
@@ -77,7 +79,12 @@ tema_gg <- function(e) {
   base <- switch(e$tema_r %||% "prancha",
     ggplot = ggplot2::theme_grey(bs, fam), bw = ggplot2::theme_bw(bs, fam), classic = ggplot2::theme_classic(bs, fam),
     minimal = ggplot2::theme_minimal(bs, fam), ggplot2::theme_minimal(bs, fam))
+  horiz <- e$legenda %in% c("top", "bottom")
   t <- base + ggplot2::theme(legend.position = e$legenda, plot.title.position = "plot",
+    legend.direction = if (horiz) "horizontal" else "vertical", legend.box = if (horiz) "horizontal" else "vertical",
+    legend.justification = if (horiz) "left" else "center",
+    legend.margin = ggplot2::margin(0, 0, 0, 0), legend.box.spacing = grid::unit(4, "pt"),
+    legend.key.size = grid::unit(.9, "lines"), legend.spacing.x = grid::unit(4, "pt"),
     plot.title = ggplot2::element_text(family = e$familia_titulo, face = "bold", size = ggplot2::rel(1.15)),
     plot.caption = ggplot2::element_text(size = ggplot2::rel(.8)))
   if (identical(e$tema_r %||% "", "salvia")) {
@@ -127,18 +134,25 @@ titulos_gg <- function(e, chave, titulo, x, y, nota = NULL) {
   if (!is.null(e$grupo_atual)) assign(paste(e$grupo_atual, chave, sep = "\r"), Filter(Negate(is.null), list(titulo = tira_grupo(e, titulo), x = x, y = y, nota = if (nzchar(nota %||% "")) nota)), envir = .TIT)
   ggplot2::labs(title = if (isTRUE(e$mostrar_titulo)) rot(e, chave, "titulo", tira_grupo(e, titulo)) else NULL,
                 subtitle = if (isTRUE(e$mostrar_titulo) && !isFALSE(e$mostrar_grupo) && !is.null(e$grupo_atual)) e$grupo_atual else NULL,
-                x = rot(e, chave, "x", x), y = rot(e, chave, "y", y), caption = rot(e, chave, "nota", nota %||% ""))
+                x = rot(e, chave, "x", x), y = rot(e, chave, "y", y), caption = nota_fig(e, chave, nota))
+}
+# nota de rodapé: só a escrita pela pessoa no editor de títulos, ou a padrão quando mostrar_nota = TRUE
+nota_fig <- function(e, chave, padrao) {
+  t <- e$titulos[[chave]][["nota"]]
+  if (!is.null(t) && nzchar(t)) return(t)
+  if (isTRUE(e$mostrar_nota)) padrao %||% "" else NULL
 }
 
 # ---- dispositivos ----
-abrir_png <- function(arq, e, w, h, dpi) {
-  k <- cores_tema(e)
-  grDevices::png(arq, width = w, height = h, units = "in", res = dpi, type = if (.Platform$OS.type == "windows") "windows" else "cairo", bg = k$fundo)
+abrir_png <- function(arq, e, w, h, dpi, jpeg = FALSE) {
+  k <- cores_tema(e); tp <- if (.Platform$OS.type == "windows") "windows" else "cairo"
+  if (jpeg) grDevices::jpeg(arq, width = w, height = h, units = "in", res = dpi, quality = 100, type = tp, bg = k$fundo)
+  else grDevices::png(arq, width = w, height = h, units = "in", res = dpi, type = tp, bg = k$fundo)
   graphics::par(family = e$familia, col.axis = k$tinta2, col.lab = k$tinta, col.main = k$tinta, fg = k$tinta2, mar = c(5.6, 4.5, if (isTRUE(e$mostrar_titulo)) 3.2 else 1.2, 1.2),
                 cex = e$fonte / 11, las = 1, lwd = e$linha)
 }
 titulo_base <- function(e, chave, padrao) if (isTRUE(e$mostrar_titulo)) graphics::title(main = rot(e, chave, "titulo", tira_grupo(e, padrao)), family = e$familia_titulo, font.main = 2, cex.main = 1.1)
-nota_base <- function(e, chave, padrao) { n <- rot(e, chave, "nota", padrao %||% ""); if (nzchar(n)) graphics::mtext(n, side = 1, line = 4.4, adj = 1, cex = .75, col = cores_tema(e)$tinta2) }
+nota_base <- function(e, chave, padrao) { n <- nota_fig(e, chave, padrao) %||% ""; if (nzchar(n)) graphics::mtext(n, side = 1, line = 4.4, adj = 1, cex = .75, col = cores_tema(e)$tinta2) }
 
 recriar_hclust <- function(d) structure(list(merge = matrix(unlist(d$merge), ncol = 2), height = unlist(d$altura), order = unlist(d$ordem),
   labels = unlist(d$rotulos), method = "average", call = quote(hclust(d, "average")), dist.method = "dissimilaridade"), class = "hclust")
@@ -147,9 +161,19 @@ recriar_hclust <- function(d) structure(list(merge = matrix(unlist(d$merge), nco
 desenhar <- function(chave, forma, G, O, e, arq, w, h, dpi) {
   pal <- e$paleta; k <- cores_tema(e); lw <- e$linha; pt <- e$ponto; gr <- G$grupo
   fmt1 <- function(x) formatC(x, format = "f", digits = 1, decimal.mark = ",")
-  gg <- function(p, ww = w, hh = h) ggplot2::ggsave(arq, p, width = ww, height = hh, dpi = dpi, bg = k$fundo, device = "png",
-                                                   type = if (.Platform$OS.type == "windows") "windows" else "cairo")
-  base <- function(fun) { abrir_png(arq, e, w, h, dpi); on.exit(grDevices::dev.off()); fun() }
+  # figura principal (pasta figuras/): também um JPEG de alta resolução (dpi_jpeg, qualidade 100) com o mesmo nome
+  tp <- if (.Platform$OS.type == "windows") "windows" else "cairo"
+  arq_jpg <- if (basename(dirname(arq)) == "figuras" && (e$dpi_jpeg %||% 0) > 0) sub("\\.png$", ".jpg", arq) else NULL
+  gg <- function(p, ww = w, hh = h) {
+    ggplot2::ggsave(arq, p, width = ww, height = hh, dpi = dpi, bg = k$fundo, device = "png", type = tp)
+    if (!is.null(arq_jpg)) ggplot2::ggsave(arq_jpg, p, width = ww, height = hh, dpi = e$dpi_jpeg, bg = k$fundo, device = "jpeg", type = tp, quality = 100)
+    invisible(arq)
+  }
+  base <- function(fun) {
+    abrir_png(arq, e, w, h, dpi); r <- tryCatch(fun(), finally = grDevices::dev.off())
+    if (!is.null(arq_jpg)) { abrir_png(arq_jpg, e, w, h, e$dpi_jpeg, jpeg = TRUE); tryCatch(fun(), finally = grDevices::dev.off()) }
+    invisible(r)
+  }
   e$grupo_atual <- gr
   if (chave %in% names(catalogo_extra())) return(desenhar_extra(chave, forma, G, O, e, arq, w, h, dpi, gg, pal, k))
   if (chave %in% c("inext_individuos", "inext_pontos") && forma == "limpa") {
@@ -365,7 +389,7 @@ pode_figura <- function(G) !isTRUE(G$insuficiente) && G$riqueza >= 3 && G$n_pont
 gerar_figuras <- function(R, OBJ, saida, e, so = NULL, faixa = c(60, 85)) {
   suppressPackageStartupMessages(library(ggplot2)); registrar_fontes(e)
   dir.create(file.path(saida, "figuras"), showWarnings = FALSE, recursive = TRUE)
-  if (is.null(so)) unlink(list.files(file.path(saida, "figuras"), glob2rx("*.png"), full.names = TRUE))
+  if (is.null(so)) unlink(list.files(file.path(saida, "figuras"), "\\.(png|jpg)$", full.names = TRUE))
   cat <- catalogo_todo(); figs <- list()
   gs <- names(R)[vapply(R, pode_figura, TRUE)]; tot <- length(gs) * length(cat); n <- 0
   for (g in names(R)) if (pode_figura(R[[g]])) {

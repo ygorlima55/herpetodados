@@ -336,6 +336,7 @@ aside.editor{border-radius:26px;background:var(--vidro);border-color:var(--vidro
 #tip{border-radius:10px;background:var(--preto);color:var(--sobre-preto)}
 @media (max-width:980px){main{margin-left:0;padding:60px 12px 60px}section.prancha{border-radius:22px;padding:16px}.numeros{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* fim Sálvia */
+#avisoTopo{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:9999;max-width:640px;padding:12px 18px;border-radius:14px;font:14px/1.45 system-ui,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.25);cursor:pointer;display:none}#avisoTopo.erro{background:#7a1f12;color:#fff}#avisoTopo.ok{background:#2f6b4a;color:#fff}
 </style>
 </head>
 <body>
@@ -412,7 +413,11 @@ const arr = x => x == null ? [] : Array.isArray(x) ? x : [x];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const store = { get(k, d){ try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
 const LID = (location.pathname.match(/^\/l\/([a-z0-9-]+)\//) || [])[1] || null;
-const api = (acao, corpo) => fetch(`/api/l/${LID}/${acao}`, {method:"POST", headers:{"Content-Type":"application/json"}, body: typeof corpo === "string" ? corpo : JSON.stringify(corpo || {})}).then(r => r.json());
+const api = (acao, corpo) => fetch(`/api/l/${LID}/${acao}`, {method:"POST", headers:{"Content-Type":"application/json"}, body: typeof corpo === "string" ? corpo : JSON.stringify(corpo || {})})
+  .then(r => r.json()).catch(() => ({erro: "O programa Herpetodados não respondeu. Ele pode ter sido fechado: abra de novo pelo atalho da área de trabalho e tente outra vez."}));
+// aviso no topo da tela (falha do programa ou do R); some sozinho ou com um clique
+function avisoTopo(msg, tipo){ let a = document.getElementById("avisoTopo"); if (!a){ a = document.createElement("div"); a.id = "avisoTopo"; document.body.appendChild(a); }
+  a.className = tipo || "erro"; a.textContent = msg; a.style.display = "block"; clearTimeout(a._t); a._t = setTimeout(() => a.style.display = "none", 12000); a.onclick = () => a.style.display = "none"; }
 if (!H) { document.body.innerHTML = "<p style='padding:40px;font-family:Georgia'>Não achei o arquivo <b>dados.js</b> ao lado deste painel. Rode o Herpetodados de novo.</p>"; throw new Error("sem dados"); }
 
 /* ---------------- estilo do R ---------------- */
@@ -426,12 +431,14 @@ const PALETAS = {
   cinza:   ["#1e1c19","#57524a","#8a8375","#b3ab9a","#3c3a35","#6f6a60","#9c9585","#c9c1b0"]
 };
 const CAT = H.catalogo || {};
-const PADRAO = { tema_r:"salvia", tema:"claro", paleta:"salvia", cores:null, fonte:11, familia:"Segoe UI", familia_titulo:"Segoe UI Semibold", linha:1, ponto:2.5, legenda:"bottom",
+const PADRAO = { tema_r:"salvia", tema:"claro", paleta:"salvia", cores:null, fonte:11, familia:"Times New Roman", familia_titulo:"Times New Roman", linha:1, ponto:2.5, legenda:"top",
   faixa:true, grade:true, mostrar_titulo:true, mostrar_grupo:true, titulos:{}, formas:{}, largura:18, altura:11.5, dpi:300, painel:"claro" };
 const doR = H.estilo && typeof H.estilo === "object" ? H.estilo : {};
 let E = Object.assign(JSON.parse(JSON.stringify(PADRAO)), store.get("herp.estilo5", {}));
 if (doR._painel) Object.assign(E, doR._painel);
 for (const k of ["titulos","formas"]) if (doR[k] && !Array.isArray(doR[k])) E[k] = doR[k]; else if (!E[k] || Array.isArray(E[k])) E[k] = {};
+// 18/11/2026: padrão novo das figuras (Times New Roman, legenda em cima e na horizontal); vale uma vez para estilos antigos
+if ((E._v || 0) < 6) { E.familia = "Times New Roman"; E.familia_titulo = "Times New Roman"; if (E.legenda === "bottom") E.legenda = "top"; E._v = 6; }
 const salvaE = () => store.set("herp.estilo5", E);
 const cores = () => E.paleta === "livre" && E.cores ? E.cores : (PALETAS[E.paleta] || PALETAS.prancha);
 function estiloR(){
@@ -457,18 +464,30 @@ function barra(caixa, t){
 }
 function acompanhar(tid, caixa, fim){
   if (caixa) { caixa.style.display = "block"; caixa.textContent = "Rodando no R..."; }
-  const passo = () => fetch("/api/tarefa/" + tid).then(r => r.json()).then(t => {
+  let falhas = 0;
+  const acaba = t => { fim && fim(t); };
+  if (!tid) return acaba({estado:"erro", log:["O programa não aceitou o pedido."]});
+  const passo = () => fetch("/api/tarefa/" + tid, {cache:"no-store"}).then(r => r.json()).then(t => {
+    falhas = 0;
+    if (t.estado === "desconhecida") return acaba({estado:"erro", log:["O programa foi reiniciado e perdeu esta tarefa. Clique de novo para redesenhar."]});
     if (caixa) barra(caixa, t);
     if (caixa) caixa.textContent = (t.log || []).filter(l => !/scale|Scale|Adding/.test(l)).slice(-5).join("\n") || "Rodando no R...";
-    if (t.estado === "rodando") setTimeout(passo, 900); else fim && fim(t);
-  });
+    if (t.estado === "rodando") setTimeout(passo, 900); else acaba(t);
+  }).catch(() => { if (++falhas < 6) setTimeout(passo, 1500); else acaba({estado:"erro", log:["O programa Herpetodados não respondeu. Abra de novo pelo atalho e tente outra vez."]}); });
   passo();
 }
 function redesenhar(so, depois){
   salvaE();
   if (!LID) { alert("Para o R redesenhar, abra o painel pelo Herpetodados (abrir_herpetodados.cmd)."); return null; }
   document.querySelectorAll(so ? `.figr[data-chave="${so}"] .quadro` : ".figr .quadro").forEach(q => q.classList.add("refazendo"));
-  return api("estilo" + (so ? "?so=" + so : ""), JSON.stringify(estiloR())).then(r => acompanhar(r.tarefa, so ? null : $("#tarefaEstilo"), t => { versao = Date.now(); render(); depois && depois(t); }));
+  const tira = () => document.querySelectorAll(".figr .quadro.refazendo").forEach(q => q.classList.remove("refazendo"));
+  return api("estilo" + (so ? "?so=" + so : ""), JSON.stringify(estiloR())).then(r => {
+    if (!r || !r.tarefa) { tira(); avisoTopo(r && r.erro ? r.erro : "O programa não aceitou o pedido de redesenho."); depois && depois({estado:"erro"}); return; }
+    acompanhar(r.tarefa, so ? null : $("#tarefaEstilo"), t => {
+      versao = Date.now(); render(); tira();
+      if (t.estado !== "pronto") avisoTopo("O R não conseguiu redesenhar" + (so ? " esta figura" : "") + ": " + ((t.log || []).filter(l => !/scale|Scale|Adding/.test(l)).slice(-2).join(" ") || "veja o log."));
+      depois && depois(t); });
+  });
 }
 
 /* ---------------- peças ---------------- */
@@ -488,6 +507,7 @@ function figuraR(alvo, chave, legenda){
   if (formas.length > 1){ const b = el("button", {}, "Outras formas"); b.onclick = () => f.querySelector(".formas").classList.toggle("aberta"); acs.appendChild(b); }
   const be = el("button", {}, "Editar títulos"); be.onclick = () => { const ed = f.querySelector(".edtit"); ed.classList.toggle("aberta"); if (ed.classList.contains("aberta")) ed.querySelector("input").focus(); }; acs.appendChild(be);
   const ba = el("a", {href:`figuras/${arq}`, target:"_blank"}); ba.appendChild(el("button", {}, "Abrir")); acs.appendChild(ba);
+  const jpg = arq.replace(/\.png$/, ".jpg"), bj = el("a", {href:`figuras/${jpg}?v=${versao}`, download: jpg, title:"JPEG em alta resolução (600 dpi)"}); bj.appendChild(el("button", {}, "JPEG 600 dpi")); acs.appendChild(bj);
   acs.appendChild(marcaRel("fig:" + tag + ":" + chave, {tipo:"fig", titulo:tit, arquivo:`figuras/${arq}`}));
   topo.appendChild(acs); f.appendChild(topo);
   f.appendChild(editorTitulos(chave));
@@ -784,10 +804,11 @@ function render(){
   if (D){
     texto(s2, D.texto);
     const sub2 = store.get("herp.sub2", "familias");
-    abas(s2, [["familias","Famílias"],["pontos","Pontos"],["lista","Lista de espécies"],["registro","Forma de registro"],["atributos","Atributos"]], sub2, v => { store.set("herp.sub2", v); render(); });
-    if (sub2 === "familias"){ figuraR(s2, "familias", "Riqueza e abundância por família");
+    abas(s2, [["familias","Famílias"],["abundantes","Espécies mais abundantes"],["pontos","Pontos"],["lista","Lista de espécies"],["registro","Forma de registro"],["atributos","Atributos"]], sub2, v => { store.set("herp.sub2", v); render(); });
+    if (sub2 === "abundantes"){ figuraR(s2, "especies_abundantes", "Abundância de cada espécie"); }
+    if (sub2 === "familias"){ figuraR(s2, "composicao_familias", "Composição de espécies por família"); figuraR(s2, "familias", "Riqueza e abundância por família");
       tabela(s2, "familias", "Riqueza e abundância por família", [{t:"Família", k:"familia"}, {t:"Espécies", k:"riqueza", num:1}, {t:"%", f:r => pc(r.riqueza_pct), num:1}, {t:"Indivíduos", k:"abundancia", num:1}, {t:"%", f:r => pc(r.abundancia_pct, 1), num:1}], arr(D.familias)); }
-    if (sub2 === "pontos"){ figuraR(s2, "descritiva_pontos", "Riqueza e abundância por ponto"); figuraR(s2, "familias_pontos", "Espécies de cada família por ponto");
+    if (sub2 === "pontos"){ figuraR(s2, "descritiva_pontos", "Riqueza e abundância por ponto"); figuraR(s2, "exclusivas_pontos", "Espécies exclusivas de cada ponto"); figuraR(s2, "familias_pontos", "Espécies de cada família por ponto");
       tabela(s2, "pontos_desc", "Riqueza e abundância por ponto", [{t:"Ponto", k:"ponto"}, {t:"Espécies", k:"riqueza", num:1}, {t:"Indivíduos", k:"abundancia", num:1}, {t:"Famílias", k:"familias", num:1}, {t:"Espécies registradas", f:r => `<span class="esp">${esc(r.especies)}</span>`, csv:r => r.especies}], arr(D.pontos)); }
     if (sub2 === "lista"){ const pts = arr(G.matriz && G.matriz.pontos);
       tabela(s2, "lista_especies", "Lista de espécies", [{t:"Família", k:"familia"}, {t:"Espécie", f:r => esc(r.especie_completa || r.especie), csv:r => r.especie_completa || r.especie, esp:1}, {t:"Nome comum", k:"nome_comum"}].concat(pts.map(p => ({t:p, f:r => r[p] || "–", num:1})))
