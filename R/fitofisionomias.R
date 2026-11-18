@@ -110,7 +110,7 @@ desenhar_fito <- function(chave, forma, G, e, gg, pal, k, w, h) {
   F <- G$fitofisionomias; if (is.null(F)) return(invisible()); tam <- e$fonte / 3.1
   fmt1 <- function(x, d = 1) formatC(x, format = "f", digits = d, decimal.mark = ",")
   quebra <- function(x) gsub(" \\+ ", " +\n", x)
-  rotulo <- function(t) factor(paste0(quebra(t$nome %||% t$fitofisionomia), "\n(", ifelse(t$n_pontos == 1, t$pontos, paste(t$n_pontos, "pontos")), ")"), levels = unique(paste0(quebra(t$nome %||% t$fitofisionomia), "\n(", ifelse(t$n_pontos == 1, t$pontos, paste(t$n_pontos, "pontos")), ")")))
+  rotulo <- function(t) factor(paste0(quebra(t$nome %||% t$fitofisionomia), "\n(", t$pontos, ")"), levels = unique(paste0(quebra(t$nome %||% t$fitofisionomia), "\n(", t$pontos, ")")))
   cores_f <- function(nomes) setNames(rep(pal, length.out = length(nomes)), nomes)
   if (chave %in% c("fito_riqueza", "fito_abundancia")) {
     X <- if (forma == "componentes" && !is.null(F$componentes)) F$componentes else F$classes; t <- X$tabela; t$rot <- rotulo(t)
@@ -174,18 +174,26 @@ desenhar_fito <- function(chave, forma, G, e, gg, pal, k, w, h) {
       titulos_gg(e, chave, "Espécies de cada família em cada fitofisionomia", NULL, "Número de espécies") + tema_gg(e), w * 1.15, h))
   }
   if (chave == "fito_similaridade" && !is.null(F$classes$jaccard) && nrow(F$classes$jaccard) >= 2) {
-    J <- F$classes$jaccard; t <- F$classes$tabela; nm <- setNames(quebra(t$nome %||% t$fitofisionomia), t$fitofisionomia)
+    J <- F$classes$jaccard; t <- F$classes$tabela; embrulha <- function(s) vapply(strsplit(s, "
+", fixed = TRUE), function(ls) paste(unlist(lapply(ls, strwrap, width = 18)), collapse = "
+"), "")
+    nm <- setNames(paste0(embrulha(quebra(t$nome %||% t$fitofisionomia)), "
+(", t$pontos, ")"), t$fitofisionomia)
     d <- expand.grid(a = rownames(J), b = colnames(J), stringsAsFactors = FALSE); d$v <- J[cbind(d$a, d$b)]
     lv <- unname(nm[rownames(J)]); d$a <- factor(nm[d$a], levels = lv); d$b <- factor(nm[d$b], levels = rev(lv))
     return(gg(ggplot2::ggplot(d, ggplot2::aes(a, b, fill = v)) + ggplot2::geom_tile(colour = k$fundo, linewidth = 1.2) +
       ggplot2::geom_text(ggplot2::aes(label = fmt1(v, 2)), family = e$familia, size = tam * 1.1, colour = ifelse(d$v > .5, "white", k$tinta)) +
-      ggplot2::scale_fill_gradient(low = "#f1eee6", high = pal[1], limits = c(0, 1), name = "Jaccard") + ggplot2::coord_equal() +
-      titulos_gg(e, chave, "Quanto as fitofisionomias se parecem (Jaccard)", NULL, NULL, "1 = mesmas espécies; 0 = nenhuma em comum.") + tema_gg(e), h * 1.4, h * 1.2))
+      ggplot2::scale_fill_gradient(low = "#f1eee6", high = pal[1], limits = c(0, 1), name = "Jaccard", breaks = c(0, .5, 1), labels = function(x) fmt1(x, 1),
+                                   guide = ggplot2::guide_colourbar(barheight = grid::unit(8, "lines"), barwidth = grid::unit(.8, "lines"))) + ggplot2::coord_equal() +
+      titulos_gg(e, chave, "Quanto as fitofisionomias se parecem (Jaccard)", NULL, NULL, "1 = mesmas espécies; 0 = nenhuma em comum.") + tema_gg(e) +
+      ggplot2::theme(legend.position = "right", legend.direction = "vertical", legend.justification = "center",
+                     axis.text.x = ggplot2::element_text(size = ggplot2::rel(.85), lineheight = .9), axis.text.y = ggplot2::element_text(size = ggplot2::rel(.85), lineheight = .9)),
+      h * 1.75, h * 1.25))
   }
   rotx <- ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 30, hjust = 1, vjust = 1))
   if (chave == "fitofisionomias") {
     X <- if (forma == "componentes" && !is.null(F$componentes)) F$componentes else F$classes; t <- X$tabela
-    t$rot <- paste0(gsub(" \\+ ", " +\n", t$nome %||% t$fitofisionomia), "\n(", ifelse(t$n_pontos == 1, t$pontos, paste(t$n_pontos, "pontos")), ")")
+    t$rot <- paste0(gsub(" \\+ ", " +\n", t$nome %||% t$fitofisionomia), "\n(", t$pontos, ")")
     t$rot <- factor(t$rot, levels = t$rot)
     d <- rbind(data.frame(rot = t$rot, medida = "Espécies", v = t$riqueza), data.frame(rot = t$rot, medida = "Espécies exclusivas", v = t$exclusivas),
                data.frame(rot = t$rot, medida = "Indivíduos", v = t$abundancia))
