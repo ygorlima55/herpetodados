@@ -139,6 +139,16 @@ table.lev .acs button{padding:5px 12px;background:var(--papel-2);border-color:tr
 .arvore{border-radius:14px;background:var(--cartao);border-color:var(--fio-2)}
 details.ajuda summary{color:var(--acento)}
 /* fim Sálvia */
+
+
+/* 19/11/2026: barra de % com a esfera de partículas ao lado */
+.barra.com-esfera{grid-template-columns:72px minmax(0,1fr);gap:14px;align-items:center;padding:10px 14px;border-radius:16px;background:#121513;color:#f1f5f2}
+.barra.com-esfera canvas{width:72px;height:72px}
+.barra.com-esfera .trilho{background:rgba(255,255,255,.14)!important}
+.barra.com-esfera .enche{background:linear-gradient(90deg,#3f8c62,#8fd3a8)!important}
+.barra.com-esfera .info,.barra.com-esfera .info *{color:rgba(255,255,255,.78)!important}
+.barra.com-esfera.terminou{background:transparent;color:inherit}.barra.com-esfera.terminou canvas{display:none}
+.barra.com-esfera.terminou{grid-template-columns:minmax(0,1fr)}.barra.com-esfera.terminou .info,.barra.com-esfera.terminou .info *{color:inherit!important}
 </style>
 </head>
 <body>
@@ -243,13 +253,33 @@ function lista(){
     document.querySelectorAll("[data-u]").forEach(b => b.onclick = () => { const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".xlsx,.xls";
       inp.onchange = () => { const f = inp.files[0]; if (!f) return; fetch(`/api/l/${b.dataset.u}/planilha?nome=${encodeURIComponent(f.name)}`, {method:"POST", body:f}).then(r => r.json()).then(j => { if (j.erro) { alert(j.erro); return; } acompanhar(j.tarefa, b.dataset.u); }); };
       inp.click(); });
-    document.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { if (!confirm("Rodar as análises de novo com a mesma planilha?")) return; fetch(`/api/l/${b.dataset.r}/refazer`, {method:"POST"}).then(r => r.json()).then(j => acompanhar(j.tarefa, b.dataset.r)); });
+    document.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { if (!confirm("Rodar as análises de novo com a mesma planilha?")) return; b.disabled = true; fetch(`/api/l/${b.dataset.r}/refazer`, {method:"POST"}).then(r => r.json()).then(j => { if (j.erro) { alert(j.erro); b.disabled = false; return; } acompanhar(j.tarefa, b.dataset.r); }).catch(() => { alert("O programa Herpetodados não respondeu. Abra de novo pelo atalho e tente outra vez."); b.disabled = false; }); });
   });
 }
+/* esfera de partículas enquanto o R roda (19/11/2026; ref. "Particle Sphere"): 260 pontos, uma volta a cada 8 s, onda de luz a cada 1,6 s */
+function esferaParticulas(cv){
+  if (!cv || cv._anim) return; cv._anim = true;
+  const cx = cv.getContext("2d"), W = cv.width, R = W * .4, N = 260, P = [];
+  for (let i = 0; i < N; i++) { const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), t = i * Math.PI * (3 - Math.sqrt(5)); P.push([Math.cos(t) * r, y, Math.sin(t) * r]); }
+  const t0 = performance.now(), parado = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const quadro = agora => {
+    if (!cv.isConnected) { cv._anim = false; return; }
+    const t = parado ? 0 : (agora - t0) / 1000, a = (t / 8) * Math.PI * 2, inc = .35, onda = ((t % 1.6) / 1.6) * 2.6 - 1.3;
+    cx.clearRect(0, 0, W, W);
+    const pr = P.map(([x, y, z]) => { const x1 = x * Math.cos(a) + z * Math.sin(a), z1 = -x * Math.sin(a) + z * Math.cos(a);
+      return [x1, y * Math.cos(inc) - z1 * Math.sin(inc), y * Math.sin(inc) + z1 * Math.cos(inc), y]; }).sort((p, q) => p[2] - q[2]);
+    const k = W / 300;
+    for (const [x, y, z, y0] of pr) { const prof = (z + 1) / 2, br = Math.exp(-Math.pow((-y0 - onda) * 3.2, 2));
+      cx.fillStyle = `rgba(${Math.round(63 + 120 * br)},${Math.round(140 + 90 * br)},${Math.round(98 + 90 * br)},${Math.min(1, .18 + prof * .62 + br * .25)})`;
+      cx.beginPath(); cx.arc(W / 2 + x * R, W / 2 + y * R, (1.2 + prof * 1.8 + br * 1.6) * k, 0, Math.PI * 2); cx.fill(); }
+    if (!parado) requestAnimationFrame(quadro);
+  };
+  requestAnimationFrame(quadro);
+}
 function barra(caixa, t){
-  let b = caixa.previousElementSibling; if (!b || !b.classList.contains("barra")) { b = document.createElement("div"); b.className = "barra"; b.innerHTML = '<div class="trilho"><div class="enche"></div></div><div class="info"><span class="et"></span><span class="pc"></span></div>'; caixa.parentNode.insertBefore(b, caixa); }
+  let b = caixa.previousElementSibling; if (!b || !b.classList.contains("barra")) { b = document.createElement("div"); b.className = "barra com-esfera"; b.innerHTML = '<canvas width="144" height="144" aria-hidden="true"></canvas><div class="trilho-e">' + '<div class="trilho"><div class="enche"></div></div><div class="info"><span class="et"></span><span class="pc"></span></div></div>'; caixa.parentNode.insertBefore(b, caixa); }
   const p = t.estado === "pronto" ? 100 : (t.pct || 0), s = Math.max(0, Math.round(Date.now() / 1000 - (t.inicio || Date.now() / 1000)));
-  b.style.display = "block"; b.querySelector(".enche").style.width = p + "%"; b.querySelector(".pc").textContent = p + "%";
+  b.style.display = "grid"; b.classList.toggle("terminou", t.estado !== "rodando"); if (t.estado === "rodando") esferaParticulas(b.querySelector("canvas")); b.querySelector(".enche").style.width = p + "%"; b.querySelector(".pc").textContent = p + "%";
   b.querySelector(".et").textContent = (t.etapa || "Rodando no R") + (t.estado === "rodando" ? ` · ${Math.floor(s / 60)} min ${s % 60} s` : "");
 }
 function acompanhar(tid, id){
@@ -284,7 +314,7 @@ lista();
 <script>
 (function(){ // claro e escuro, o mesmo do painel
   const k = "herp.estilo5"; let e = {}; try { e = JSON.parse(localStorage.getItem(k) || "{}"); } catch (x) {}
-  const aplica = () => { document.documentElement.dataset.theme = e.painel === "escuro" ? "dark" : "light"; const t = document.getElementById("btTemaTx"); if (t) t.textContent = e.painel === "escuro" ? "Claro" : "Escuro"; };
+  const aplica = () => { if (e.painel === "vinho") e.painel = "claro"; document.documentElement.dataset.theme = e.painel === "escuro" ? "dark" : "light"; const t = document.getElementById("btTemaTx"); if (t) t.textContent = e.painel === "escuro" ? "Claro" : "Escuro"; };
   aplica();
   document.getElementById("btTema").onclick = () => { e.painel = e.painel === "escuro" ? "claro" : "escuro"; try { localStorage.setItem(k, JSON.stringify(e)); } catch (x) {} aplica(); };
 })();

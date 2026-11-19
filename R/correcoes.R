@@ -76,8 +76,8 @@ aplicar_correcoes <- function(L, corr) {
     } else if (tp == "incluir_na_consolidada" && !is.null(k)) {
       s <- r[r$especie == c$especie, ]; if (!nrow(s)) next
       nl <- k[1, ]; nl[] <- NA; nl$linha_planilha <- NA; nl$especie_completa <- s$especie_completa[1]; nl$especie <- c$especie
-      for (p in grep("^P\\d+$", names(k), value = TRUE)) nl[[p]] <- sum(s$total[s$ponto == p], na.rm = TRUE)
-      nl$total_informado <- sum(s$total, na.rm = TRUE); nl$familia <- s$familia[1]; nl$grupo <- s$grupo_pad[1]
+      for (p in grep("^P\\d+$", names(k), value = TRUE)) nl[[p]] <- somar_totais_de_campo(s$total[s$ponto == p])
+      nl$total_informado <- somar_totais_de_campo(s$total); nl$familia <- s$familia[1]; nl$grupo <- s$grupo_pad[1]
       k <- rbind(k, nl); nota(c, sprintf("Consolidada: incluída %s com os números dos registros.", c$especie))
     }
   }

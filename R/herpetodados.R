@@ -39,6 +39,16 @@ if (!is.null(L$secundarios) && nrow(L$secundarios)) conf <- rbind(conf, data.fra
   sugestao = "Eles aparecem na planilha 09, aba Dados secundários.", tipo = "", especie = "", ponto = "", dados = "", stringsAsFactors = FALSE))
 unlink(file.path(saida, "planilha_corrigida.xlsx"))
 tryCatch(gravar_planilha_corrigida(L, saida), error = function(e) msg("planilha corrigida não gravada:", conditionMessage(e)))
+# registros com erro que quebrariam ou distorceriam as contas (espécie vazia, Total inválido) saem das análises e ficam listados
+L <- registros_para_analise(L)
+if (nrow(L$fora_da_analise)) {
+  conf <- rbind(conf, data.frame(nivel = "informação", aba = L$aba_registros, linha = paste(L$fora_da_analise$linha_planilha, collapse = ", "),
+    campo = "Fora das análises", problema = sprintf("%d registros ficaram fora das análises até serem corrigidos: %s.", nrow(L$fora_da_analise),
+      paste(sprintf("linha %s (%s)", L$fora_da_analise$linha_planilha, L$fora_da_analise$motivo), collapse = "; ")),
+    sugestao = "Corrigir na planilha e usar Atualizar planilha. Os erros de cada linha estão acima nesta conferência.", tipo = "", especie = "", ponto = "", dados = "", stringsAsFactors = FALSE))
+  msg(nrow(L$fora_da_analise), "registros com erro ficaram fora das análises")
+}
+if (!nrow(L$registros)) stop("Nenhum registro válido para analisar: confira as colunas Espécie e Total da aba de registros.")
 msg(sum(conf$nivel == "erro"), "erros,", sum(conf$nivel == "atenção"), "pontos de atenção,", sum(conf$nivel == "informação"), "informações")
 
 if (length(unique(L$registros$campanha)) >= 2) {

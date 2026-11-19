@@ -10,8 +10,8 @@ estilo_padrao <- list(
   # 18/11/2026: tudo em Times New Roman, legenda em cima e na horizontal, sem notas de rodapé
   # explicativas (mostrar_nota), JPEG de alta resolução ao lado de cada PNG (dpi_jpeg).
   tema_r = "salvia", fonte = 11, familia = "Times New Roman", familia_titulo = "Times New Roman",
-  tema = "claro", faixa = TRUE, grade = TRUE, linha = 1, ponto = 2.5,
-  legenda = "top", largura = 7, altura = 4.5, dpi = 300, dpi_jpeg = 600, mostrar_nota = FALSE, mostrar_titulo = TRUE, mostrar_grupo = TRUE,
+  tema = "claro", faixa = TRUE, grade = FALSE, linha = 1, ponto = 2.5,
+  legenda = "top", largura = 7, altura = 4.5, dpi = 300, dpi_jpeg = 600, mostrar_nota = FALSE, mostrar_titulo = TRUE, mostrar_grupo = FALSE, cores_fig = list(),
   titulos = list(), formas = list()
 )
 
@@ -50,6 +50,7 @@ ler_estilo <- function(caminhos) {
   e$paleta <- unlist(e$paleta)
   if (is.null(e$titulos) || !is.list(e$titulos)) e$titulos <- list()
   if (is.null(e$formas) || !is.list(e$formas)) e$formas <- list()
+  if (is.null(e$cores_fig) || !is.list(e$cores_fig)) e$cores_fig <- list()
   e
 }
 
@@ -67,7 +68,7 @@ cores_tema <- function(e) {
   escuro <- identical(e$tema, "escuro")
   if (identical(e$tema_r %||% "", "salvia"))   # Sálvia: cinza quente claro ou grafite
     return(if (escuro) list(tinta = "#eceeea", tinta2 = "#a3aba5", fundo = "#1a1d1b", grade = "#2c312e")
-           else list(tinta = "#1d1f1e", tinta2 = "#5c615c", fundo = "#f7f7f5", grade = "#e4e4e0"))
+           else list(tinta = "#1d1f1e", tinta2 = "#5c615c", fundo = "#ffffff", grade = "#e4e4e0"))
   if (!escuro && identical(e$tema_r %||% "", "sintese"))   # papel creme, nanquim, grade sépia
     return(list(tinta = "#2B2620", tinta2 = "#55493B", fundo = "#F7F1E3", grade = "#E3D7BF"))
   list(tinta = if (escuro) "#ecebe3" else "#24231f", tinta2 = if (escuro) "#b8bab3" else "#5d5a52",
@@ -157,8 +158,36 @@ nota_base <- function(e, chave, padrao) { n <- nota_fig(e, chave, padrao) %||% "
 recriar_hclust <- function(d) structure(list(merge = matrix(unlist(d$merge), ncol = 2), height = unlist(d$altura), order = unlist(d$ordem),
   labels = unlist(d$rotulos), method = "average", call = quote(hclust(d, "average")), dist.method = "dissimilaridade"), class = "hclust")
 
+# nomes e cores da legenda de uma figura (o painel mostra como quadradinhos clicáveis para trocar a cor);
+# indice = posição da cor na paleta (1ª cor, 2ª cor...), que é o que o painel troca em cores_fig
+legenda_cores <- function(p, paleta, destino) {
+  info <- tryCatch({
+    out <- NULL
+    for (a in c("fill", "colour")) {
+      g <- suppressWarnings(ggplot2::get_guide_data(p, a))
+      if (!is.null(g) && nrow(g) && a %in% names(g)) {
+        cor <- toupper(grDevices::rgb(t(grDevices::col2rgb(g[[a]])), maxColorValue = 255))
+        out <- data.frame(rotulo = as.character(g$.label), cor = cor, indice = match(cor, toupper(paleta)), stringsAsFactors = FALSE)
+        break
+      }
+    }
+    if (is.null(out)) {   # figura sem legenda (uma cor só): pega as cores da primeira camada
+      ld <- suppressWarnings(ggplot2::layer_data(p, 1)); v <- if (!is.null(ld$fill)) ld$fill else ld$colour
+      v <- unique(v[!is.na(v)]); v <- utils::head(v, 4)
+      if (length(v)) { cor <- toupper(grDevices::rgb(t(grDevices::col2rgb(v)), maxColorValue = 255))
+        out <- data.frame(rotulo = if (length(v) == 1) "Cor" else paste("Cor", seq_along(v)), cor = cor, indice = match(cor, toupper(paleta)), stringsAsFactors = FALSE) }
+    }
+    out
+  }, error = function(x) NULL)
+  if (is.null(info) || !nrow(info)) { unlink(destino); return(invisible()) }
+  jsonlite::write_json(info, destino, auto_unbox = TRUE)
+}
+
 # ---- uma figura, numa forma ----
 desenhar <- function(chave, forma, G, O, e, arq, w, h, dpi) {
+  # cores próprias desta figura (escolhidas no painel em "Editar títulos"); o que faltar vem da paleta geral
+  cf <- unlist(e$cores_fig[[chave]]); cf <- cf[!is.na(cf) & nzchar(cf)]
+  if (length(cf)) e$paleta <- c(cf, e$paleta[-seq_along(cf)])
   pal <- e$paleta; k <- cores_tema(e); lw <- e$linha; pt <- e$ponto; gr <- G$grupo
   fmt1 <- function(x) formatC(x, format = "f", digits = 1, decimal.mark = ",")
   # figura principal (pasta figuras/): também um JPEG de alta resolução (dpi_jpeg, qualidade 100) com o mesmo nome
@@ -167,6 +196,7 @@ desenhar <- function(chave, forma, G, O, e, arq, w, h, dpi) {
   gg <- function(p, ww = w, hh = h) {
     ggplot2::ggsave(arq, p, width = ww, height = hh, dpi = dpi, bg = k$fundo, device = "png", type = tp)
     if (!is.null(arq_jpg)) ggplot2::ggsave(arq_jpg, p, width = ww, height = hh, dpi = e$dpi_jpeg, bg = k$fundo, device = "jpeg", type = tp, quality = 100)
+    if (!is.null(arq_jpg)) legenda_cores(p, e$paleta, sub("\\.png$", ".cores.json", arq))
     invisible(arq)
   }
   base <- function(fun) {
@@ -277,20 +307,20 @@ desenhar <- function(chave, forma, G, O, e, arq, w, h, dpi) {
     }
     if (forma == "base") return(base(function() {
       graphics::par(mfrow = c(1, 2), oma = c(0, 0, if (isTRUE(e$mostrar_titulo)) 1.5 else 0, 0))
-      graphics::barplot(ip$S, names.arg = ip$ponto, col = pal[1], border = NA, ylab = "Riqueza (S)", main = "Riqueza")
+      graphics::barplot(ip$S, names.arg = ip$ponto, col = pal[1], border = NA, ylab = "Riqueza", main = "Riqueza")
       graphics::barplot(ip$shannon, names.arg = ip$ponto, col = pal[2], border = NA, ylab = "Shannon (H')", main = "Shannon")
       if (isTRUE(e$mostrar_titulo)) graphics::mtext(rot(e, chave, "titulo", tt), outer = TRUE, font = 2, family = e$familia_titulo)
     }))
-    lg <- rbind(data.frame(ponto = ip$ponto, medida = "Riqueza (S)", v = ip$S), data.frame(ponto = ip$ponto, medida = "Shannon (H')", v = ip$shannon),
-                data.frame(ponto = ip$ponto, medida = "Simpson (1-D)", v = ip$simpson), data.frame(ponto = ip$ponto, medida = "Pielou (J')", v = ip$pielou))
+    lg <- rbind(data.frame(ponto = ip$ponto, medida = "Riqueza", v = ip$S), data.frame(ponto = ip$ponto, medida = "Shannon (H')", v = ip$shannon),
+                data.frame(ponto = ip$ponto, medida = "Simpson (1 - D)", v = ip$simpson), data.frame(ponto = ip$ponto, medida = "Pielou (J')", v = ip$pielou))
     if (forma == "hill") {
-      nh <- c("Riqueza (espécies)", "Espécies comuns (Shannon, q = 1)", "Espécies dominantes (Simpson, q = 2)")
+      nh <- c("Riqueza", "Shannon", "Simpson")
       dh <- rbind(data.frame(ponto = ip$ponto, h = nh[1], v = ip$hill0), data.frame(ponto = ip$ponto, h = nh[2], v = ip$hill1), data.frame(ponto = ip$ponto, h = nh[3], v = ip$hill2))
       dh$h <- factor(dh$h, levels = nh); dh$ponto <- factor(dh$ponto, levels = ip$ponto)
       return(gg(ggplot2::ggplot(dh, ggplot2::aes(ponto, v, fill = h)) + ggplot2::geom_col(position = ggplot2::position_dodge(.8), width = .75, na.rm = TRUE) +
-        ggplot2::geom_text(ggplot2::aes(label = fmt1(v)), position = ggplot2::position_dodge(.8), vjust = -.4, family = e$familia, size = e$fonte / 3.4, colour = k$tinta, na.rm = TRUE) +
+        ggplot2::geom_text(ggplot2::aes(label = ifelse(abs(v - round(v)) < 1e-9, formatC(round(v), format = "d"), fmt1(v))), position = ggplot2::position_dodge(.8), vjust = -.4, family = e$familia, size = e$fonte / 3.4, colour = k$tinta, na.rm = TRUE) +
         ggplot2::scale_fill_manual(values = pal[1:3], name = NULL) + ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, .12))) +
-        titulos_gg(e, chave, "Diversidade de cada ponto em número de espécies", NULL, "Número efetivo de espécies",
+        titulos_gg(e, chave, "Diversidade por ponto", NULL, "Número efetivo de espécies",
                    "Quanto mais perto as três colunas, mais equilibrada a comunidade; colunas de Shannon e Simpson baixas = poucas espécies dominam.") + tema_gg(e), w * 1.1, h))
     }
     if (forma == "pontos") return(gg(ggplot2::ggplot(lg, ggplot2::aes(ponto, v, colour = ponto)) + ggplot2::geom_segment(ggplot2::aes(xend = ponto, y = 0, yend = v), linewidth = lw, na.rm = TRUE) +
@@ -385,6 +415,13 @@ cores_pontos <- function(pontos, pal) {
 
 pode_figura <- function(G) !isTRUE(G$insuficiente) && G$riqueza >= 3 && G$n_pontos >= 3 && G$n_individuos >= 20
 
+# versão do código das figuras = data (segundos) do arquivo .R mais novo da pasta R/ do programa
+versao_codigo <- function() {
+  d <- if (exists("aqui", envir = globalenv())) get("aqui", envir = globalenv()) else "R"
+  fs <- list.files(d, "^(saida.*|fitofisionomias|campanhas|figuras)\\.R$", full.names = TRUE)   # só os arquivos que desenham figuras
+  if (!length(fs)) return(0)
+  as.numeric(max(file.mtime(fs), na.rm = TRUE))
+}
 # figuras finais do laudo: uma por chave, na forma escolhida
 gerar_figuras <- function(R, OBJ, saida, e, so = NULL, faixa = c(60, 85)) {
   suppressPackageStartupMessages(library(ggplot2)); registrar_fontes(e)
@@ -405,6 +442,8 @@ gerar_figuras <- function(R, OBJ, saida, e, so = NULL, faixa = c(60, 85)) {
     }
     figs[[g]] <- feitos
   }
+  if (is.null(so)) jsonlite::write_json(list(codigo = versao_codigo(), feito_em = format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
+                                        file.path(saida, "figuras", "_versao.json"), auto_unbox = TRUE)
   figs
 }
 
@@ -427,6 +466,15 @@ gerar_formas <- function(R, OBJ, saida, e, faixa = c(85, 95)) {
   out
 }
 
+# tabela de índices como a do PAST: uma linha por índice, uma coluna por ponto
+indices_formato_past <- function(tab) {
+  if (is.null(tab) || !nrow(tab)) return(NULL)
+  f <- function(x, d) ifelse(is.na(x), "-", formatC(x, format = "f", digits = d, decimal.mark = ","))
+  D <- if (!is.null(tab$dominancia_D)) tab$dominancia_D else 1 - tab$simpson
+  out <- data.frame(`Índices de Diversidade` = c("Riqueza", "Abundância", "Dominance (D)", "Shannon (H)", "Equitability (J)"), check.names = FALSE, stringsAsFactors = FALSE)
+  for (i in seq_len(nrow(tab))) out[[tab$ponto[i]]] <- c(as.character(tab$S[i]), as.character(tab$N[i]), f(D[i], 4), f(tab$shannon[i], 3), f(if (tab$S[i] > 1) tab$pielou[i] else NA, 4))
+  out
+}
 exportar_tabelas <- function(L, conf, R, saida) {
   pasta <- file.path(saida, "tabelas"); dir.create(pasta, showWarnings = FALSE, recursive = TRUE)
   unlink(list.files(pasta, glob2rx("*.xlsx"), full.names = TRUE))
@@ -444,7 +492,7 @@ exportar_tabelas <- function(L, conf, R, saida) {
         sprintf("02_%s_riqueza_estimadores.xlsx", t))
     esc(list("iNEXT assintótico" = if (!is.null(G$inext$assintotico_abund)) rbind(cbind(base = "indivíduos", G$inext$assintotico_abund), if (!is.null(G$inext$assintotico_inc)) cbind(base = "pontos", G$inext$assintotico_inc)),
              "iNEXT indivíduos" = G$inext$abundancia, "iNEXT pontos" = G$inext$incidencia, "Rarefação por ponto" = G$rarefacao_pontos), sprintf("03_%s_rarefacao_inext.xlsx", t))
-    esc(list("Índices por ponto" = G$indices$tabela, "Hutcheson pares" = G$hutcheson$pares, "Shannon com IC" = G$hutcheson$ic), sprintf("04_%s_diversidade_pontos.xlsx", t))
+    esc(list("Índices (formato PAST)" = indices_formato_past(G$indices$tabela), "Índices por ponto" = G$indices$tabela, "Hutcheson pares" = G$hutcheson$pares, "Shannon com IC" = G$hutcheson$ic), sprintf("04_%s_diversidade_pontos.xlsx", t))
     if (!is.null(G$similaridade)) {
       mat <- function(M) cbind(Ponto = rownames(M), as.data.frame(M))
       esc(list("Pares de pontos" = G$similaridade$pares, "Jaccard" = mat(G$similaridade$jaccard), "Bray-Curtis" = mat(G$similaridade$bray),

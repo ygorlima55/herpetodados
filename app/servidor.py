@@ -44,6 +44,12 @@ os.makedirs(LEV, exist_ok=True)
 TAREFAS = {}
 PING = {"ultimo": None}   # sinal de vida das páginas abertas (a janela do programa)
 TRAVA = threading.Lock()
+ACOES_COM_R = ("refazer", "planilha", "correcoes", "estilo")   # rodam o R na pasta do levantamento: uma de cada vez
+RESERVADOS = set()   # levantamentos com um desses pedidos sendo atendido agora (antes de a tarefa entrar em TAREFAS)
+
+
+def ocupado(lid):
+    return any(t["levantamento"] == lid and t["estado"] == "rodando" for t in TAREFAS.values())
 
 
 def slug(nome):
@@ -206,10 +212,23 @@ class Manipulador(SimpleHTTPRequestHandler):
             raise ValueError("arquivo grande demais")
         return self.rfile.read(n)
 
+    def descarta_corpo(self):
+        """Lê e joga fora o corpo (até o limite de envio), para a resposta chegar ao navegador."""
+        n = min(int(self.headers.get("Content-Length") or 0), MAX_UPLOAD)
+        while n > 0:
+            b = self.rfile.read(min(n, 1 << 20))
+            if not b:
+                break
+            n -= len(b)
+
     def do_GET(self):
         u = urlparse(self.path); caminho = unquote(u.path)
         if caminho in ("/", "/index.html"):
             self.path = "/app/inicio.html"; return super().do_GET()
+        if caminho == "/api/versao":   # data do arquivo .R mais novo (o painel compara com figuras/_versao.json)
+            rs = [os.path.join(RAIZ, "R", f) for f in os.listdir(os.path.join(RAIZ, "R"))
+                  if re.fullmatch(r"(saida.*|fitofisionomias|campanhas|figuras)\.R", f)]   # só os arquivos que desenham figuras
+            return self.json({"codigo": max((os.path.getmtime(f) for f in rs), default=0)})
         if caminho == "/api/ping":
             PING["ultimo"] = time.time()
             return self.json({"ok": True})
@@ -237,6 +256,7 @@ class Manipulador(SimpleHTTPRequestHandler):
         u = urlparse(self.path); caminho = unquote(u.path)
         if self.headers.get("Origin") not in (None, f"http://127.0.0.1:{PORTA}", f"http://localhost:{PORTA}"):
             return self.send_error(403)
+        reservou = None
         try:
             if caminho == "/api/enviar":
                 nome = os.path.basename(parse_qs(u.query).get("nome", ["planilha.xlsx"])[0])
@@ -258,6 +278,16 @@ class Manipulador(SimpleHTTPRequestHandler):
             lid, acao = m.groups(); p = pasta_ok(lid)
             if not p:
                 return self.send_error(404)
+            if acao in ACOES_COM_R:
+                # 19/11/2026: dois pedidos seguidos (clique duplo em "Rodar de novo") punham dois R gravando na mesma pasta
+                with TRAVA:
+                    livre = lid not in RESERVADOS and not ocupado(lid)
+                    if livre:
+                        RESERVADOS.add(lid)
+                if not livre:
+                    self.descarta_corpo()   # sem ler o corpo, o navegador vê a conexão cortada em vez da resposta
+                    return self.json({"erro": "As análises deste levantamento ainda estão rodando no R. Espere terminar e tente de novo."}, 409)
+                reservou = lid   # liberado no finally, depois que a tarefa já está em TAREFAS
             if acao == "pasta":
                 sub = parse_qs(u.query).get("sub", [""])[0]
                 alvo = os.path.join(p, sub) if sub in ("relatorio", "figuras", "tabelas") and os.path.isdir(os.path.join(p, sub)) else p
@@ -344,6 +374,10 @@ class Manipulador(SimpleHTTPRequestHandler):
                 json.dump(o, open(f, "w", encoding="utf-8"), ensure_ascii=False); return self.json({"ok": True})
         except (ValueError, json.JSONDecodeError) as e:
             return self.json({"erro": str(e)}, 400)
+        finally:
+            if reservou:
+                with TRAVA:
+                    RESERVADOS.discard(reservou)
 
 
 def ja_aberto(url):

@@ -31,8 +31,8 @@ catalogo_novas <- function() c(
     familias_pontos = list(nome = "Espécies de cada família por ponto", padrao = "colunas", formas = list(
       colunas = "Uma coluna por família, com valores", empilhado = "Colunas empilhadas com valores")),
     # 18/11/2026: mais descritiva
-    composicao_familias = list(nome = "Composição por família", padrao = "rosca", formas = list(
-      rosca = "Rosca: % das espécies em cada família", colunas = "Colunas: espécies por família, com número e %")),
+    composicao_familias = list(nome = "Composição por família", padrao = "colunas", formas = list(
+      colunas = "Colunas: espécies por família, com número e %", rosca = "Rosca: % das espécies em cada família (melhor com até 5 famílias)")),
     especies_abundantes = list(nome = "Espécies mais abundantes", padrao = "todas", formas = list(
       todas = "Todas as espécies, da mais para a menos abundante", top10 = "Só as 10 mais abundantes")),
     exclusivas_pontos = list(nome = "Espécies exclusivas de cada ponto", padrao = "barras", formas = list(
@@ -47,6 +47,10 @@ catalogo_novas <- function() c(
     colunas = "Colunas com número e %", barras = "Barras deitadas com número e %"))), paste0("atributo_", names(ATRIBUTOS)))
 )
 
+# legenda dentro do gráfico, num canto vazio (19/11/2026: legenda em cima tomava espaço à toa)
+leg_dentro <- function(k, canto = c(.98, .03)) ggplot2::theme(legend.position = "inside", legend.position.inside = canto, legend.justification = canto,
+  legend.direction = "vertical", legend.box = "vertical", legend.background = ggplot2::element_rect(fill = grDevices::adjustcolor(k$fundo, .92), colour = NA),
+  legend.margin = ggplot2::margin(6, 8, 6, 8), legend.key.size = grid::unit(.95, "lines"), legend.text = ggplot2::element_text(size = ggplot2::rel(.92)))
 # cor fixa para cada família (a mesma em todas as figuras)
 cores_familias <- function(fams, pal) {
   u <- sort(unique(fams)); n <- length(u)
@@ -70,13 +74,13 @@ desenhar_novas <- function(chave, forma, G, e, gg, pal, k, w, h) {
       ggplot2::geom_text(ggplot2::aes(label = n), position = ggplot2::position_stack(vjust = .5), family = e$familia, size = tam, colour = "white", fontface = "bold") +
       ggplot2::stat_summary(fun = sum, ggplot2::aes(label = ggplot2::after_stat(y), group = ponto, fill = NULL), geom = "text", vjust = -.5, family = e$familia, size = tam * 1.1, colour = k$tinta, fontface = "bold") +
       ggplot2::scale_fill_manual(values = cf, name = NULL) + ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, .1))) +
-      titulos_gg(e, chave, "Número de espécies de cada família por ponto amostral", NULL, "Número de espécies", "Número em cima da coluna = total de espécies do ponto.") + tema_gg(e)))
+      titulos_gg(e, chave, "Espécies por família em cada ponto", NULL, "Número de espécies", "Número em cima da coluna = total de espécies do ponto.") + tema_gg(e)))
     return(gg(ggplot2::ggplot(d, ggplot2::aes(ponto, n, fill = familia)) +
       ggplot2::geom_col(position = ggplot2::position_dodge2(preserve = "single", padding = .12), width = .85) +
       ggplot2::geom_text(ggplot2::aes(label = n, group = familia), position = ggplot2::position_dodge2(width = .85, preserve = "single", padding = .12),
                          vjust = -.4, family = e$familia, size = tam * .95, colour = k$tinta) +
       ggplot2::scale_fill_manual(values = cf, name = NULL) + ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, .12)), breaks = function(l) unique(floor(pretty(l)))) +
-      titulos_gg(e, chave, "Número de espécies de cada família por ponto amostral", NULL, "Número de espécies") + tema_gg(e), w * 1.15, h))
+      titulos_gg(e, chave, "Espécies por família em cada ponto", NULL, "Número de espécies") + tema_gg(e), w * 1.15, h))
   }
 
   abrev <- function(x) sub("^(\\w)\\w*\\s+", "\\1. ", x)
@@ -88,7 +92,7 @@ desenhar_novas <- function(chave, forma, G, e, gg, pal, k, w, h) {
     if (forma == "colunas") return(gg(ggplot2::ggplot(tf, ggplot2::aes(familia, riqueza, fill = familia)) + ggplot2::geom_col(width = .6, show.legend = FALSE) +
       ggplot2::geom_text(ggplot2::aes(label = rot), vjust = -.5, family = e$familia, size = tam, colour = k$tinta) +
       ggplot2::scale_fill_manual(values = cf) + ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, .14)), breaks = function(l) unique(floor(pretty(l)))) +
-      titulos_gg(e, chave, "Número de espécies por família", NULL, "Número de espécies") + tema_gg(e) + (if (nrow(tf) > 5) rotx)))
+      titulos_gg(e, chave, "Espécies por família", NULL, "Número de espécies") + tema_gg(e) + (if (nrow(tf) > 5) rotx)))
     tf$rot_fora <- ifelse(tf$riqueza_pct >= .06, tf$rot, "")
     nl <- ceiling(nrow(tf) / 3)
     return(gg(ggplot2::ggplot(tf, ggplot2::aes(x = 2, y = riqueza, fill = familia)) +
@@ -99,7 +103,7 @@ espécies"), family = e$familia, size = tam * 1.4, colour = k$tinta, lineheight 
       ggplot2::coord_polar(theta = "y") + ggplot2::xlim(.5, 2.5) +
       ggplot2::scale_fill_manual(values = cf, name = NULL, labels = paste0(tf$familia, " (", tf$riqueza, ")")) +
       ggplot2::guides(fill = ggplot2::guide_legend(nrow = nl, byrow = TRUE)) +
-      titulos_gg(e, chave, "Composição de espécies por família", NULL, NULL) + tema_gg(e) + leg_cima +
+      titulos_gg(e, chave, "Composição por família", NULL, NULL) + tema_gg(e) + leg_cima +
       ggplot2::theme(axis.text = ggplot2::element_blank(), axis.title = ggplot2::element_blank(), axis.line = ggplot2::element_blank(), axis.line.x = ggplot2::element_blank(),
                      axis.ticks = ggplot2::element_blank(), panel.grid = ggplot2::element_blank(), panel.grid.major = ggplot2::element_blank(),
                      legend.justification = "center"), w, h * 1.15))
@@ -113,9 +117,9 @@ espécies"), family = e$familia, size = tam * 1.4, colour = k$tinta, lineheight 
     return(gg(ggplot2::ggplot(le, ggplot2::aes(total, especie, fill = familia)) + ggplot2::geom_col(width = .68) +
       ggplot2::geom_text(ggplot2::aes(label = rot), hjust = -.08, family = e$familia, size = tam * .9, colour = k$tinta) +
       ggplot2::scale_fill_manual(values = cf, name = NULL) + ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0, .16))) +
-      ggplot2::guides(fill = ggplot2::guide_legend(nrow = if (length(unique(le$familia)) > 4) 2 else 1, byrow = TRUE)) +
-      titulos_gg(e, chave, if (forma == "top10") "As 10 espécies mais abundantes" else "Abundância de cada espécie", "Número de indivíduos (abundância relativa)", NULL) +
-      tema_gg(e) + leg_cima + ggplot2::theme(axis.text.y = ggplot2::element_text(face = "italic", colour = k$tinta), panel.grid.major.y = ggplot2::element_blank(),
+      ggplot2::guides(fill = ggplot2::guide_legend(ncol = 1)) +
+      titulos_gg(e, chave, if (forma == "top10") "As 10 espécies mais abundantes" else "Abundância por espécie", "Número de indivíduos", NULL) +
+      tema_gg(e) + leg_dentro(k) + ggplot2::theme(axis.text.y = ggplot2::element_text(face = "italic", colour = k$tinta), panel.grid.major.y = ggplot2::element_blank(),
                                              panel.grid.major.x = if (isTRUE(e$grade)) ggplot2::element_line(colour = k$grade, linewidth = .4) else ggplot2::element_blank()),
       w, max(3, .26 * nrow(le) + 1.5)))
   }
@@ -132,14 +136,14 @@ espécies"), family = e$familia, size = tam * 1.4, colour = k$tinta, lineheight 
         ggplot2::geom_text(ggplot2::aes(label = ifelse(n > 0, n, "")), position = ggplot2::position_stack(vjust = .5), family = e$familia, size = tam, colour = "white", fontface = "bold") +
         ggplot2::scale_fill_manual(values = c("Exclusivas do ponto" = pal[2], "Também em outros pontos" = pal[1]), name = NULL, breaks = c("Exclusivas do ponto", "Também em outros pontos")) +
         ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, .06)), breaks = function(l) unique(floor(pretty(l)))) +
-        titulos_gg(e, chave, "Espécies exclusivas e compartilhadas em cada ponto", NULL, "Número de espécies") + tema_gg(e) + leg_cima))
+        titulos_gg(e, chave, "Exclusivas e compartilhadas por ponto", NULL, "Número de espécies") + tema_gg(e) + leg_cima))
     }
     m <- max(1, d$exclusivas); passo <- m * .06
     return(gg(ggplot2::ggplot(d, ggplot2::aes(exclusivas, ponto)) + ggplot2::geom_col(fill = pal[2], width = .55) +
       ggplot2::geom_text(ggplot2::aes(x = exclusivas + passo, label = exclusivas), hjust = 0, family = e$familia, size = tam, colour = k$tinta, fontface = "bold") +
       ggplot2::geom_text(ggplot2::aes(x = exclusivas + passo * 4, label = nomes), hjust = 0, family = e$familia, fontface = "italic", size = tam * .9, colour = k$tinta) +
       ggplot2::scale_x_continuous(limits = c(0, m * 2.6 + 1), expand = ggplot2::expansion(mult = c(0, 0))) +
-      titulos_gg(e, chave, "Espécies registradas em um só ponto", NULL, NULL) + tema_gg(e) +
+      titulos_gg(e, chave, "Espécies exclusivas por ponto", NULL, NULL) + tema_gg(e) +
       ggplot2::theme(panel.grid = ggplot2::element_blank(), panel.grid.major = ggplot2::element_blank(), panel.grid.major.y = ggplot2::element_blank(), axis.text.x = ggplot2::element_blank(), axis.line.x = ggplot2::element_blank(),
                      axis.text.y = ggplot2::element_text(colour = k$tinta, size = ggplot2::rel(1.05))), w, max(2.6, .45 * length(pts) + 1.4)))
   }
@@ -151,7 +155,7 @@ espécies"), family = e$familia, size = tam * 1.4, colour = k$tinta, lineheight 
     t$especies_pct <- t$especies_n / sum(t$especies_n)
     t$rot <- paste0(t$especies_n, " (", pc(t$especies_pct), ")")
     t$classe <- factor(t$classe, levels = t$classe[order(-t$especies_n)])
-    tt <- paste(ATRIBUTOS[[a]], "das espécies registradas")
+    tt <- ATRIBUTOS[[a]]
     if (forma == "barras") return(gg(ggplot2::ggplot(t, ggplot2::aes(especies_n, stats::reorder(classe, especies_n))) + ggplot2::geom_col(fill = pal[1], width = .6) +
       ggplot2::geom_text(ggplot2::aes(label = rot), hjust = -.12, family = e$familia, size = tam, colour = k$tinta) +
       ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0, .25))) +

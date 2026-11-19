@@ -81,7 +81,7 @@ conferir_planilha <- function(L) {
   for (k in unique(ch[duplicated(ch)])) {
     s <- r[ch == k, ]
     add("informação", ab, paste(s$linha_planilha, collapse = ", "), "Ponto + espécie",
-        sprintf("%s no %s aparece em %d linhas; as contagens foram somadas (%s).", s$especie[1], s$ponto[1], nrow(s), sum(s$total, na.rm = TRUE)),
+        sprintf("%s no %s aparece em %d linhas; as contagens válidas somam %s.", s$especie[1], s$ponto[1], nrow(s), somar_totais_de_campo(s$total)),
         "Confirmar que não é a mesma anotação repetida.")
   }
   # identificações incompletas
@@ -120,7 +120,7 @@ conferir_planilha <- function(L) {
         add("erro", ac, k$linha_planilha[i], "Total", sprintf("%s: total %s, mas a soma dos pontos dá %s.", k$especie[i], k$total_informado[i], soma), "Corrigir o total ou a fórmula.", tipo = "consolidada_total", especie = k$especie[i], dados = soma)
       for (p in pcols) {
         v_con <- k[[p]][i]; if (is.na(v_con)) v_con <- 0
-        v_reg <- sum(r$total[r$especie == k$especie[i] & r$ponto == p], na.rm = TRUE)
+        v_reg <- somar_totais_de_campo(r$total[r$especie == k$especie[i] & r$ponto == p])
         if (v_con != v_reg)
           add("erro", ac, k$linha_planilha[i], p, sprintf("%s no %s: %s na aba consolidada e %s nos registros de campo.", k$especie[i], p, v_con, v_reg),
               "Decidir qual está certo.", tipo = "consolidada_ponto", especie = k$especie[i], ponto = p, dados = paste(v_con, v_reg, sep = "|"))
@@ -150,7 +150,7 @@ completar_com_consolidada <- function(L) {
   pcols <- grep("^P\\d+$", names(k), value = TRUE); novos <- list(); feitos <- list()
   for (i in seq_len(nrow(k))) for (p in pcols) {
     v_con <- k[[p]][i]; if (is.na(v_con) || v_con <= 0) next
-    v_reg <- sum(r$total[r$especie == k$especie[i] & r$ponto == p], na.rm = TRUE)
+    v_reg <- somar_totais_de_campo(r$total[r$especie == k$especie[i] & r$ponto == p])
     if (v_con > v_reg) {
       dif <- v_con - v_reg
       novos[[length(novos) + 1]] <- data.frame(linha_planilha = paste("consolidada", k$linha_planilha[i]), ponto_original = p, ponto = p,

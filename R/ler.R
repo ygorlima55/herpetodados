@@ -186,6 +186,23 @@ ler_planilha <- function(arquivo) {
        registros = reg, pontos = pontos, consolidada = consol, secundarios = secundarios)
 }
 
+total_de_campo_valido <- function(x) !is.na(x) & x >= 0
+somar_totais_de_campo <- function(x) sum(x[total_de_campo_valido(x)])
+
+# Tira das análises os registros que o corretor marca como erro e que quebram ou distorcem os cálculos:
+# espécie vazia (viraria uma "espécie" sem nome e aumentaria a riqueza) e Total vazio, não numérico ou negativo
+# (o vegan não aceita negativo). Eles continuam na conferência e ficam em L$fora_da_analise com o motivo.
+registros_para_analise <- function(L) {
+  r <- L$registros
+  sem_esp <- is.na(r$especie_completa) | trimws(r$especie_completa) == "" | is.na(r$especie) | trimws(r$especie) == ""
+  tot_ruim <- !total_de_campo_valido(r$total)
+  fora <- sem_esp | tot_ruim
+  L$fora_da_analise <- r[fora, , drop = FALSE]
+  L$fora_da_analise$motivo <- ifelse(sem_esp[fora], "sem nome de espécie", "Total vazio, não numérico ou negativo")
+  L$registros <- r[!fora, , drop = FALSE]
+  L
+}
+
 # transforma a consolidada (espécie x P1..Pn) em registros: uma linha por espécie e ponto com contagem > 0,
 # com as colunas da aba de registros (Ponto, Espécie, Família, Grupo, Total)
 registros_da_consolidada <- function(consol) {

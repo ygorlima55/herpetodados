@@ -54,8 +54,9 @@ indices_por_ponto <- function(m) {
   excl <- sapply(seq_len(nrow(m)), function(i) sum(m[i, ] > 0 & colSums(m[-i, , drop = FALSE] > 0) == 0))
   sing <- rowSums(m == 1)
   eq <- t(apply(m, 1, equitabilidade))
-  data.frame(ponto = rownames(m), S = S, N = N, shannon = round(H, 3), simpson = round(D, 3),
-             hill0 = S, hill1 = round(exp(H), 2), hill2 = round(invD, 2), pielou = round(J, 3),
+  domD <- ifelse(N > 0, rowSums((m / pmax(N, 1))^2), NA)   # Dominância D = soma de pi² (o "Dominance_D" do PAST)
+  data.frame(ponto = rownames(m), S = S, N = N, dominancia_D = round(domD, 4), shannon = round(H, 3), simpson = round(D, 3),
+             hill0 = S, hill1 = round(exp(H), 2), hill2 = round(invD, 2), pielou = round(J, 4),
              berger_parker = round(bp, 3), dominante = dom, S_rarefeita = round(Srar, 2), S_rarefeita_ep = round(Srar_se, 2),
              n_rarefacao = nmin, exclusivas = excl, singletons = sing,
              H_max = round(eq[, "H_max"], 3), simpson_E = round(eq[, "simpson_E"], 3), hill_E21 = round(eq[, "hill_E21"], 3), evar = round(eq[, "evar"], 3),
@@ -86,7 +87,9 @@ analisar_grupo <- function(reg, nome, pontos_info, consol = NULL, campanhas = NU
               excluidas = I(M$excluidas), n_excluido = M$n_excluido,
               matriz = list(pontos = rownames(m), especies = colnames(m), valores = unname(m)))
   res$descritiva <- tryCatch(descritiva(reg, M, consol), error = function(e) NULL)
-  if (S < 2 || n_pt < 2) { res$insuficiente <- TRUE; return(res) }
+  # conta os pontos COM registro: a matriz inclui todos os pontos da aba Pontos, até os vazios
+  n_com_registro <- sum(rowSums(pr) > 0)
+  if (S < 2 || n_pt < 2 || n_com_registro < 2) { res$insuficiente <- TRUE; res$n_pontos_com_registro <- n_com_registro; return(res) }
 
   # ---------- 1. índices por ponto ----------
   passo(0, "índices por ponto")

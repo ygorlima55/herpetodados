@@ -337,6 +337,41 @@ aside.editor{border-radius:26px;background:var(--vidro);border-color:var(--vidro
 @media (max-width:980px){main{margin-left:0;padding:60px 12px 60px}section.prancha{border-radius:22px;padding:16px}.numeros{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* fim Sálvia */
 #avisoTopo{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:9999;max-width:640px;padding:12px 18px;border-radius:14px;font:14px/1.45 system-ui,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.25);cursor:pointer;display:none}#avisoTopo.erro{background:#7a1f12;color:#fff}#avisoTopo.ok{background:#2f6b4a;color:#fff}
+.cores-fig{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0}.cores-fig label{display:flex;align-items:center;gap:6px;font-size:13px}.cores-fig input{width:38px;height:28px;padding:0;border:0;background:none;cursor:pointer}@keyframes pulsa{0%,100%{box-shadow:0 0 0 0 rgba(63,140,98,.6)}50%{box-shadow:0 0 0 8px rgba(63,140,98,0)}}button.pulsa{animation:pulsa 1.4s infinite}
+.legcores{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:2px 0 10px;font-size:13px;color:var(--tinta-2)}.legcores .it{display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:0;background:none;padding:2px 4px;border-radius:8px;color:var(--tinta);font:inherit}.legcores .it:hover{background:var(--papel-3)}.legcores .q{width:18px;height:18px;border-radius:5px;border:1px solid rgba(0,0,0,.18);display:inline-block}.legcores input[type=color]{position:absolute;opacity:0;width:0;height:0;pointer-events:none}.legcores .dica{font-size:12px;color:var(--tinta-3)}.legcores .volta{font-size:12px;text-decoration:underline;cursor:pointer;border:0;background:none;color:var(--tinta-2)}
+
+
+/* 19/11/2026: barra de % com a esfera de partículas ao lado */
+.barra.com-esfera{grid-template-columns:72px minmax(0,1fr);gap:14px;align-items:center;padding:10px 14px;border-radius:16px;background:#121513;color:#f1f5f2}
+.barra.com-esfera canvas{width:72px;height:72px}
+.barra.com-esfera .trilho{background:rgba(255,255,255,.14)!important}
+.barra.com-esfera .enche{background:linear-gradient(90deg,#3f8c62,#8fd3a8)!important}
+.barra.com-esfera .info,.barra.com-esfera .info *{color:rgba(255,255,255,.78)!important}
+.barra.com-esfera.terminou{background:transparent;color:inherit}.barra.com-esfera.terminou canvas{display:none}
+.barra.com-esfera.terminou{grid-template-columns:minmax(0,1fr)}.barra.com-esfera.terminou .info,.barra.com-esfera.terminou .info *{color:inherit!important}
+
+/* 19/11/2026: menu com a marcação que sobe e desce (sem a pílula preta) */
+.menu nav{position:relative;padding-left:26px!important}
+.menu nav::before{content:"";position:absolute;left:14px;top:14px;bottom:14px;width:1.5px;background:var(--fio);border-radius:2px}
+.menu nav .feito{position:absolute;left:14px;top:14px;height:0;width:1.5px;background:var(--acento);border-radius:2px;z-index:1}
+.menu nav .marcador{position:absolute;left:22px;right:12px;top:0;height:0;border-radius:999px;background:color-mix(in srgb, var(--acento) 18%, transparent);z-index:0}
+.menu nav .marcador::before{content:"";position:absolute;left:-12px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:var(--acento);box-shadow:0 0 0 3px var(--vidro)}
+.menu nav .marcador.pronta{transition:transform .6s cubic-bezier(.3,1.25,.4,1), height .4s cubic-bezier(.3,1.25,.4,1)}
+.menu nav .feito{transition:height .6s cubic-bezier(.3,1.25,.4,1)}
+.menu nav a{position:relative;z-index:1}
+.menu nav a.ativo{background:transparent!important;color:var(--tinta)!important;font-weight:600}
+.menu nav a.ativo .n{background:var(--acento)!important;border-color:transparent!important;color:#fff!important}
+.menu nav a.ativo .val{color:var(--tinta-2)!important}
+/* abas: pílula elástica */
+.abas{position:relative}
+.abas .pilula-abas{position:absolute;left:0;top:0;width:0;height:0;border-radius:999px;background:var(--preto);z-index:0;box-shadow:0 6px 16px -8px rgba(0,0,0,.45)}
+.abas button{position:relative;z-index:1;transition:color .25s ease .08s}
+.abas:has(.pilula-abas.pronta) button[aria-pressed="true"]{background:transparent!important}
+.abas button[aria-pressed="true"]{color:var(--sobre-preto)!important}
+/* figura redesenhando: esfera + texto */
+.figr .quadro .aviso-r{flex-direction:column;gap:6px;background:rgba(18,21,19,.55);color:#fff;border-radius:inherit}
+.figr .quadro .aviso-r canvas{width:80px;height:80px}
+@media (prefers-reduced-motion:reduce){.menu nav .marcador,.menu nav .feito,.abas .pilula-abas{transition:none!important}}
 </style>
 </head>
 <body>
@@ -432,20 +467,22 @@ const PALETAS = {
 };
 const CAT = H.catalogo || {};
 const PADRAO = { tema_r:"salvia", tema:"claro", paleta:"salvia", cores:null, fonte:11, familia:"Times New Roman", familia_titulo:"Times New Roman", linha:1, ponto:2.5, legenda:"top",
-  faixa:true, grade:true, mostrar_titulo:true, mostrar_grupo:true, titulos:{}, formas:{}, largura:18, altura:11.5, dpi:300, painel:"claro" };
+  faixa:true, grade:false, mostrar_titulo:true, mostrar_grupo:false, titulos:{}, formas:{}, cores_fig:{}, largura:18, altura:11.5, dpi:300, painel:"claro" };
 const doR = H.estilo && typeof H.estilo === "object" ? H.estilo : {};
 let E = Object.assign(JSON.parse(JSON.stringify(PADRAO)), store.get("herp.estilo5", {}));
 if (doR._painel) Object.assign(E, doR._painel);
-for (const k of ["titulos","formas"]) if (doR[k] && !Array.isArray(doR[k])) E[k] = doR[k]; else if (!E[k] || Array.isArray(E[k])) E[k] = {};
+for (const k of ["titulos","formas","cores_fig"]) if (doR[k] && !Array.isArray(doR[k])) E[k] = doR[k]; else if (!E[k] || Array.isArray(E[k])) E[k] = {};
 // 18/11/2026: padrão novo das figuras (Times New Roman, legenda em cima e na horizontal); vale uma vez para estilos antigos
 if ((E._v || 0) < 6) { E.familia = "Times New Roman"; E.familia_titulo = "Times New Roman"; if (E.legenda === "bottom") E.legenda = "top"; E._v = 6; }
+// 19/11/2026: o nome do grupo (Herpetofauna, Anuros...) sai das figuras; dá para religar em Editar títulos
+if ((E._v || 0) < 7) { E.mostrar_grupo = false; E.grade = false; E._v = 7; }   // e fundo branco sem linhas de grade
 const salvaE = () => store.set("herp.estilo5", E);
 const cores = () => E.paleta === "livre" && E.cores ? E.cores : (PALETAS[E.paleta] || PALETAS.prancha);
 function estiloR(){
   const cm = v => Math.round(v / 2.54 * 100) / 100;
   return {paleta: cores(), tema_r: E.tema_r, tema: E.tema, fonte: +E.fonte, familia: E.familia, familia_titulo: E.familia_titulo, faixa: E.faixa, grade: E.grade,
     linha: +E.linha, ponto: +E.ponto, legenda: E.legenda, mostrar_titulo: E.mostrar_titulo, mostrar_grupo: E.mostrar_grupo !== false, largura: cm(E.largura), altura: cm(E.altura), dpi: +E.dpi,
-    titulos: E.titulos, formas: E.formas, _painel: Object.fromEntries(Object.keys(PADRAO).filter(k => k !== "titulos" && k !== "formas").map(k => [k, E[k]]))};
+    titulos: E.titulos, formas: E.formas, cores_fig: E.cores_fig || {}, _painel: Object.fromEntries(Object.keys(PADRAO).filter(k => !["titulos","formas","cores_fig"].includes(k)).map(k => [k, E[k]]))};
 }
 
 /* ---------------- estado ---------------- */
@@ -455,11 +492,32 @@ let SEL = store.get(kSel, []);       // itens do relatório: {tipo:"fig"|"tab", 
 const salvaSel = () => { store.set(kSel, SEL); if (LID) api("selecao", SEL); };
 const naSel = id => SEL.some(s => s.id === id);
 
+
+/* esfera de partículas enquanto o R roda (19/11/2026; ref. "Particle Sphere"): 260 pontos, uma volta a cada 8 s, onda de luz a cada 1,6 s */
+function esferaParticulas(cv){
+  if (!cv || cv._anim) return; cv._anim = true;
+  const cx = cv.getContext("2d"), W = cv.width, R = W * .4, N = 260, P = [];
+  for (let i = 0; i < N; i++) { const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), t = i * Math.PI * (3 - Math.sqrt(5)); P.push([Math.cos(t) * r, y, Math.sin(t) * r]); }
+  const t0 = performance.now(), parado = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const quadro = agora => {
+    if (!cv.isConnected) { cv._anim = false; return; }
+    const t = parado ? 0 : (agora - t0) / 1000, a = (t / 8) * Math.PI * 2, inc = .35, onda = ((t % 1.6) / 1.6) * 2.6 - 1.3;
+    cx.clearRect(0, 0, W, W);
+    const pr = P.map(([x, y, z]) => { const x1 = x * Math.cos(a) + z * Math.sin(a), z1 = -x * Math.sin(a) + z * Math.cos(a);
+      return [x1, y * Math.cos(inc) - z1 * Math.sin(inc), y * Math.sin(inc) + z1 * Math.cos(inc), y]; }).sort((p, q) => p[2] - q[2]);
+    const k = W / 300;
+    for (const [x, y, z, y0] of pr) { const prof = (z + 1) / 2, br = Math.exp(-Math.pow((-y0 - onda) * 3.2, 2));
+      cx.fillStyle = `rgba(${Math.round(63 + 120 * br)},${Math.round(140 + 90 * br)},${Math.round(98 + 90 * br)},${Math.min(1, .18 + prof * .62 + br * .25)})`;
+      cx.beginPath(); cx.arc(W / 2 + x * R, W / 2 + y * R, (1.2 + prof * 1.8 + br * 1.6) * k, 0, Math.PI * 2); cx.fill(); }
+    if (!parado) requestAnimationFrame(quadro);
+  };
+  requestAnimationFrame(quadro);
+}
 /* ---------------- tarefas do R ---------------- */
 function barra(caixa, t){
-  let b = caixa.previousElementSibling; if (!b || !b.classList.contains("barra")) { b = document.createElement("div"); b.className = "barra"; b.innerHTML = '<div class="trilho"><div class="enche"></div></div><div class="info"><span class="et"></span><span class="pc"></span></div>'; caixa.parentNode.insertBefore(b, caixa); }
+  let b = caixa.previousElementSibling; if (!b || !b.classList.contains("barra")) { b = document.createElement("div"); b.className = "barra com-esfera"; b.innerHTML = '<canvas width="144" height="144" aria-hidden="true"></canvas><div class="trilho-e">' + '<div class="trilho"><div class="enche"></div></div><div class="info"><span class="et"></span><span class="pc"></span></div></div>'; caixa.parentNode.insertBefore(b, caixa); }
   const p = t.estado === "pronto" ? 100 : (t.pct || 0), s = Math.max(0, Math.round(Date.now() / 1000 - (t.inicio || Date.now() / 1000)));
-  b.style.display = "block"; b.querySelector(".enche").style.width = p + "%"; b.querySelector(".pc").textContent = p + "%";
+  b.style.display = "grid"; b.classList.toggle("terminou", t.estado !== "rodando"); if (t.estado === "rodando") esferaParticulas(b.querySelector("canvas")); b.querySelector(".enche").style.width = p + "%"; b.querySelector(".pc").textContent = p + "%";
   b.querySelector(".et").textContent = (t.etapa || "Rodando no R") + (t.estado === "rodando" ? ` · ${Math.floor(s / 60)} min ${s % 60} s` : "");
 }
 function acompanhar(tid, caixa, fim){
@@ -479,7 +537,7 @@ function acompanhar(tid, caixa, fim){
 function redesenhar(so, depois){
   salvaE();
   if (!LID) { alert("Para o R redesenhar, abra o painel pelo Herpetodados (abrir_herpetodados.cmd)."); return null; }
-  document.querySelectorAll(so ? `.figr[data-chave="${so}"] .quadro` : ".figr .quadro").forEach(q => q.classList.add("refazendo"));
+  document.querySelectorAll(so ? `.figr[data-chave="${so}"] .quadro` : ".figr .quadro").forEach(q => { q.classList.add("refazendo"); esferaParticulas(q.querySelector(".aviso-r canvas")); });
   const tira = () => document.querySelectorAll(".figr .quadro.refazendo").forEach(q => q.classList.remove("refazendo"));
   return api("estilo" + (so ? "?so=" + so : ""), JSON.stringify(estiloR())).then(r => {
     if (!r || !r.tarefa) { tira(); avisoTopo(r && r.erro ? r.erro : "O programa não aceitou o pedido de redesenho."); depois && depois({estado:"erro"}); return; }
@@ -510,8 +568,9 @@ function figuraR(alvo, chave, legenda){
   const jpg = arq.replace(/\.png$/, ".jpg"), bj = el("a", {href:`figuras/${jpg}?v=${versao}`, download: jpg, title:"JPEG em alta resolução (600 dpi)"}); bj.appendChild(el("button", {}, "JPEG 600 dpi")); acs.appendChild(bj);
   acs.appendChild(marcaRel("fig:" + tag + ":" + chave, {tipo:"fig", titulo:tit, arquivo:`figuras/${arq}`}));
   topo.appendChild(acs); f.appendChild(topo);
+  f.appendChild(legendaCores(chave, `${tag}_${chave}`));
   f.appendChild(editorTitulos(chave));
-  const q = el("div", {class:"quadro"}); q.innerHTML = `<img src="figuras/${arq}?v=${versao}" alt="${esc(tit)}"><div class="aviso-r">O R está redesenhando...</div>`; f.appendChild(q);
+  const q = el("div", {class:"quadro"}); q.innerHTML = `<img src="figuras/${arq}?v=${versao}" alt="${esc(tit)}"><div class="aviso-r"><canvas width="160" height="160" aria-hidden="true"></canvas><span>O R está redesenhando...</span></div>`; f.appendChild(q);
   if (formas.length > 1){
     const fz = el("div", {class:"formas naoimprime"}), lista = el("div", {class:"lista"});
     fz.appendChild(el("div", {class:"rotulo", style:"margin-bottom:8px"}, "O mesmo resultado desenhado de outro jeito pelo R. Clique para usar."));
@@ -521,6 +580,29 @@ function figuraR(alvo, chave, legenda){
   }
   alvo.appendChild(f);
 }
+// legenda de cores da figura: clicar num quadradinho abre a paleta do Windows; ao escolher, o R redesenha só esta figura
+function legendaCores(chave, base){
+  const box = el("div", {class:"legcores naoimprime"});
+  const troca = (indice, cor) => {
+    const pal = (E.cores_fig[chave] || cores()).slice();
+    while (pal.length < indice) pal.push(cores()[pal.length] || "#888888");
+    pal[indice - 1] = cor; E.cores_fig[chave] = pal; salvaE(); redesenhar(chave);
+  };
+  if (!LID) return box;
+  fetch(`figuras/${base}.cores.json?v=${versao}`, {cache:"no-store"}).then(r => r.ok ? r.json() : null).catch(() => null).then(itens => {
+    itens = arr(itens).filter(i => i && i.indice);
+    if (!itens.length) return;
+    box.appendChild(el("span", {class:"dica"}, "Cores:"));
+    for (const it of itens){
+      const b = el("label", {class:"it", title:"Clique para trocar a cor"}), inp = el("input", {type:"color", value: it.cor.toLowerCase()});
+      b.innerHTML = `<span class="q" style="background:${it.cor}"></span>${esc(it.rotulo)}`; b.appendChild(inp);
+      inp.onchange = () => { b.querySelector(".q").style.background = inp.value; troca(it.indice, inp.value); };
+      box.appendChild(b);
+    }
+    if (E.cores_fig[chave]) { const v = el("button", {class:"volta"}, "cores padrão"); v.onclick = () => { delete E.cores_fig[chave]; salvaE(); redesenhar(chave); }; box.appendChild(v); }
+  });
+  return box;
+}
 // títulos e eixos de uma figura, editados ali mesmo; o R redesenha só ela
 function editorTitulos(chave){
   const pad = (((H.titulos_padrao || {})[grupo] || {})[chave]) || {}, atual = E.titulos[chave] || {};
@@ -528,10 +610,14 @@ function editorTitulos(chave){
   const campos = [["titulo", "Título"], ["x", "Eixo horizontal"], ["y", "Eixo vertical"], ["nota", "Nota de rodapé"]];
   ed.innerHTML = `<div class="rotulo">Escreva por cima. Deixe em branco para voltar ao texto padrão.</div><div class="grade-ed">` +
     campos.map(([k, n]) => `<label>${n}<input type="text" data-k="${k}" value="${esc(atual[k] || "")}" placeholder="${esc(pad[k] || "(sem)")}"></label>`).join("") +
-    `</div><label class="ck"><input type="checkbox" data-g ${E.mostrar_grupo !== false ? "checked" : ""}> Mostrar o grupo (${esc(grupo)}) abaixo do título em todas as figuras</label>`;
+    `</div><div class="rotulo" style="margin-top:10px">Cores desta figura (1ª cor = 1ª série da legenda, 2ª = 2ª série...)</div><div class="cores-fig">` +
+    (E.cores_fig[chave] || cores().slice(0, 4)).slice(0, 4).map((c, i) => `<label>Cor ${i + 1} <input type="color" data-c="${i}" value="${c}"></label>`).join("") +
+    `</div><label class="ck"><input type="checkbox" data-g ${E.mostrar_grupo === true ? "checked" : ""}> Mostrar o grupo (${esc(grupo)}) abaixo do título em todas as figuras</label>`;
   const ap = el("button", {class:"forte"}, "Aplicar e redesenhar"), vt = el("button", {}, "Voltar ao padrão");
   const grava = limpa => { const t = {}; ed.querySelectorAll("input[data-k]").forEach(i => { if (limpa) i.value = ""; if (i.value.trim()) t[i.dataset.k] = i.value.trim(); });
     if (Object.keys(t).length) E.titulos[chave] = t; else delete E.titulos[chave];
+    const cs = [...ed.querySelectorAll("input[data-c]")].map(i => i.value), pad = cores().slice(0, cs.length);
+    if (!limpa && cs.some((c, i) => c.toLowerCase() !== String(pad[i]).toLowerCase())) E.cores_fig[chave] = cs; else delete E.cores_fig[chave];
     const g = ed.querySelector("[data-g]").checked; const todas = g !== (E.mostrar_grupo !== false); E.mostrar_grupo = g;
     redesenhar(todas ? null : chave); };
   ap.onclick = () => grava(false); vt.onclick = () => grava(true);
@@ -708,7 +794,26 @@ function tabela(alvo, id, titulo, cols, linhas, alto){
   const tb = el("tbody"); for (const r of linhas) tb.insertAdjacentHTML("beforeend", "<tr>" + cols.map(c => { const v = c.f ? c.f(r) : r[c.k]; return `<td class="${c.num ? "num" : ""}${c.esp ? " esp" : ""}">${v ?? "–"}</td>`; }).join("") + "</tr>");
   t.appendChild(tb); wrap.appendChild(t); box.appendChild(wrap); alvo.appendChild(box);
 }
-function abas(alvo, opcoes, valor, ao){ const a = el("div", {class:"abas naoimprime"}); for (const [v, t] of opcoes){ const b = el("button", {"aria-pressed": String(v === valor)}, t); b.onclick = () => ao(v); a.appendChild(b); } alvo.appendChild(a); }
+// abas numa cápsula com pílula elástica (19/11/2026): ao clicar, a ponta da frente da pílula anda primeiro e a de trás alcança; depois o conteúdo troca
+function abas(alvo, opcoes, valor, ao){
+  const a = el("div", {class:"abas naoimprime"}), pil = el("span", {class:"pilula-abas", "aria-hidden":"true"}); a.appendChild(pil);
+  const bts = [], SAI = "cubic-bezier(.55,0,.25,1)", CHEGA = "cubic-bezier(.3,1.25,.4,1)";
+  const poe = b => { pil.style.left = b.offsetLeft + "px"; pil.style.width = b.offsetWidth + "px"; pil.style.top = b.offsetTop + "px"; pil.style.height = b.offsetHeight + "px"; };
+  const move = b => { pil.classList.add("movendo"); const esq = b.offsetLeft, dir = esq + b.offsetWidth, l = parseFloat(pil.style.left) || 0, w = parseFloat(pil.style.width) || 0, ida = esq > l;
+    pil.style.top = b.offsetTop + "px"; pil.style.height = b.offsetHeight + "px";
+    pil.style.transition = ida ? `width .3s ${SAI}, left .42s ${CHEGA} .1s, top .3s ${CHEGA}` : `left .3s ${SAI}, width .42s ${CHEGA} .1s, top .3s ${CHEGA}`;
+    if (ida) { pil.style.width = (dir - l) + "px"; setTimeout(() => { pil.style.left = esq + "px"; pil.style.width = (dir - esq) + "px"; }, 16); }
+    else { pil.style.left = esq + "px"; pil.style.width = (l + w - esq) + "px"; setTimeout(() => { pil.style.width = (dir - esq) + "px"; }, 16); } };
+  for (const [v, tx] of opcoes){ const b = el("button", {"aria-pressed": String(v === valor)}, tx); bts.push(b);
+    b.onclick = () => { if (v === valor) return; move(b); bts.forEach(x => x.setAttribute("aria-pressed", String(x === b))); setTimeout(() => ao(v), matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 430); };
+    a.appendChild(b); }
+  alvo.appendChild(a);
+  const at = bts[opcoes.findIndex(o => o[0] === valor)];
+  // posiciona a pílula quando as abas aparecem (as seções escondidas medem 0 até serem mostradas)
+  const ajusta = () => { if (pil.classList.contains("movendo")) return; const atual = bts.find(x => x.getAttribute("aria-pressed") === "true") || at;
+    if (atual && atual.offsetWidth) { pil.style.transition = "none"; poe(atual); pil.classList.add("pronta"); } };
+  a._ajusta = ajusta; if (window.ResizeObserver) new ResizeObserver(ajusta).observe(a); setTimeout(ajusta, 0);
+}
 function md(txt){
   const ls = esc(txt).split(/\r?\n/); let h = "", li = false;
   for (let l of ls){ l = l.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\*(.+?)\*/g, "<i>$1</i>");
@@ -739,7 +844,20 @@ function secao(id, titulo, pergunta){
   $("#main").appendChild(s); return s;
 }
 
+// figuras feitas com uma versão anterior do programa? (correções de rótulo, cores e textos só aparecem depois de redesenhar)
+let FIG_ANTIGAS = null;
+if (LID) Promise.all([fetch("/api/versao", {cache:"no-store"}).then(r => r.json()).catch(() => null), fetch(`figuras/_versao.json?v=${Date.now()}`, {cache:"no-store"}).then(r => r.ok ? r.json() : {codigo:0}).catch(() => ({codigo:0}))])
+  .then(([a, f]) => { if (a && a.codigo && (f.codigo || 0) + 1 < a.codigo) { FIG_ANTIGAS = true; avisoAntigas(); } });
+function avisoAntigas(){
+  if (!FIG_ANTIGAS || document.getElementById("faixaAntigas")) return;
+  const fx = el("div", {id:"faixaAntigas", class:"aviso naoimprime", style:"margin:0 0 14px"}, `<span><span class="pill atenção">atenção</span></span><div><b>Figuras de uma versão anterior do programa</b>Algumas correções (rótulos com os pontos, títulos, cores, fundo branco) só aparecem depois de redesenhar. Leva alguns minutos.</div>`);
+  const b = el("button", {class:"acento", style:"margin-left:auto"}, "Redesenhar todas agora");
+  b.onclick = () => { b.disabled = true; b.textContent = "O R está redesenhando..."; redesenhar(null, t => { if (t.estado === "pronto") { FIG_ANTIGAS = false; fx.remove(); } else { b.disabled = false; b.textContent = "Deu erro: tentar de novo"; } }); };
+  fx.appendChild(b); const m = $("#main"); if (m) m.prepend(fx);
+}
 function render(){
+  setTimeout(avisoAntigas, 0);
+  if (E.painel === "vinho") E.painel = "claro";   // tema Vinho retirado em 19/11/2026
   document.documentElement.dataset.theme = E.painel === "escuro" ? "dark" : "light";
   if ($("#btTemaTx")) $("#btTemaTx").textContent = E.painel === "escuro" ? "Claro" : "Escuro";
   $("#main").innerHTML = "";
@@ -854,7 +972,12 @@ function render(){
   const s4 = secao("diversidade", "Diversidade em cada ponto", "Qual ponto é mais diverso e qual é dominado por poucas espécies.");
   const sub4 = store.get("herp.sub4", "indices");
   abas(s4, [["indices","Índices por ponto"],["area","Equitabilidade da área"],["shannon","Shannon e teste de Hutcheson"]], sub4, v => { store.set("herp.sub4", v); render(); });
-  if (sub4 === "indices"){ figuraR(s4, "indices_pontos", "Índices de diversidade por ponto"); texto(s4, G.indices.texto);
+  if (sub4 === "indices"){
+    { const tp = arr(G.indices.tabela), f = (x, d) => x == null || isNaN(x) ? "-" : nf(x, d);
+      const lin = [["Riqueza", r => String(r.S)], ["Abundância", r => String(r.N)], ["Dominance (D)", r => f(r.dominancia_D != null ? r.dominancia_D : 1 - r.simpson, 4)],
+                   ["Shannon (H)", r => f(r.shannon, 3)], ["Equitability (J)", r => r.S > 1 ? f(r.pielou, 4) : "-"]].map(([n, fn]) => Object.assign({indice: n}, Object.fromEntries(tp.map(r => [r.ponto, fn(r)]))));
+      tabela(s4, "indices_past", "Índices de diversidade", [{t:"Índices de Diversidade", k:"indice"}].concat(tp.map(r => ({t: r.ponto, k: r.ponto, num:1}))), lin); }
+    figuraR(s4, "indices_pontos", "Índices de diversidade por ponto"); texto(s4, G.indices.texto);
     tabela(s4, "indices", "Índices por ponto", [{t:"Ponto", k:"ponto"}, {t:"Fitofisionomia", k:"fitofisionomia"}, {t:"S", k:"S", num:1}, {t:"N", k:"N", num:1}, {t:"Shannon H′", f:r => nf(r.shannon, 3), num:1}, {t:"Simpson 1−D", f:r => nf(r.simpson, 3), num:1}, {t:"Pielou J′", f:r => nf(r.pielou, 3), num:1}, {t:"Riqueza rarefeita", f:r => nf(r.S_rarefeita, 1), num:1}, {t:"Cobertura", f:r => pc(r.cobertura, 1), num:1}, {t:"Exclusivas", k:"exclusivas", num:1}], arr(G.indices.tabela)); }
   else if (sub4 === "area"){
     if (G.relatorio && G.relatorio.aviso) s4.appendChild(el("div", {class:"aviso"}, `<span><span class="pill atenção">atenção</span></span><div>${esc(G.relatorio.aviso)}</div>`));
@@ -982,10 +1105,16 @@ function montaMenu(){
   SECOES.filter(([id]) => (id !== "laudo" || (H.grupos[grupo] || {}).relatorio) && (id !== "campanhas" || (H.grupos[grupo] || {}).campanhas) && (id !== "fitofisionomias" || (H.grupos[grupo] || {}).fitofisionomias)).forEach(([id, nome, faz], i) => {
     const extra = id === "relatorio" && SEL.length ? ` (${SEL.length})` : "";
     const a = el("a", {href:"#" + id, class: id === aba ? "ativo" : "", title: faz}, `<span class="n">${i + 1}</span><span class="nome">${esc(nome)}<small>${esc(faz)}</small></span><span class="val">${esc(valorMenu(id))}</span>`);
-    a.onclick = ev => { ev.preventDefault(); aba = id; history.replaceState(null, "", "#" + id); $("#menu").classList.remove("aberto"); montaMenu(); mostraAba(); scrollTo(0, 0); };
+    a.onclick = ev => { ev.preventDefault(); aba = id; history.replaceState(null, "", "#" + id); $("#menu").classList.remove("aberto"); montaMenu(); mostraAba(); scrollTo(0, 0); setTimeout(() => document.querySelectorAll(".abas").forEach(x => x._ajusta && x._ajusta()), 0); };
     nav.appendChild(a);
   });
+  // 19/11/2026: marcação que sobe e desce até a seção ativa (faixa clara + ponto na linha da esquerda)
+  const fe = el("span", {class:"feito", "aria-hidden":"true"}), mk = el("span", {class:"marcador", "aria-hidden":"true"}); nav.prepend(mk); nav.prepend(fe);
+  const at = nav.querySelector("a.ativo"); if (!at) return;
+  if (MENU_Y) { mk.style.transition = fe.style.transition = "none"; mk.style.transform = `translateY(${MENU_Y.y}px)`; mk.style.height = MENU_Y.h + "px"; fe.style.height = MENU_Y.f + "px"; void mk.offsetWidth; mk.style.transition = fe.style.transition = ""; }
+  setTimeout(() => { const y = at.offsetTop, h = at.offsetHeight, f = Math.max(0, y + h / 2 - 12); mk.style.transform = `translateY(${y}px)`; mk.style.height = h + "px"; fe.style.height = f + "px"; MENU_Y = {y, h, f}; mk.classList.add("pronta"); });
 }
+let MENU_Y = null;
 
 /* ---------------- aparência ---------------- */
 function carregaTitulos(){ const k = $("#selFig").value, t = E.titulos[k] || {}; $("#tTitulo").value = t.titulo || ""; $("#tX").value = t.x || ""; $("#tY").value = t.y || ""; $("#tNota").value = t.nota || ""; }
@@ -995,7 +1124,8 @@ function montaEditor(){
   $("#btPasta").onclick = () => { if (LID) api("pasta"); else alert("Os arquivos estão na mesma pasta deste painel."); };
   $("#abreMenu").onclick = () => $("#menu").classList.toggle("aberto");
   if (!LID) $("#marcaLink").removeAttribute("href");
-  const liga = (id, k, conv = v => v) => { $("#" + id).onchange = e => { E[k] = conv(e.target.type === "checkbox" ? e.target.checked : e.target.value); salvaE(); if (k === "paleta") sincroniza(); }; };
+  const pedeR = () => { avisoTopo("Escolha guardada. Clique em \"Redesenhar no R\" (no fim desta gaveta) para aplicar em todas as figuras. Para uma figura só, use \"Editar títulos\" nela.", "ok"); const b = $("#btAplicarR"); b.classList.add("pulsa"); };
+  const liga = (id, k, conv = v => v) => { $("#" + id).onchange = e => { E[k] = conv(e.target.type === "checkbox" ? e.target.checked : e.target.value); salvaE(); if (k === "paleta") sincroniza(); pedeR(); }; };
   liga("selTemaR", "tema_r"); liga("selPaleta", "paleta"); liga("selFTitulo", "familia_titulo"); liga("selFTexto", "familia"); liga("nFonte", "fonte", Number); liga("nLinha", "linha", Number); liga("nPonto", "ponto", Number);
   liga("selLegenda", "legenda"); liga("ckFaixa", "faixa"); liga("ckGrade", "grade"); liga("ckTitulo", "mostrar_titulo"); liga("nLarg", "largura", Number); liga("nAlt", "altura", Number); liga("selDpi", "dpi", Number);
   $("#segTema").querySelectorAll("button").forEach(b => b.onclick = () => { E.tema = b.dataset.v; salvaE(); sincroniza(); });
@@ -1003,7 +1133,7 @@ function montaEditor(){
   const sf = $("#selFig"); for (const k in CAT) sf.appendChild(el("option", {value:k}, CAT[k].nome)); sf.onchange = carregaTitulos;
   for (const [id, c] of [["tTitulo","titulo"],["tX","x"],["tY","y"],["tNota","nota"]]) $("#" + id).onchange = ev => { const k = sf.value; E.titulos[k] = Object.assign({}, E.titulos[k], {[c]: ev.target.value}); salvaE(); };
   $("#btPadrao").onclick = () => { E = JSON.parse(JSON.stringify(PADRAO)); salvaE(); render(); sincroniza(); carregaTitulos(); };
-  $("#btAplicarR").onclick = () => { const b = $("#btAplicarR"); b.disabled = true; b.textContent = "O R está redesenhando...";
+  $("#btAplicarR").onclick = () => { const b = $("#btAplicarR"); b.classList.remove("pulsa"); b.disabled = true; b.textContent = "O R está redesenhando...";
     if (!redesenhar(null, t => { b.disabled = false; b.textContent = t.estado === "pronto" ? "Pronto. Redesenhar de novo" : "Deu erro (veja acima)"; })) { b.disabled = false; b.textContent = "Redesenhar no R"; } };
   const sg = $("#selGrupo"); for (const g in H.grupos) sg.appendChild(el("option", {value:g}, g)); if (!H.grupos[grupo]) grupo = Object.keys(H.grupos)[0]; sg.value = grupo;
   sg.onchange = () => { grupo = sg.value; store.set("herp.grupo", grupo); render(); };
@@ -1014,7 +1144,7 @@ function sincroniza(){
   $("#selLegenda").value = E.legenda; $("#ckFaixa").checked = E.faixa; $("#ckGrade").checked = E.grade; $("#ckTitulo").checked = E.mostrar_titulo; $("#nLarg").value = E.largura; $("#nAlt").value = E.altura; $("#selDpi").value = String(E.dpi);
   $("#segTema").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === E.tema)));
   $("#segPainel").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === E.painel)));
-  const cx = $("#cores"); cx.innerHTML = ""; cores().forEach((c, i) => { const inp = el("input", {type:"color", value:c}); inp.onchange = () => { E.cores = cores().slice(); E.cores[i] = inp.value; E.paleta = "livre"; salvaE(); sincroniza(); }; cx.appendChild(inp); });
+  const cx = $("#cores"); cx.innerHTML = ""; cores().forEach((c, i) => { const inp = el("input", {type:"color", value:c}); inp.onchange = () => { E.cores = cores().slice(); E.cores[i] = inp.value; E.paleta = "livre"; salvaE(); sincroniza(); avisoTopo("Cor guardada. Clique em \"Redesenhar no R\" para aplicar em todas as figuras.", "ok"); $("#btAplicarR").classList.add("pulsa"); }; cx.appendChild(inp); });
 }
 const iniciar = () => { montaEditor(); render(); sincroniza(); };
 if (LID) Promise.all([fetch(`/l/${LID}/contexto.json`).then(r => r.ok ? r.json() : null).catch(() => null), fetch(`/l/${LID}/selecao.json`).then(r => r.ok ? r.json() : null).catch(() => null)])
