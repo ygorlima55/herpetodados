@@ -1,4 +1,4 @@
-# Herpetodados: várias campanhas.
+# Quadrante: várias campanhas.
 # Com 2 ou mais campanhas, a unidade amostral vira ponto x campanha ("P1 C1", "P1 C2"...),
 # a campanha vira o grupo da PERMANOVA (quando a aba de pontos não tem "Grupo amostral")
 # e sai uma comparação entre campanhas (espécies em comum, exclusivas, mudança em cada ponto).

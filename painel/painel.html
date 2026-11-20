@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Herpetodados · painel</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' rx='13' fill='%23161716'/%3E%3Cpath d='M8 34 C 12 19, 18 14, 36 12.5' fill='none' stroke='%23b9d7a8' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='28.5' cy='13.6' r='5' fill='%23b9d7a8'/%3E%3C/svg%3E">
+<title>Quadrante · painel</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' fill='%232a2620'/%3E%3Crect x='6' y='6' width='16' height='16' fill='%23b5552c'/%3E%3Crect x='6' y='6' width='32' height='32' fill='none' stroke='%23e9dfc8' stroke-width='2.4'/%3E%3C/svg%3E">
 <script src="dados.js"></script>
 <style>
 /* ===== sistema visual Prancha (mesmo de identidade/prancha.css; repetido aqui para o painel abrir sozinho) ===== */
@@ -198,7 +198,7 @@ details.sentido div{padding:6px 0 0 0} details.sentido p{margin:4px 0} details.s
 .relitem img{width:70px;border:1px solid var(--fio);background:#fff}
 .relitem .n{font:italic 1.05em var(--f-titulo);color:var(--acento)}
 
-/* ===== Herpetodados · Direção A "Sálvia" (17/11/2026) =====
+/* ===== Quadrante · Direção A "Sálvia" (17/11/2026) =====
    Referências: painel de cafeteira da Orbix (fundo cinza quente, cartões brancos, faixa de indicadores, destaque verde-sálvia,
    botões pretos em pílula) e menu "nido" da Felvra (vidro fosco, valor de cada item à direita, ativo em pílula preta com círculo verde).
    Este bloco substitui a Direção C (cópia em versoes/direcao-c-sintese-2026-11-17). Letras do Windows, para funcionar sem internet. */
@@ -372,6 +372,191 @@ aside.editor{border-radius:26px;background:var(--vidro);border-color:var(--vidro
 .figr .quadro .aviso-r{flex-direction:column;gap:6px;background:rgba(18,21,19,.55);color:#fff;border-radius:inherit}
 .figr .quadro .aviso-r canvas{width:80px;height:80px}
 @media (prefers-reduced-motion:reduce){.menu nav .marcador,.menu nav .feito,.abas .pilula-abas{transition:none!important}}
+
+
+/* 19/11/2026: paletas, legenda editável, contexto do campo, sugestões e pedidos */
+.galeria-pal{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 10px}
+.galeria-pal .pal{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:8px;border-radius:12px;border:1px solid var(--fio-2);background:var(--cartao);cursor:pointer;color:var(--tinta);font:inherit}
+.galeria-pal .pal.atual{outline:2px solid var(--acento);outline-offset:1px}
+.galeria-pal .pal b{font-size:13px}.galeria-pal .pal small{color:var(--tinta-3);font-size:11px;line-height:1.25}
+.galeria-pal .faixa,.faixa-prev{display:flex;width:100%;height:18px;border-radius:6px;overflow:hidden}.galeria-pal .faixa i,.faixa-prev i{flex:1}
+.faixa-prev{height:26px;margin:6px 0}
+.edtit .elems{display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0 4px}.edtit .elems label{flex-direction:row;align-items:center;gap:5px}
+.edtit .itens-leg{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px 14px;margin:6px 0 4px}
+.edtit .itens-leg .it{display:flex;align-items:center;gap:6px}.edtit .itens-leg .q{width:16px;height:16px;border-radius:4px;flex:none;border:1px solid rgba(0,0,0,.15)}.edtit .itens-leg input[type=text]{flex:1;min-width:0}
+.legcores .it.fora{opacity:.45;text-decoration:line-through}
+.ctx .camp{border:1px solid var(--fio-2);border-radius:16px;padding:10px 12px;margin:8px 0;background:var(--cartao)}
+.ctx .cab-camp{display:flex;gap:10px;align-items:center}.ctx .cab-camp input{font:inherit;font-weight:600;border:0;border-bottom:1px solid var(--fio);background:transparent;color:inherit;padding:2px 0}
+.ctx .grade-camp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 12px;margin:8px 0}
+.ctx label{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--tinta-2)}
+.ctx input,.ctx select,.ctx textarea{font:inherit;font-size:14px;color:var(--tinta)}
+.ctx .metodos{display:flex;flex-wrap:wrap;gap:6px}.ctx .chip{flex-direction:row;align-items:center;gap:5px;border:1px solid var(--fio-2);border-radius:999px;padding:3px 10px;font-size:12.5px;color:var(--tinta)}
+.ctx .cp{margin-top:10px}.ctx .esforco-prev{font-size:13px;color:var(--tinta-2);margin:8px 0 4px}
+.bts-ctx{display:flex;gap:12px;align-items:center;margin:8px 0}
+.sugest{margin:16px 0;padding:12px 16px;border:1px solid var(--fio-2);border-radius:18px;background:var(--cartao)}
+.lista-sug{list-style:none;margin:6px 0 0;padding:0}.lista-sug li{display:grid;grid-template-columns:1fr auto;gap:1px 12px;padding:8px 0;border-top:1px solid var(--fio-2);align-items:center}
+.lista-sug li b{grid-column:1;font-weight:600}.lista-sug li .por{grid-column:1;font-size:12.5px;color:var(--tinta-3)}.lista-sug li .est{grid-column:1;font-size:12px;color:var(--acento)}.lista-sug li .est.falta{color:var(--tinta-3)}
+.lista-sug li button{grid-column:2;grid-row:1/4}
+.busca-pedido{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:10px 16px;border-radius:999px;border:1px solid var(--fio);background:var(--cartao);color:var(--tinta);margin:6px 0 10px}
+.cartao-pedido{border:1px solid var(--fio-2);border-radius:18px;padding:12px 16px;margin:8px 0;background:var(--cartao)}.cartao-pedido ul{margin:4px 0 10px 18px;padding:0;font-size:13.5px}
+.cartao-pedido p{margin:4px 0}.linha-pedido{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.res-pedido{border-top:1px solid var(--fio-2);padding:10px 0}.res-pedido summary{cursor:pointer}.res-pedido summary small{color:var(--tinta-3);margin-left:8px;font-size:12px}
+.pill.ok{background:rgba(63,140,98,.16);color:#2f6b3b}
+/* >>> quadrante.css >>> */
+/* ===== Quadrante · identidade visual (escolhida em 19/11/2026, prévia identidade/propostas-2026-11-19/identidades.html, direção B) =====
+   Parcela de campo em quadrantes, papel quadriculado de caderno de campo, títulos em letra de livro técnico (Sitka),
+   números em Bahnschrift, terracota como cor de destaque. Substitui o bloco do vidro (19/11). Fica por cima da base Sálvia.
+   20/11/2026 (manhã): pedido: TIRAR a aparência de caderno (papel quadriculado, linhas, letra de livro) e voltar
+   com o orbe de partículas, remodelado. Fica: marca Quadrante, terracota, vidro, lente, botões em pílula.
+   20/11/2026: pedido: juntar com o jeito Apple: menu de vidro com seleção em lente, abas em botão segmentado,
+   cartões arredondados com sombra suave, botões em pílula e a tela de análise em vidro fosco.
+   Edite AQUI e rode: python -I identidade/aplica_identidade.py
+   Movimento pelas regras de Emil Kowalski (lidas, não instaladas): ease-out (.23,1,.32,1) para entrar e sair,
+   ease-in-out (.77,0,.175,1) para o que se move; menu e abas até 250 ms; aperto de botão scale .97 em 160 ms. */
+/* base limpa, sem papel nem quadriculado: cinza claro neutro, cartões brancos, letra do sistema; terracota como destaque */
+:root{
+  color-scheme: light;
+  --papel:#f2f2f0; --papel-2:#ebebe8; --papel-3:#e3e3df; --cartao:#ffffff; --fig:#ffffff;
+  --tinta:#1d1d1f; --tinta-2:#62625f; --tinta-3:#8e8e8a; --fio:#dcdcd7; --fio-2:#ececea; --linha:#dcdcd7;
+  --acento:#b5552c; --acento-2:#2f6e86; --salvia:#5f7a3a; --salvia-2:#c9962f; --preto:#1d1d1f; --sobre-preto:#ffffff;
+  --vidro:#ebebe8; --vidro-borda:#dcdcd7; --vidro-brilho:#ffffff;
+  --sombra:0 1px 0 rgba(0,0,0,.03);
+  --f-titulo:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
+  --f-leitura:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
+  --f-texto:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
+  --f-num:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
+  --f-mono:"Cascadia Mono",Consolas,monospace;
+  --ease-out:cubic-bezier(.23,1,.32,1); --ease-in-out:cubic-bezier(.77,0,.175,1);
+  --menu-w:264px;
+  --raio:14px; --raio-p:18px; --lente:#ffffff; --trilho:rgba(118,118,128,.12);
+  --sombra-c:0 1px 2px rgba(0,0,0,.05),0 8px 24px -14px rgba(0,0,0,.22);
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --papel:#0f0f10; --papel-2:#18181a; --papel-3:#232326; --cartao:#1c1c1e; --fig:#ffffff;
+  --tinta:#f5f5f7; --tinta-2:#a1a1a6; --tinta-3:#77777c; --fio:#2f2f33; --fio-2:#262629; --linha:#2f2f33;
+  --acento:#e07a4c; --acento-2:#6fb0c9; --preto:#f5f5f7; --sobre-preto:#111;
+  --vidro:#18181a; --vidro-borda:#2f2f33; --vidro-brilho:#1c1c1e;
+  --lente:#3a3a3d; --trilho:rgba(255,255,255,.08); --sombra-c:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.8);
+}
+html{background:var(--papel)}
+/* fundo liso com duas manchas suaves de cor, para o vidro ter o que mostrar (sem linhas) */
+body{font-family:var(--f-texto);-webkit-font-smoothing:antialiased;background:
+  radial-gradient(44vw 40vw at 6% 0%, rgba(181,85,44,.10), transparent 70%),
+  radial-gradient(40vw 36vw at 96% 8%, rgba(47,110,134,.10), transparent 70%),
+  var(--papel)!important;background-attachment:fixed!important}
+:root[data-theme="dark"] body{background:
+  radial-gradient(44vw 40vw at 6% 0%, rgba(224,122,76,.12), transparent 70%),
+  radial-gradient(40vw 36vw at 96% 8%, rgba(111,176,201,.10), transparent 70%),
+  var(--papel)!important}
+body::before,.formulas,.fundo-formulas{display:none!important}
+
+h1,h2,.prancha h2,.menu .marca b,.menu .nomep,.relitem .n{font-family:var(--f-titulo)!important;font-weight:700!important;letter-spacing:-.022em}
+.prancha h2{font-size:1.9em;line-height:1.1}
+h1{font-size:2.1em;line-height:1.08}
+.prancha .pergunta,.lead{color:var(--tinta-2)}
+.numeros .v,.passos b,.pc,table td.num,.num{font-family:var(--f-num)!important;font-variant-numeric:tabular-nums}
+.numeros .v{font-weight:600!important;letter-spacing:-.02em}
+.rotulo{font-family:var(--f-texto);letter-spacing:.03em;text-transform:uppercase;font-size:.72em;color:var(--tinta-3)}
+
+/* menu de vidro encostado na lateral */
+.menu{left:0!important;top:0!important;bottom:0!important;width:var(--menu-w)!important;border-radius:0!important;background:color-mix(in srgb,var(--papel-2) 72%,transparent)!important;
+  border:0!important;border-right:1px solid var(--fio)!important;box-shadow:none!important;backdrop-filter:blur(24px) saturate(1.6)!important;-webkit-backdrop-filter:blur(24px) saturate(1.6)!important}
+main{margin-left:calc(var(--menu-w) + 28px)!important}
+.menu .marca svg,.menu .logo svg{border-radius:0}
+.menu .lev select,.menu select{border-radius:9px!important;background:var(--cartao)!important;border:1px solid var(--fio)!important}
+.menu nav::before,.menu nav .feito,.menu nav .marcador::before{display:none!important}
+.menu nav{padding-left:8px!important;padding-right:8px!important}
+.menu nav .marcador{left:8px!important;right:8px!important;border-radius:10px!important;background:var(--lente)!important;box-shadow:0 1px 2px rgba(42,38,32,.08),0 4px 12px -6px rgba(42,38,32,.3)!important}
+.menu nav .marcador.pronta{transition:transform 250ms var(--ease-in-out),height 250ms var(--ease-in-out)!important}
+.menu nav a,.menu a:not(.marca){border-radius:10px!important;padding:7px 12px 7px 10px!important;margin:1px 0!important;box-shadow:none!important}
+.menu nav a:hover,.menu a:not(.marca):hover{background:rgba(42,38,32,.04)!important}
+.menu nav a .n,.menu a:not(.marca) .n{width:auto!important;height:auto!important;border:0!important;background:none!important;border-radius:0!important;
+  font:500 .8em var(--f-num)!important;color:var(--tinta-3)!important;box-shadow:none!important}
+.menu nav a.ativo,.menu a:not(.marca).ativo{background:transparent!important;color:var(--tinta)!important;font-weight:600}
+.menu a:not(.marca).ativo{background:var(--lente)!important;box-shadow:0 1px 2px rgba(42,38,32,.08),0 4px 12px -6px rgba(42,38,32,.3)!important}
+.menu nav a.ativo .n,.menu a:not(.marca).ativo .n{color:var(--acento)!important;background:none!important}
+.menu nav a.ativo .val{color:var(--tinta-2)!important}
+.menu .acoes button,.menu .tema{border-radius:12px!important;background:var(--cartao)!important;border:1px solid var(--fio)!important}
+
+/* seções e cartões: papel liso com fio fino, cantos quase retos */
+section.prancha,#inserir,#levantamentos,#guia,#arquivos,main > section{background:color-mix(in srgb,var(--cartao) 88%,transparent)!important;border:1px solid var(--fio)!important;border-radius:var(--raio-p)!important;box-shadow:var(--sombra-c)!important;backdrop-filter:blur(10px)!important}
+.figr,.tabbox,.leitura,.numeros > div,.numeros > div:last-child,.corr,.corrlista,.edtit,#lista,.passos div,.guia div,.solta,.explica div,.arvore{
+  background:var(--cartao)!important;border:1px solid var(--fio)!important;border-radius:var(--raio)!important;box-shadow:none!important}
+.prancha .figr,.prancha .tabbox,.prancha .numeros > div{background:var(--papel)!important}
+.figr .quadro{background:var(--fig);border:1px solid var(--fio-2);border-radius:10px!important;overflow:hidden}
+.destaque{background:var(--tinta)!important;color:var(--papel)!important;border-radius:var(--raio-p)!important;box-shadow:var(--sombra-c)!important}
+.destaque .figr{background:transparent!important;border:0!important}
+.destaque .figr .topo .tit{color:var(--papel)!important}
+.destaque .figr .topo .acs button,.destaque .rel{background:var(--papel)!important;color:var(--tinta)!important;border-color:transparent!important}
+.resultado,.como{background:var(--cartao)!important;border:0!important;border-left:3px solid var(--acento)!important;border-radius:4px var(--raio) var(--raio) 4px!important}
+.resultado b{color:var(--acento)}
+.numeros .v.ac,.numeros .ac .v{color:var(--acento)}
+.solta{border:1.5px dashed var(--tinta-3)!important}
+.solta.sobre{background:var(--papel-3)!important;border-color:var(--acento)!important}
+
+/* abas em botão segmentado (jeito Apple): trilho cinza quente e lente branca que desliza */
+.abas,.seg{background:var(--trilho)!important;border:0!important;border-radius:11px!important;padding:2px!important;gap:2px!important;box-shadow:none!important;backdrop-filter:none!important}
+.abas .pilula-abas{display:block!important;border-radius:9px!important;background:var(--lente)!important;box-shadow:0 1px 2px rgba(42,38,32,.1),0 3px 8px -2px rgba(42,38,32,.22)!important}
+.abas button,.seg button{background:transparent!important;border:0!important;border-radius:9px!important;padding:5px 13px!important;box-shadow:none!important;color:var(--tinta-2)!important;transition:color 150ms ease!important}
+.abas button[aria-pressed="true"],.seg button[aria-pressed="true"]{color:var(--tinta)!important;font-weight:600}
+.abas:not(:has(.pilula-abas.pronta)) button[aria-pressed="true"],.seg button[aria-pressed="true"]{background:var(--lente)!important;box-shadow:0 1px 2px rgba(42,38,32,.1)!important}
+
+/* botões em pílula; o principal em grafite */
+button,select,input[type=text],input[type=number]{border-radius:999px!important}
+textarea{border-radius:12px!important}
+button,select,input[type=text],input[type=number],textarea{border:1px solid var(--fio);background:var(--cartao);color:var(--tinta);box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;
+  transition:transform 160ms var(--ease-out),border-color 150ms ease}
+button:active{transform:scale(.97)}
+@media (hover:hover) and (pointer:fine){button:hover{border-color:var(--tinta-3)}}
+button.forte,button.acento,button.bcorr,.abrir,#escolher{background:var(--tinta)!important;color:var(--papel)!important;border-color:var(--tinta)!important;box-shadow:none!important}
+.figr .topo .acs button,.figr .topo .acs a button,.rel,table.lev .acs button:not(.abrir){background:var(--cartao)!important;border-color:var(--fio)!important}
+.rel.on{background:var(--acento)!important;color:#fff!important;border-color:var(--acento)!important}
+.pill{border-radius:999px!important}
+
+/* tabelas de relatório */
+th{background:transparent!important;color:var(--tinta-2);font:600 .78em var(--f-texto);text-transform:uppercase;letter-spacing:.04em;border-bottom:1.5px solid var(--tinta)!important}
+td{border-bottom:1px solid var(--fio-2)}
+tbody tr:hover td{background:rgba(181,85,44,.05)}
+
+aside.editor{border-radius:0!important;background:color-mix(in srgb,var(--papel-2) 80%,transparent)!important;border:0!important;border-left:1px solid var(--fio)!important;top:0!important;right:0!important;bottom:0!important;box-shadow:-12px 0 30px -20px rgba(0,0,0,.3)!important;backdrop-filter:blur(24px) saturate(1.5)!important;transition:transform 250ms var(--ease-out)!important}
+#tip{border-radius:8px!important;background:var(--tinta)!important;color:var(--papel)!important;transition:opacity 125ms var(--ease-out)!important}
+.tarefa,.log{border-radius:10px!important;background:var(--papel-2)!important;border-left:2px solid var(--fio)!important}
+
+/* barra pequena de andamento (fica no lugar quando a análise sai da tela cheia) */
+.barra.quad{display:none;margin:12px 0 4px}
+.barra.quad .info{display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:5px}
+.barra.quad .et{color:var(--tinta-2)}
+.barra.quad .pc{font-family:var(--f-num);color:var(--acento)}
+.barra.quad .trilho{height:6px!important;background:var(--fio)!important;border:0!important;border-radius:999px!important}
+.barra.quad .enche{height:100%;background:var(--acento)!important;border-radius:999px!important;transition:width 400ms linear}
+.barra.quad .reabre{font-size:12px;padding:2px 8px;margin-left:8px}
+
+/* análise em andamento: orbe de partículas sobre vidro escuro, cobrindo a área de conteúdo (o menu fica livre) */
+#analiseQuad{position:fixed;top:14px;right:14px;bottom:14px;left:calc(var(--menu-w) + 14px);z-index:50;display:none;grid-template-rows:auto 1fr auto;gap:10px;padding:26px 32px;border-radius:24px;
+  background:rgba(14,14,15,.86);backdrop-filter:blur(26px) saturate(1.4);-webkit-backdrop-filter:blur(26px) saturate(1.4);border:1px solid rgba(255,255,255,.08);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 30px 80px -30px rgba(0,0,0,.6);color:#f5f5f7;opacity:0;transition:opacity 250ms var(--ease-out)}
+#analiseQuad.on{display:grid}
+#analiseQuad.visivel{opacity:1}
+#analiseQuad .cabq{display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
+#analiseQuad .rotq{font:600 11px var(--f-texto);letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.45)}
+#analiseQuad h4{font:700 26px/1.15 var(--f-titulo);letter-spacing:-.02em;color:#fff;margin-top:4px}
+#analiseQuad .etq{font:15px var(--f-texto);color:rgba(255,255,255,.65);margin-top:2px;min-height:1.4em}
+#analiseQuad .pcq{font:600 46px/1 var(--f-num);color:#f19a6d;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+#analiseQuad canvas{width:100%;height:100%;min-height:260px;display:block}
+#analiseQuad .peq{display:flex;justify-content:space-between;align-items:center;gap:16px;font:12.5px var(--f-texto);color:rgba(255,255,255,.5)}
+#analiseQuad .peq button{font-size:13px;background:rgba(255,255,255,.1)!important;color:#fff!important;border:1px solid rgba(255,255,255,.14)!important}
+@media (max-width:980px){#analiseQuad{left:8px;top:8px;right:8px;bottom:8px;padding:18px}main{margin-left:0!important}.menu{width:280px!important}}
+
+/* figura redesenhando: orbe pequeno */
+.figr .quadro .aviso-r{background:rgba(14,14,15,.72)!important;color:#fff!important;backdrop-filter:blur(6px)}
+
+.figr .quadro .aviso-r canvas{width:130px!important;height:130px!important}
+
+@media (prefers-reduced-motion:reduce){button,.menu nav .marcador,aside.editor,#analiseQuad,.abas .pilula-abas{transition:none!important}button:active{transform:none}}
+@media (prefers-reduced-transparency:reduce){.menu,section.prancha,main > section,aside.editor,#analiseQuad{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:var(--papel-2)!important}}
+@media print{#analiseQuad,.barra.quad{display:none!important}body{background:#fff!important}}
+/* <<< quadrante.css <<< */
 </style>
 </head>
 <body>
@@ -383,27 +568,44 @@ aside.editor{border-radius:26px;background:var(--vidro);border-color:var(--vidro
 <button class="abre-menu" id="abreMenu">Menu</button>
 <aside class="menu" id="menu" aria-label="Menu do painel">
   <a class="marca" href="/" id="marcaLink" title="Voltar ao início">
-    <svg viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" rx="13" fill="#161716"/><path d="M8 34 C 12 19, 18 14, 36 12.5" fill="none" stroke="#b9d7a8" stroke-width="2.6" stroke-linecap="round"/><circle cx="28.5" cy="13.6" r="4.6" fill="#161716" stroke="#b9d7a8" stroke-width="2"/><rect x="26" y="12.7" width="5" height="1.9" rx=".95" fill="#b9d7a8"/></svg>
-    <b>Herpetodados</b>
+    <svg viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" fill="#2a2620"/><rect x="7" y="7" width="15" height="15" fill="#b5552c"/><g fill="none" stroke="#e9dfc8" stroke-width="1.4"><rect x="7" y="7" width="30" height="30"/><line x1="22" y1="7" x2="22" y2="37"/><line x1="7" y1="22" x2="37" y2="22"/></g><path d="M23.5 34.5c3-6 6-9 12-10.3" fill="none" stroke="#e9dfc8" stroke-width="1" opacity=".7"/><circle cx="29.5" cy="29" r="1.7" fill="#e9dfc8"/></svg>
+    <b>Quadrante</b>
   </a>
   <div class="lev"><div class="t" id="levTitulo"></div>
     <label class="rotulo" style="display:block;margin-top:8px">Grupo<select id="selGrupo"></select></label></div>
   <nav id="indice"></nav>
   <div class="acoes">
-    <button id="btEditor"><b>Aparência</b>cores e letras</button>
-    <button id="btPasta"><b>Pasta</b>dos arquivos</button>
-    <button id="btTema" class="tema" aria-label="Trocar entre claro e escuro"><span>Claro e escuro</span><b id="btTemaTx">Escuro</b></button>
+    <button id="btEditor"><b>Aparência</b></button>
+    <button id="btContexto"><b>Contexto do campo</b></button>
+    <button id="btPasta"><b>Abrir pasta</b></button>
+    <button id="btTema" class="tema" aria-label="Trocar entre claro e escuro"><span>Tema</span><b id="btTemaTx">Escuro</b></button>
   </div>
 </aside>
 <main id="main"></main>
 
 <aside class="editor" id="editor" aria-label="Aparência dos gráficos">
   <div style="display:flex;justify-content:space-between;align-items:center"><span class="rotulo">Aparência dos gráficos</span><button id="fechaEditor">Fechar</button></div>
-  <p class="nota">Os gráficos são desenhados pelo R. Mude aqui e clique em <b>Redesenhar no R</b> (cerca de 2 minutos). Isso só redesenha: os resultados continuam os mesmos. Para recalcular com a planilha corrigida, use <b>Planilha → Atualizar planilha</b>.</p>
+  <p class="nota">Depois de mudar, clique em <b>Redesenhar no R</b> (cerca de 2 min). Os resultados não mudam. Para recalcular com a planilha corrigida, use <b>Planilha → Atualizar planilha</b>.</p>
   <h3>Estilo</h3>
   <div class="linha">Tema <select id="selTemaR"><option value="salvia">Sálvia (cinza quente, sem moldura)</option><option value="sintese">Síntese (papel creme e grade)</option><option value="prancha">Prancha (fundo branco)</option><option value="ggplot">ggplot2 padrão (cinza)</option><option value="bw">theme_bw</option><option value="classic">theme_classic</option><option value="minimal">theme_minimal</option></select></div>
   <div class="linha">Fundo <div class="seg" id="segTema"><button data-v="claro">Branco</button><button data-v="escuro">Lousa</button></div></div>
-  <div class="linha">Cores <select id="selPaleta"><option value="salvia">Sálvia</option><option value="sintese">Síntese</option><option value="prancha">Prancha</option><option value="hue">R padrão</option><option value="okabe">Okabe-Ito</option><option value="cerrado">Cerrado</option><option value="cinza">Tons de cinza</option><option value="livre">Personalizada</option></select></div>
+  <h3>Paletas prontas</h3>
+  <p class="nota">Troca as cores de todas as figuras. Paletas do Cerrado conferidas para daltonismo (protanopia e deuteranopia) e contraste no fundo branco.</p>
+  <div class="galeria-pal" id="galeriaPaletas"></div>
+  <div class="linha" hidden>Cores <select id="selPaleta"><option value="salvia">Sálvia</option><option value="sintese">Síntese</option><option value="prancha">Prancha</option><option value="hue">R padrão</option><option value="okabe">Okabe-Ito</option><option value="cerrado">Cerrado</option><option value="cinza">Tons de cinza</option><option value="cerrado_seca">Cerrado na seca</option><option value="cerrado_chuva">Cerrado na chuva</option><option value="vereda">Vereda</option><option value="ipes">Ipês</option><option value="mapedados">Mapas</option><option value="terra">Terra</option><option value="livre">Personalizada</option></select></div>
+  <h3>Criar pela harmonia (regras do Adobe Color)</h3>
+  <p class="nota">Escolha uma cor base e a regra; o programa monta 8 cores que combinam e confere o daltonismo. Paletas de harmonia quase sempre têm cores que daltônicos confundem; para o laudo, prefira uma paleta do Cerrado ou a Okabe-Ito.</p>
+  <div class="linha">Cor base <input type="color" id="harmBase" value="#6b7d2e"></div>
+  <div class="linha">Regra <select id="harmRegra"></select></div>
+  <div class="faixa-prev" id="harmPrev"></div><p class="nota" id="harmConf"></p>
+  <button id="harmUsar">Usar esta paleta</button>
+  <h3>Trazer do Adobe</h3>
+  <p class="nota">Arquivo .ase (troca de cores da Adobe: Adobe Color, Illustrator, Photoshop) ou os códigos copiados (#...).</p>
+  <label class="campo">Arquivo .ase <input type="file" id="aseArq" accept=".ase"></label>
+  <label class="campo">Ou cole os códigos <input type="text" id="hexCola" placeholder="#6b7d2e #c9772b #2f6f5e"></label>
+  <div class="faixa-prev" id="adobePrev"></div><p class="nota" id="adobeConf"></p>
+  <button id="adobeUsar" disabled>Usar estas cores</button>
+  <h3>Cores uma a uma</h3>
   <div class="cores" id="cores"></div>
   <div class="linha">Letra dos títulos <select id="selFTitulo"><option>Segoe UI Semibold</option><option>Georgia Pro</option><option>Sitka Heading</option><option>Cambria</option><option>Bahnschrift</option><option>Arial</option><option>Times New Roman</option></select></div>
   <div class="linha">Letra do texto <select id="selFTexto"><option>Bahnschrift</option><option>Segoe UI</option><option>Arial</option><option>Calibri</option><option>Times New Roman</option></select></div>
@@ -449,11 +651,11 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;
 const store = { get(k, d){ try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
 const LID = (location.pathname.match(/^\/l\/([a-z0-9-]+)\//) || [])[1] || null;
 const api = (acao, corpo) => fetch(`/api/l/${LID}/${acao}`, {method:"POST", headers:{"Content-Type":"application/json"}, body: typeof corpo === "string" ? corpo : JSON.stringify(corpo || {})})
-  .then(r => r.json()).catch(() => ({erro: "O programa Herpetodados não respondeu. Ele pode ter sido fechado: abra de novo pelo atalho da área de trabalho e tente outra vez."}));
+  .then(r => r.json()).catch(() => ({erro: "O Quadrante não respondeu. Ele pode ter sido fechado: abra de novo pelo atalho da área de trabalho e tente outra vez."}));
 // aviso no topo da tela (falha do programa ou do R); some sozinho ou com um clique
 function avisoTopo(msg, tipo){ let a = document.getElementById("avisoTopo"); if (!a){ a = document.createElement("div"); a.id = "avisoTopo"; document.body.appendChild(a); }
   a.className = tipo || "erro"; a.textContent = msg; a.style.display = "block"; clearTimeout(a._t); a._t = setTimeout(() => a.style.display = "none", 12000); a.onclick = () => a.style.display = "none"; }
-if (!H) { document.body.innerHTML = "<p style='padding:40px;font-family:Georgia'>Não achei o arquivo <b>dados.js</b> ao lado deste painel. Rode o Herpetodados de novo.</p>"; throw new Error("sem dados"); }
+if (!H) { document.body.innerHTML = "<p style='padding:40px;font-family:Georgia'>Não achei o arquivo <b>dados.js</b> ao lado deste painel. Rode o Quadrante de novo.</p>"; throw new Error("sem dados"); }
 
 /* ---------------- estilo do R ---------------- */
 const PALETAS = {
@@ -463,15 +665,22 @@ const PALETAS = {
   hue:     ["#F8766D","#00BA38","#619CFF","#B79F00","#00BFC4","#F564E3","#C49A00","#53B400"],
   okabe:   ["#0072B2","#D55E00","#009E73","#E69F00","#CC79A7","#56B4E9","#F0E442","#000000"],
   cerrado: ["#6b7d2e","#c9772b","#2f6f5e","#a8463b","#8c6d3f","#3d6aa8","#b58b2a","#5e4b6b"],
-  cinza:   ["#1e1c19","#57524a","#8a8375","#b3ab9a","#3c3a35","#6f6a60","#9c9585","#c9c1b0"]
+  cinza:   ["#1e1c19","#57524a","#8a8375","#b3ab9a","#3c3a35","#6f6a60","#9c9585","#c9c1b0"],
+  // 19/11/2026: paletas do Cerrado, ajustadas para daltonismo (protanopia e deuteranopia, distância mínima 19 entre as 6 primeiras) e contraste no branco
+  cerrado_seca:  ["#469780","#8B5E19","#97B23C","#5A2520","#5692C4","#3D2F47","#B98F57","#896D43"],
+  cerrado_chuva: ["#24422C","#C09422","#5293C9","#79A6A4","#703C6D","#8AA768","#683124","#5E5E3F"],
+  vereda:        ["#275247","#705021","#2F7AA7","#739830","#C3856F","#739FB1","#A79272","#6BB94A"],
+  ipes:          ["#B89320","#572A69","#204E2B","#C66B89","#478DD2","#CC8766","#AD9F85","#6D6D49"],
+  mapedados:     ["#B18E1F","#5D7146","#6D8BA5","#3F76B0","#2D4434","#AD9C85","#BD8775","#665D44"],
+  terra:         ["#462D20","#CB9867","#536A2C","#8196AB","#305F5F","#A17B1C","#713418","#A7A772"]
 };
 const CAT = H.catalogo || {};
 const PADRAO = { tema_r:"salvia", tema:"claro", paleta:"salvia", cores:null, fonte:11, familia:"Times New Roman", familia_titulo:"Times New Roman", linha:1, ponto:2.5, legenda:"top",
-  faixa:true, grade:false, mostrar_titulo:true, mostrar_grupo:false, titulos:{}, formas:{}, cores_fig:{}, largura:18, altura:11.5, dpi:300, painel:"claro" };
+  faixa:true, grade:false, mostrar_titulo:true, mostrar_grupo:false, titulos:{}, formas:{}, cores_fig:{}, ajustes:{}, largura:18, altura:11.5, dpi:300, painel:"claro" };
 const doR = H.estilo && typeof H.estilo === "object" ? H.estilo : {};
 let E = Object.assign(JSON.parse(JSON.stringify(PADRAO)), store.get("herp.estilo5", {}));
 if (doR._painel) Object.assign(E, doR._painel);
-for (const k of ["titulos","formas","cores_fig"]) if (doR[k] && !Array.isArray(doR[k])) E[k] = doR[k]; else if (!E[k] || Array.isArray(E[k])) E[k] = {};
+for (const k of ["titulos","formas","cores_fig","ajustes"]) if (doR[k] && !Array.isArray(doR[k])) E[k] = doR[k]; else if (!E[k] || Array.isArray(E[k])) E[k] = {};
 // 18/11/2026: padrão novo das figuras (Times New Roman, legenda em cima e na horizontal); vale uma vez para estilos antigos
 if ((E._v || 0) < 6) { E.familia = "Times New Roman"; E.familia_titulo = "Times New Roman"; if (E.legenda === "bottom") E.legenda = "top"; E._v = 6; }
 // 19/11/2026: o nome do grupo (Herpetofauna, Anuros...) sai das figuras; dá para religar em Editar títulos
@@ -482,7 +691,7 @@ function estiloR(){
   const cm = v => Math.round(v / 2.54 * 100) / 100;
   return {paleta: cores(), tema_r: E.tema_r, tema: E.tema, fonte: +E.fonte, familia: E.familia, familia_titulo: E.familia_titulo, faixa: E.faixa, grade: E.grade,
     linha: +E.linha, ponto: +E.ponto, legenda: E.legenda, mostrar_titulo: E.mostrar_titulo, mostrar_grupo: E.mostrar_grupo !== false, largura: cm(E.largura), altura: cm(E.altura), dpi: +E.dpi,
-    titulos: E.titulos, formas: E.formas, cores_fig: E.cores_fig || {}, _painel: Object.fromEntries(Object.keys(PADRAO).filter(k => !["titulos","formas","cores_fig"].includes(k)).map(k => [k, E[k]]))};
+    titulos: E.titulos, formas: E.formas, cores_fig: E.cores_fig || {}, ajustes: E.ajustes || {}, _painel: Object.fromEntries(Object.keys(PADRAO).filter(k => !["titulos","formas","cores_fig","ajustes"].includes(k)).map(k => [k, E[k]]))};
 }
 
 /* ---------------- estado ---------------- */
@@ -514,14 +723,113 @@ function esferaParticulas(cv){
   requestAnimationFrame(quadro);
 }
 /* ---------------- tarefas do R ---------------- */
-function barra(caixa, t){
-  let b = caixa.previousElementSibling; if (!b || !b.classList.contains("barra")) { b = document.createElement("div"); b.className = "barra com-esfera"; b.innerHTML = '<canvas width="144" height="144" aria-hidden="true"></canvas><div class="trilho-e">' + '<div class="trilho"><div class="enche"></div></div><div class="info"><span class="et"></span><span class="pc"></span></div></div>'; caixa.parentNode.insertBefore(b, caixa); }
-  const p = t.estado === "pronto" ? 100 : (t.pct || 0), s = Math.max(0, Math.round(Date.now() / 1000 - (t.inicio || Date.now() / 1000)));
-  b.style.display = "grid"; b.classList.toggle("terminou", t.estado !== "rodando"); if (t.estado === "rodando") esferaParticulas(b.querySelector("canvas")); b.querySelector(".enche").style.width = p + "%"; b.querySelector(".pc").textContent = p + "%";
-  b.querySelector(".et").textContent = (t.etapa || "Rodando no R") + (t.estado === "rodando" ? ` · ${Math.floor(s / 60)} min ${s % 60} s` : "");
+/* >>> analise-quadrante.js >>> */
+/* Quadrante: animação de análise (20/11/2026, pedido do usuário: "volte com o efeito de orbe, remodelado").
+   Enquanto o R roda, a área de conteúdo mostra um orbe de partículas em terracota e areia sobre vidro escuro:
+   gira devagar, uma faixa de luz passa por ele, partículas de dados vêm das bordas e são puxadas para dentro
+   e um anel em volta mostra o andamento. "Continuar usando o painel" recolhe para a barra pequena.
+   Nas figuras que estão sendo redesenhadas aparece um orbe pequeno. Copiado para painel/painel.html e
+   app/inicio.html por identidade/aplica_identidade.py. Edite AQUI e rode o script. */
+const QUAD_PARADO = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function quadPrep(cv){ const d = devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return null;
+  if (cv.width !== Math.round(w * d) || cv.height !== Math.round(h * d)) { cv.width = Math.round(w * d); cv.height = Math.round(h * d); }
+  const x = cv.getContext("2d"); x.setTransform(d, 0, 0, d, 0, 0); return [x, w, h]; }
+function quadPontos(N){ const P = []; for (let i = 0; i < N; i++) { const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), a = i * Math.PI * (3 - Math.sqrt(5)); P.push([Math.cos(a) * r, y, Math.sin(a) * r]); } return P; }
+
+/* um quadro do orbe. est guarda as partículas que chegam; p = andamento (0 a 1) ou null sem anel */
+function quadOrbe(cx, w, h, t, p, est, grande){
+  const X = w / 2, Y = h / 2, R = Math.min(w, h) * (grande ? .3 : .4), a = (t / 9) * Math.PI * 2, inc = .38, onda = ((t % 1.8) / 1.8) * 2.8 - 1.4;
+  cx.clearRect(0, 0, w, h);
+  if (grande) {   // brilho de fundo
+    const g = cx.createRadialGradient(X, Y, R * .2, X, Y, R * 1.9); g.addColorStop(0, "rgba(224,122,76,.20)"); g.addColorStop(1, "rgba(224,122,76,0)");
+    cx.fillStyle = g; cx.fillRect(0, 0, w, h);
+  }
+  // partículas de dados chegando das bordas e sendo puxadas em espiral
+  if (grande && est) {
+    if (!QUAD_PARADO && (p == null || p < 1) && t - est.ult > .025) { est.ult = t; const ang = Math.random() * Math.PI * 2;
+      est.voo.push({ang, r0: Math.max(w, h) * (.45 + Math.random() * .2), t0: t, dur: 1.4 + Math.random() * 1.2, gira: (Math.random() < .5 ? -1 : 1) * (.6 + Math.random() * .8), tam: .8 + Math.random() * 1.4}); }
+    est.voo = est.voo.filter(q => t - q.t0 < q.dur);
+    for (const q of est.voo) { const f = (t - q.t0) / q.dur, e = f * f * (3 - 2 * f), rr = q.r0 + (R * .98 - q.r0) * e, an = q.ang + q.gira * e;
+      cx.fillStyle = `rgba(255,214,176,${(.15 + .7 * f) * (f > .9 ? (1 - f) * 10 : 1)})`;
+      cx.beginPath(); cx.arc(X + Math.cos(an) * rr, Y + Math.sin(an) * rr, q.tam * (1 - .4 * f), 0, 7); cx.fill(); }
+  }
+  // o orbe
+  const P = est && est.P || quadPontos(grande ? 640 : 220);
+  if (est && !est.P) est.P = P;
+  const pr = P.map(([x, y, z]) => { const x1 = x * Math.cos(a) + z * Math.sin(a), z1 = -x * Math.sin(a) + z * Math.cos(a);
+    return [x1, y * Math.cos(inc) - z1 * Math.sin(inc), y * Math.sin(inc) + z1 * Math.cos(inc), y]; }).sort((u, v) => u[2] - v[2]);
+  const k = R / 120;
+  for (const [x, y, z, y0] of pr) { const prof = (z + 1) / 2, br = Math.exp(-Math.pow((-y0 - onda) * 3.4, 2));
+    const rr = Math.round(181 + 74 * br), gg = Math.round(85 + 129 * br * .9 + prof * 30), bb = Math.round(44 + 130 * br * .8 + prof * 20);
+    cx.fillStyle = `rgba(${rr},${gg},${bb},${Math.min(1, .14 + prof * .66 + br * .3)})`;
+    cx.beginPath(); cx.arc(X + x * R, Y + y * R, (.9 + prof * 1.5 + br * 1.4) * k, 0, 7); cx.fill(); }
+  // anel de andamento
+  if (grande && p != null) {
+    const Ra = R * 1.24, ini = -Math.PI / 2, fim = ini + Math.PI * 2 * Math.max(.002, p);
+    cx.lineWidth = 2; cx.strokeStyle = "rgba(255,255,255,.08)"; cx.beginPath(); cx.arc(X, Y, Ra, 0, 7); cx.stroke();
+    cx.lineWidth = 3; cx.lineCap = "round"; cx.strokeStyle = "#e07a4c"; cx.shadowColor = "rgba(224,122,76,.7)"; cx.shadowBlur = 12;
+    cx.beginPath(); cx.arc(X, Y, Ra, ini, fim); cx.stroke(); cx.shadowBlur = 0;
+    cx.fillStyle = "#ffd9bd"; cx.beginPath(); cx.arc(X + Math.cos(fim) * Ra, Y + Math.sin(fim) * Ra, 4, 0, 7); cx.fill();
+  }
 }
+
+/* orbe pequeno no aviso de cada figura (o painel chama esferaParticulas) */
+function esferaParticulas(cv){
+  if (!cv || cv._anim) return; cv._anim = true;
+  const t0 = performance.now(), est = {voo: [], ult: 0};
+  const quadro = () => { if (!cv.isConnected) { cv._anim = false; return; }
+    const r = quadPrep(cv); if (r) quadOrbe(r[0], r[1], r[2], (performance.now() - t0) / 1000, null, est, false);
+    if (!QUAD_PARADO) setTimeout(quadro, 40); else cv._anim = false; };
+  quadro();
+}
+
+/* tela de análise sobre a área de conteúdo */
+const QUAD = {el: null, p: 0, alvo: 0, t0: 0, anim: false, dispensada: false, est: null};
+function quadTela(){
+  if (QUAD.el) return QUAD.el;
+  const d = document.createElement("div"); d.id = "analiseQuad"; d.setAttribute("role", "status"); d.setAttribute("aria-live", "polite");
+  d.innerHTML = '<div class="cabq"><div><div class="rotq">Análise em andamento</div><h4>Analisando os dados</h4><div class="etq"></div></div><div class="pcq">0%</div></div>'
+    + '<canvas aria-hidden="true"></canvas><div class="peq"><span>O R está calculando. Você pode continuar usando o painel.</span><span><button type="button" class="segue">Continuar usando o painel</button></span></div>';
+  document.body.appendChild(d);
+  d.querySelector(".segue").onclick = () => { QUAD.dispensada = true; quadFecha(); };
+  QUAD.el = d; return d;
+}
+function quadAbre(){
+  const d = quadTela(); if (d.classList.contains("on")) return;
+  const m = document.querySelector(".menu"); if (m) document.documentElement.style.setProperty("--menu-w", Math.round(m.getBoundingClientRect().right) + "px");
+  QUAD.t0 = performance.now(); QUAD.p = 0; QUAD.est = {voo: [], ult: 0};
+  d.classList.add("on"); setTimeout(() => d.classList.add("visivel"), 20);
+  if (!QUAD.anim) { QUAD.anim = true; quadPasso(); }
+}
+function quadFecha(){ const d = QUAD.el; if (!d) return; d.classList.remove("visivel"); setTimeout(() => d.classList.remove("on"), 260); }
+function quadPasso(){
+  const d = QUAD.el; if (!d || !d.classList.contains("on")) { QUAD.anim = false; return; }
+  // segue o andamento do R e, enquanto ele não avança, anda devagar até um pouco além do último passo
+  const meta = QUAD.alvo >= 1 ? 1 : Math.min(.97, QUAD.alvo + .05);
+  QUAD.p += (meta - QUAD.p) * (QUAD.p < QUAD.alvo ? .12 : .01);
+  const r = quadPrep(d.querySelector("canvas")); if (r) quadOrbe(r[0], r[1], r[2], (performance.now() - QUAD.t0) / 1000, QUAD.p, QUAD.est, true);
+  if (QUAD_PARADO) { QUAD.anim = false; return; }
+  setTimeout(quadPasso, 33);
+}
+function barra(caixa, t){
+  let b = caixa.previousElementSibling;
+  if (b && b.classList.contains("barra") && !b.classList.contains("quad")) { b.remove(); b = null; }
+  if (!b || !b.classList.contains("barra")) { b = document.createElement("div"); b.className = "barra quad";
+    b.innerHTML = '<div class="info"><span class="et"></span><span><span class="pc"></span><button type="button" class="reabre">Ver análise</button></span></div><div class="trilho"><div class="enche"></div></div>';
+    b.querySelector(".reabre").onclick = () => { QUAD.dispensada = false; quadAbre(); };
+    caixa.parentNode.insertBefore(b, caixa); }
+  const p = t.estado === "pronto" ? 100 : (t.pct || 0), rodando = t.estado === "rodando", s = Math.max(0, Math.round(Date.now() / 1000 - (t.inicio || Date.now() / 1000)));
+  const etapa = (t.etapa || "Rodando no R"), tempo = rodando ? ` · ${Math.floor(s / 60)} min ${s % 60} s` : "";
+  b.style.display = "block"; b.querySelector(".enche").style.width = p + "%"; b.querySelector(".pc").textContent = p + "%";
+  b.querySelector(".et").textContent = etapa + tempo; b.querySelector(".reabre").style.display = rodando ? "" : "none";
+  QUAD.alvo = p / 100;
+  if (rodando) { if (!QUAD.dispensada) quadAbre();
+    const d = quadTela(); d.querySelector(".etq").textContent = etapa + tempo; d.querySelector(".pcq").textContent = p + "%"; }
+  else { QUAD.alvo = 1; QUAD.dispensada = false; setTimeout(quadFecha, t.estado === "pronto" ? 700 : 0); }
+}
+/* <<< analise-quadrante.js <<< */
 function acompanhar(tid, caixa, fim){
-  if (caixa) { caixa.style.display = "block"; caixa.textContent = "Rodando no R..."; }
+  if (caixa) { caixa.style.display = "block"; caixa.textContent = "Rodando no R"; }
   let falhas = 0;
   const acaba = t => { fim && fim(t); };
   if (!tid) return acaba({estado:"erro", log:["O programa não aceitou o pedido."]});
@@ -529,14 +837,14 @@ function acompanhar(tid, caixa, fim){
     falhas = 0;
     if (t.estado === "desconhecida") return acaba({estado:"erro", log:["O programa foi reiniciado e perdeu esta tarefa. Clique de novo para redesenhar."]});
     if (caixa) barra(caixa, t);
-    if (caixa) caixa.textContent = (t.log || []).filter(l => !/scale|Scale|Adding/.test(l)).slice(-5).join("\n") || "Rodando no R...";
+    if (caixa) caixa.textContent = (t.log || []).filter(l => !/scale|Scale|Adding/.test(l)).slice(-5).join("\n") || "Rodando no R";
     if (t.estado === "rodando") setTimeout(passo, 900); else acaba(t);
-  }).catch(() => { if (++falhas < 6) setTimeout(passo, 1500); else acaba({estado:"erro", log:["O programa Herpetodados não respondeu. Abra de novo pelo atalho e tente outra vez."]}); });
+  }).catch(() => { if (++falhas < 6) setTimeout(passo, 1500); else acaba({estado:"erro", log:["O Quadrante não respondeu. Abra de novo pelo atalho e tente outra vez."]}); });
   passo();
 }
 function redesenhar(so, depois){
   salvaE();
-  if (!LID) { alert("Para o R redesenhar, abra o painel pelo Herpetodados (abrir_herpetodados.cmd)."); return null; }
+  if (!LID) { alert("Para o R redesenhar, abra o painel pelo Quadrante (atalho abrir_quadrante.cmd)."); return null; }
   document.querySelectorAll(so ? `.figr[data-chave="${so}"] .quadro` : ".figr .quadro").forEach(q => { q.classList.add("refazendo"); esferaParticulas(q.querySelector(".aviso-r canvas")); });
   const tira = () => document.querySelectorAll(".figr .quadro.refazendo").forEach(q => q.classList.remove("refazendo"));
   return api("estilo" + (so ? "?so=" + so : ""), JSON.stringify(estiloR())).then(r => {
@@ -563,26 +871,27 @@ function figuraR(alvo, chave, legenda){
   const acs = el("span", {class:"acs naoimprime"});
   const formas = arr(((H.formas || {})[grupo] || {})[chave]), info = CAT[chave] || {formas:{}}, atual = E.formas[chave] || info.padrao;
   if (formas.length > 1){ const b = el("button", {}, "Outras formas"); b.onclick = () => f.querySelector(".formas").classList.toggle("aberta"); acs.appendChild(b); }
-  const be = el("button", {}, "Editar títulos"); be.onclick = () => { const ed = f.querySelector(".edtit"); ed.classList.toggle("aberta"); if (ed.classList.contains("aberta")) ed.querySelector("input").focus(); }; acs.appendChild(be);
+  const be = el("button", {}, "Editar figura"); be.onclick = () => { const ed = f.querySelector(".edtit"); ed.classList.toggle("aberta"); if (ed.classList.contains("aberta")) ed.querySelector("input").focus(); }; acs.appendChild(be);
   const ba = el("a", {href:`figuras/${arq}`, target:"_blank"}); ba.appendChild(el("button", {}, "Abrir")); acs.appendChild(ba);
   const jpg = arq.replace(/\.png$/, ".jpg"), bj = el("a", {href:`figuras/${jpg}?v=${versao}`, download: jpg, title:"JPEG em alta resolução (600 dpi)"}); bj.appendChild(el("button", {}, "JPEG 600 dpi")); acs.appendChild(bj);
   acs.appendChild(marcaRel("fig:" + tag + ":" + chave, {tipo:"fig", titulo:tit, arquivo:`figuras/${arq}`}));
   topo.appendChild(acs); f.appendChild(topo);
   f.appendChild(legendaCores(chave, `${tag}_${chave}`));
   f.appendChild(editorTitulos(chave));
-  const q = el("div", {class:"quadro"}); q.innerHTML = `<img src="figuras/${arq}?v=${versao}" alt="${esc(tit)}"><div class="aviso-r"><canvas width="160" height="160" aria-hidden="true"></canvas><span>O R está redesenhando...</span></div>`; f.appendChild(q);
+  const q = el("div", {class:"quadro"}); q.innerHTML = `<img src="figuras/${arq}?v=${versao}" alt="${esc(tit)}"><div class="aviso-r"><canvas width="160" height="160" aria-hidden="true"></canvas><span>Redesenhando</span></div>`; f.appendChild(q);
   if (formas.length > 1){
     const fz = el("div", {class:"formas naoimprime"}), lista = el("div", {class:"lista"});
-    fz.appendChild(el("div", {class:"rotulo", style:"margin-bottom:8px"}, "O mesmo resultado desenhado de outro jeito pelo R. Clique para usar."));
+    fz.appendChild(el("div", {class:"rotulo", style:"margin-bottom:8px"}, "Outras formas desta figura"));
     for (const fm of formas){ const b = el("button", {class: fm === atual ? "atual" : ""}, `<img loading="lazy" src="formas/${tag}_${chave}__${fm}.png?v=${versao}" alt=""><span>${esc((info.formas || {})[fm] || fm)}</span>`);
       b.onclick = () => { if (fm !== atual) { E.formas[chave] = fm; redesenhar(chave); } }; lista.appendChild(b); }
     fz.appendChild(lista); f.appendChild(fz);
   }
   alvo.appendChild(f);
 }
-// legenda de cores da figura: clicar num quadradinho abre a paleta do Windows; ao escolher, o R redesenha só esta figura
+// legenda de cores da figura: clicar num quadradinho abre a paleta do Windows; ao escolher, o R redesenha só esta figura.
+// Mostra os nomes trocados e risca os itens tirados em "Editar figura".
 function legendaCores(chave, base){
-  const box = el("div", {class:"legcores naoimprime"});
+  const box = el("div", {class:"legcores naoimprime"}), aj = E.ajustes[chave] || {}, nomes = aj.nomes || {}, fora = arr(aj.remover);
   const troca = (indice, cor) => {
     const pal = (E.cores_fig[chave] || cores()).slice();
     while (pal.length < indice) pal.push(cores()[pal.length] || "#888888");
@@ -594,8 +903,8 @@ function legendaCores(chave, base){
     if (!itens.length) return;
     box.appendChild(el("span", {class:"dica"}, "Cores:"));
     for (const it of itens){
-      const b = el("label", {class:"it", title:"Clique para trocar a cor"}), inp = el("input", {type:"color", value: it.cor.toLowerCase()});
-      b.innerHTML = `<span class="q" style="background:${it.cor}"></span>${esc(it.rotulo)}`; b.appendChild(inp);
+      const b = el("label", {class:"it" + (fora.includes(it.rotulo) ? " fora" : ""), title:"Clique para trocar a cor"}), inp = el("input", {type:"color", value: it.cor.toLowerCase()});
+      b.innerHTML = `<span class="q" style="background:${it.cor}"></span>${esc(nomes[it.rotulo] || it.rotulo)}`; b.appendChild(inp);
       inp.onchange = () => { b.querySelector(".q").style.background = inp.value; troca(it.indice, inp.value); };
       box.appendChild(b);
     }
@@ -603,27 +912,331 @@ function legendaCores(chave, base){
   });
   return box;
 }
-// títulos e eixos de uma figura, editados ali mesmo; o R redesenha só ela
+// títulos, eixos, legenda e elementos de uma figura, editados ali mesmo; o R redesenha só ela (19/11/2026: legenda e elementos)
+const ELEMENTOS = [["legenda", "Legenda"], ["titulo_legenda", "Título da legenda"], ["titulo", "Título"], ["titulo_x", "Nome do eixo horizontal"], ["titulo_y", "Nome do eixo vertical"],
+  ["nomes_x", "Nomes no eixo horizontal"], ["nomes_y", "Nomes no eixo vertical"], ["rotulos", "Valores escritos na figura"], ["pontos", "Pontos"], ["linhas_ref", "Linhas de referência"],
+  ["barras_erro", "Barras de erro"], ["faixa", "Faixas (intervalos)"]];
 function editorTitulos(chave){
-  const pad = (((H.titulos_padrao || {})[grupo] || {})[chave]) || {}, atual = E.titulos[chave] || {};
+  const pad = (((H.titulos_padrao || {})[grupo] || {})[chave]) || {}, atual = E.titulos[chave] || {}, aj = E.ajustes[chave] || {}, oc = arr(aj.ocultar);
   const ed = el("div", {class:"edtit naoimprime"});
   const campos = [["titulo", "Título"], ["x", "Eixo horizontal"], ["y", "Eixo vertical"], ["nota", "Nota de rodapé"]];
   ed.innerHTML = `<div class="rotulo">Escreva por cima. Deixe em branco para voltar ao texto padrão.</div><div class="grade-ed">` +
     campos.map(([k, n]) => `<label>${n}<input type="text" data-k="${k}" value="${esc(atual[k] || "")}" placeholder="${esc(pad[k] || "(sem)")}"></label>`).join("") +
-    `</div><div class="rotulo" style="margin-top:10px">Cores desta figura (1ª cor = 1ª série da legenda, 2ª = 2ª série...)</div><div class="cores-fig">` +
+    `<label>Título da legenda<input type="text" data-tl value="${esc(aj.titulo_legenda || "")}" placeholder="(padrão)"></label></div>` +
+    `<div class="rotulo" style="margin-top:10px">O que aparece na figura (desmarque para tirar)</div><div class="elems">` +
+    ELEMENTOS.map(([k, n]) => `<label><input type="checkbox" data-el="${k}" ${oc.includes(k) ? "" : "checked"}> ${n}</label>`).join("") + `</div>` +
+    `<div class="rotulo" style="margin-top:10px">Itens da legenda: mude o texto ou desmarque para tirar o item da figura</div><div class="itens-leg"><span class="nota">Carregando...</span></div>` +
+    `<div class="rotulo" style="margin-top:10px">Cores desta figura (1ª cor = 1ª série da legenda, 2ª = 2ª série...)</div><div class="cores-fig">` +
     (E.cores_fig[chave] || cores().slice(0, 4)).slice(0, 4).map((c, i) => `<label>Cor ${i + 1} <input type="color" data-c="${i}" value="${c}"></label>`).join("") +
-    `</div><label class="ck"><input type="checkbox" data-g ${E.mostrar_grupo === true ? "checked" : ""}> Mostrar o grupo (${esc(grupo)}) abaixo do título em todas as figuras</label>`;
+    `</div><label class="ck"><input type="checkbox" data-g ${E.mostrar_grupo === true ? "checked" : ""}> Mostrar o grupo (${esc(grupo)}) abaixo do título em todas as figuras</label>` +
+    `<p class="nota">Legenda e elementos valem para as figuras feitas com ggplot2. As do R base (mapa de calor, dendrograma base, rarefação vegan, radfit) só aceitam título e eixos.</p>`;
+  const il = ed.querySelector(".itens-leg");
+  if (LID) fetch(`figuras/${TAG(grupo)}_${chave}.cores.json?v=${versao}`, {cache:"no-store"}).then(r => r.ok ? r.json() : null).catch(() => null).then(itens => {
+    itens = arr(itens).filter(i => i && i.rotulo && !/^Cor( \d+)?$/.test(i.rotulo));
+    if (!itens.length) { il.innerHTML = '<span class="nota">Esta figura não tem itens de legenda para editar.</span>'; return; }
+    const nomes = aj.nomes || {}, fora = arr(aj.remover); il.innerHTML = "";
+    for (const it of itens) { const d = el("div", {class:"it"});
+      d.innerHTML = `<input type="checkbox" data-it="${esc(it.rotulo)}" ${fora.includes(it.rotulo) ? "" : "checked"} title="Desmarque para tirar da figura"><span class="q" style="background:${it.cor}"></span><input type="text" data-nm="${esc(it.rotulo)}" value="${esc(nomes[it.rotulo] || it.rotulo)}">`;
+      il.appendChild(d); }
+  });
   const ap = el("button", {class:"forte"}, "Aplicar e redesenhar"), vt = el("button", {}, "Voltar ao padrão");
   const grava = limpa => { const t = {}; ed.querySelectorAll("input[data-k]").forEach(i => { if (limpa) i.value = ""; if (i.value.trim()) t[i.dataset.k] = i.value.trim(); });
     if (Object.keys(t).length) E.titulos[chave] = t; else delete E.titulos[chave];
     const cs = [...ed.querySelectorAll("input[data-c]")].map(i => i.value), pad = cores().slice(0, cs.length);
     if (!limpa && cs.some((c, i) => c.toLowerCase() !== String(pad[i]).toLowerCase())) E.cores_fig[chave] = cs; else delete E.cores_fig[chave];
+    const a = {}, ocul = [...ed.querySelectorAll("input[data-el]")].filter(i => !i.checked).map(i => i.dataset.el), rem = [...ed.querySelectorAll("input[data-it]")].filter(i => !i.checked).map(i => i.dataset.it);
+    const nm = {}; ed.querySelectorAll("input[data-nm]").forEach(i => { const v = i.value.trim(); if (v && v !== i.dataset.nm) nm[i.dataset.nm] = v; });
+    const tl = ed.querySelector("[data-tl]").value.trim();
+    if (ocul.length) a.ocultar = ocul; if (rem.length) a.remover = rem; if (Object.keys(nm).length) a.nomes = nm; if (tl) a.titulo_legenda = tl;
+    if (!limpa && Object.keys(a).length) E.ajustes[chave] = a; else delete E.ajustes[chave];
     const g = ed.querySelector("[data-g]").checked; const todas = g !== (E.mostrar_grupo !== false); E.mostrar_grupo = g;
     redesenhar(todas ? null : chave); };
   ap.onclick = () => grava(false); vt.onclick = () => grava(true);
   ed.querySelectorAll("input[type=text]").forEach(i => i.onkeydown = ev => { if (ev.key === "Enter") grava(false); });
   const bx = el("div", {class:"bts"}); bx.append(ap, vt); ed.appendChild(bx);
   return ed;
+}
+
+/* ---------------- paletas prontas, harmonia (regras do Adobe Color) e arquivo .ase (19/11/2026) ---------------- */
+const PALETA_INFO = { cerrado_seca:["Cerrado na seca","capim dourado, latossolo, céu seco"], cerrado_chuva:["Cerrado na chuva","mata, ipê-amarelo, água"],
+  vereda:["Vereda","buriti, água e brejo"], ipes:["Ipês","amarelo, roxo e rosa dos ipês"], mapedados:["Mapas","as cores dos mapas do Mapedados"],
+  terra:["Terra","solo, rocha e folhas secas"], salvia:["Sálvia","padrão do programa"], okabe:["Okabe-Ito","referência para daltonismo"],
+  prancha:["Prancha","azul e vermelho"], sintese:["Síntese","petróleo e laranja"], cerrado:["Cerrado (anterior)","tons de terra"], hue:["R padrão","cores do ggplot2"], cinza:["Tons de cinza","para impressão em preto e branco"] };
+const CVD = {normal:[[1,0,0],[0,1,0],[0,0,1]], protan:[[.152286,1.052583,-.204868],[.114503,.786281,.099216],[-.003882,-.048116,1.051998]],
+  deutan:[[.367322,.860646,-.227968],[.280085,.672501,.047413],[-.011820,.042940,.968881]]};   // Machado et al. 2009, gravidade 1
+const linC = c => { c /= 255; return c <= .04045 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4; };
+const hexRgb = h => [1, 3, 5].map(i => parseInt(String(h).slice(i, i + 2), 16));
+function labDe(c){ const [r, g, b] = c, X = .4124*r + .3576*g + .1805*b, Y = .2126*r + .7152*g + .0722*b, Z = .0193*r + .1192*g + .9505*b,
+  f = t => t > .008856 ? Math.cbrt(t) : 7.787*t + 16/116, fx = f(X/.95047), fy = f(Y), fz = f(Z/1.08883); return [116*fy - 16, 500*(fx - fy), 200*(fy - fz)]; }
+// confere as 6 primeiras cores: pares parecidos (visão normal, protanopia, deuteranopia) e cores claras demais no fundo branco
+function conferePaleta(cs, n = 6){
+  cs = cs.slice(0, n); const ruins = [];
+  for (const [m, M] of Object.entries(CVD)) {
+    const L = cs.map(h => { const c = hexRgb(h).map(linC); return labDe(M.map(l => Math.min(1, Math.max(0, l[0]*c[0] + l[1]*c[1] + l[2]*c[2])))); });
+    for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) { const d = Math.hypot(L[i][0]-L[j][0], L[i][1]-L[j][1], L[i][2]-L[j][2]); if (d < 12) ruins.push({m, i, j}); } }
+  const lum = h => { const c = hexRgb(h).map(linC); return .2126*c[0] + .7152*c[1] + .0722*c[2]; };
+  const claras = cs.map((h, i) => [i, 1.05 / (lum(h) + .05)]).filter(x => x[1] < 2);
+  return {ok: !ruins.length && !claras.length, ruins, claras};
+}
+function textoConferencia(r){
+  if (r.ok) return "Boa para daltonismo e com contraste no fundo branco (6 primeiras cores).";
+  const nm = {normal:"para todos", protan:"para protanopia", deutan:"para deuteranopia"};
+  const p = [...new Set(r.ruins.map(x => `cores ${x.i + 1} e ${x.j + 1} parecidas ${nm[x.m]}`))].slice(0, 3), c = r.claras.map(x => `cor ${x[0] + 1} clara demais no branco`);
+  return "Atenção: " + p.concat(c).join("; ") + ".";
+}
+function hexHsl(h){ const [r, g, b] = hexRgb(h).map(v => v / 255), mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2; let hh = 0, s = 0;
+  if (mx !== mn) { const d = mx - mn; s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn); hh = (mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4) * 60; }
+  return [hh, s, l]; }
+function hslHex(h, s, l){ h = ((h % 360) + 360) % 360; const a = s * Math.min(l, 1 - l), f = n => { const k = (n + h / 30) % 12; return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
+  return "#" + [f(0), f(8), f(4)].map(v => Math.round(v * 255).toString(16).padStart(2, "0")).join(""); }
+// regras de harmonia do Adobe Color: deslocamentos de matiz a partir da cor base; claridade alternada para separar as cores
+const REGRAS = {analoga:["Análoga", [0, -30, 30, -60, 60]], monocromatica:["Monocromática", [0]], triade:["Tríade", [0, 120, 240]],
+  complementar:["Complementar", [0, 180]], composta:["Composta", [0, 30, 180, 150, 210]], tons:["Tons", [0]]};
+// cada cor: o matiz vem da regra; claridade e saturação são escolhidas para ficar o mais longe possível das cores anteriores
+// na visão normal, na protanopia e na deuteranopia, sem passar do limite de contraste com o fundo branco
+function labsDe(h){ const c = hexRgb(h).map(linC); return Object.values(CVD).map(M => labDe(M.map(l => Math.min(1, Math.max(0, l[0]*c[0] + l[1]*c[1] + l[2]*c[2]))))); }
+function harmonia(base, regra){
+  const [h, s0] = hexHsl(base), s = Math.min(.62, Math.max(.3, s0)), desl = REGRAS[regra][1], out = [base], labs = [labsDe(base)];
+  const lum = x => { const c = hexRgb(x).map(linC); return .2126*c[0] + .7152*c[1] + .0722*c[2]; };
+  for (let i = 1; i < 8; i++) {
+    const volta = Math.floor(i / desl.length), hh = h + desl[i % desl.length] + (volta ? (volta % 2 ? 16 : -16) : 0);
+    let melhor = null;
+    for (const l of [.2, .26, .32, .38, .44, .5, .56, .62]) for (const ss of [s, s * .65, Math.min(.75, s * 1.25)]) {
+      const c = hslHex(hh, ss, l); if (1.05 / (lum(c) + .05) < 2.2) continue;
+      const L = labsDe(c); let d = 1e9;
+      labs.slice(-6).forEach(P => P.forEach((p, m) => { d = Math.min(d, Math.hypot(p[0]-L[m][0], p[1]-L[m][1], p[2]-L[m][2])); }));
+      if (!melhor || d > melhor.d) melhor = {c, d, L};
+    }
+    out.push(melhor.c); labs.push(melhor.L);
+  }
+  return out;
+}
+// completa até 8 cores (o R usa 8) variando a claridade das que vieram
+function completa8(cs){ const out = cs.slice(0, 8); let i = 0; while (out.length < 8 && cs.length) { const [h, s, l] = hexHsl(cs[i % cs.length]); out.push(hslHex(h, s, l > .45 ? l - .18 : l + .18)); i++; } return out; }
+// arquivo .ase (Adobe Swatch Exchange: Adobe Color, Illustrator, Photoshop)
+function lerASE(buf){
+  const v = new DataView(buf), tag = String.fromCharCode(...[0, 1, 2, 3].map(i => v.getUint8(i)));
+  if (tag !== "ASEF") throw new Error("O arquivo não é um .ase da Adobe.");
+  const n = v.getUint32(8), cores = []; let p = 12;
+  const gama = c => c <= .0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - .055;
+  for (let b = 0; b < n && p + 6 <= buf.byteLength; b++) {
+    const tipo = v.getUint16(p), tam = v.getUint32(p + 2); let q = p + 6;
+    if (tipo === 1) {
+      q += 2 + v.getUint16(q) * 2;
+      const mod = String.fromCharCode(...[0, 1, 2, 3].map(i => v.getUint8(q + i))).trim(); q += 4;
+      const f = i => v.getFloat32(q + 4 * i); let rgb = null;
+      if (mod === "RGB") rgb = [f(0), f(1), f(2)];
+      else if (mod === "CMYK") { const [c, m, y, k] = [f(0), f(1), f(2), f(3)]; rgb = [(1 - c) * (1 - k), (1 - m) * (1 - k), (1 - y) * (1 - k)]; }
+      else if (mod === "Gray") rgb = [f(0), f(0), f(0)];
+      else if (mod === "LAB") { const L = f(0) * 100, fy = (L + 16) / 116, fx = fy + f(1) / 500, fz = fy - f(2) / 200, inv = t => t ** 3 > .008856 ? t ** 3 : (t - 16 / 116) / 7.787;
+        const X = .95047 * inv(fx), Y = inv(fy), Z = 1.08883 * inv(fz);
+        rgb = [3.2406*X - 1.5372*Y - .4986*Z, -.9689*X + 1.8758*Y + .0415*Z, .0557*X - .2040*Y + 1.0570*Z].map(gama); }
+      if (rgb) cores.push("#" + rgb.map(x => Math.round(Math.max(0, Math.min(1, x)) * 255).toString(16).padStart(2, "0")).join(""));
+    }
+    p += 6 + tam;
+  }
+  if (!cores.length) throw new Error("Não achei cores no arquivo.");
+  return cores;
+}
+const faixaCores = cs => cs.map(c => `<i style="background:${c}" title="${c}"></i>`).join("");
+function aplicaPaleta(chave, lista){
+  const n = Object.keys(E.cores_fig || {}).length;
+  if (n && confirm(`${n} ${n > 1 ? "figuras têm" : "figura tem"} cores trocadas uma a uma. Tirar essas trocas para a paleta nova valer em todas? (Cancelar mantém as trocas.)`)) E.cores_fig = {};
+  if (lista) { E.cores = completa8(lista); E.paleta = "livre"; } else E.paleta = chave;
+  salvaE(); sincroniza();
+  avisoTopo("Paleta trocada. Redesenhando todas as figuras (cerca de 2 min).", "ok");
+  $("#btAplicarR").click();
+}
+function montaGaleria(){
+  const g = $("#galeriaPaletas"); if (!g) return; g.innerHTML = "";
+  for (const k of Object.keys(PALETAS)) {
+    const [nome, desc] = PALETA_INFO[k] || [k, ""], cs = PALETAS[k], r = conferePaleta(cs);
+    const b = el("button", {class:"pal" + (E.paleta === k ? " atual" : ""), title:textoConferencia(r)},
+      `<span class="faixa">${faixaCores(cs)}</span><b>${esc(nome)}</b><small>${esc(desc)}${r.ok ? "" : " · atenção para daltonismo"}</small>`);
+    b.onclick = () => aplicaPaleta(k); g.appendChild(b);
+  }
+  if (E.paleta === "livre" && E.cores) { const r = conferePaleta(E.cores);
+    g.appendChild(el("div", {class:"pal atual"}, `<span class="faixa">${faixaCores(E.cores)}</span><b>Personalizada (em uso)</b><small>${esc(textoConferencia(r))}</small>`)); }
+}
+function montaHarmonia(){
+  const base = $("#harmBase"), regra = $("#harmRegra"); if (!base) return;
+  regra.innerHTML = Object.entries(REGRAS).map(([k, [n]]) => `<option value="${k}">${n}</option>`).join("");
+  let atual = [];
+  const prev = () => { atual = harmonia(base.value, regra.value); $("#harmPrev").innerHTML = faixaCores(atual); $("#harmConf").textContent = textoConferencia(conferePaleta(atual)); };
+  base.oninput = prev; regra.onchange = prev; prev();
+  $("#harmUsar").onclick = () => aplicaPaleta(null, atual);
+  let trazidas = [];
+  const mostraTrazidas = cs => { trazidas = cs; $("#adobePrev").innerHTML = faixaCores(cs); $("#adobeConf").textContent = cs.length ? `${cs.length} cores. ` + textoConferencia(conferePaleta(completa8(cs))) : ""; $("#adobeUsar").disabled = !cs.length; };
+  $("#aseArq").onchange = ev => { const f = ev.target.files[0]; if (!f) return; f.arrayBuffer().then(b => mostraTrazidas(lerASE(b))).catch(e => { $("#adobeConf").textContent = e.message; mostraTrazidas([]); }); };
+  $("#hexCola").oninput = ev => mostraTrazidas((ev.target.value.match(/#?[0-9a-f]{6}\b/gi) || []).map(h => "#" + h.replace("#", "").toLowerCase()));
+  $("#adobeUsar").onclick = () => trazidas.length && aplicaPaleta(null, trazidas);
+}
+
+/* ---------------- contexto do campo, sugestões por serviço e análises sob pedido (19/11/2026) ---------------- */
+const SERV = [["", "Escolha o serviço"], ["diagnostico", "Diagnóstico para licenciamento (EIA/RIMA, RAS, PCA)"], ["monitoramento", "Monitoramento de fauna"],
+  ["inventario", "Inventário ou levantamento rápido"], ["resgate", "Resgate e afugentamento"], ["pesquisa", "Pesquisa científica"], ["outro", "Outro"]];
+const METODOS = ["Busca ativa", "Procura visual limitada por tempo", "Zoofonia (escuta)", "Armadilha de queda (pitfall)", "Armadilha de funil", "Encontro ocasional",
+  "Transecção", "Armadilha fotográfica", "Rede de neblina", "Captura e marcação"];
+const pastaLev = () => String(H.meta.caminho || "").replace(/[\\/][^\\/]+$/, "").replace(/\//g, "\\");
+function copia(t, b){ (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => { if (b) b.textContent = "Copiado"; }).catch(() => prompt("Copie o texto:", t)); }
+const semAc = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const nPontosCampo = () => new Set(arr(H.pontos).map(p => String(p.ponto).replace(/ C\d+$/, ""))).size || (H.grupos[grupo] || {}).n_pontos || 0;
+function ctxAtual(){
+  const c = H.contexto_json || {}, camp = arr(H.campanhas);
+  const lista = arr(c.campanhas).length ? arr(c.campanhas).map(x => Object.assign({}, x)) : (camp.length ? camp.map(x => ({nome:x.campanha, codigo:x.codigo})) : [{nome:"Campanha 1"}]);
+  for (const x of camp) if (!lista.some(l => l.codigo === x.codigo || l.nome === x.campanha)) lista.push({nome:x.campanha, codigo:x.codigo});
+  return {servico:c.servico || "", finalidade:c.finalidade || "", campo:c.campo || H.contexto || "", campanhas:lista};
+}
+function vaiContexto(){ store.set("herp.sub1", "campo"); irPara("planilha"); }
+function irPara(id, sub){ if (sub) { const k = {laudo:"herp.subL", descritiva:"herp.sub2"}[id]; if (k) store.set(k, sub); } aba = id; history.replaceState(null, "", "#" + id); render(); scrollTo(0, 0); }
+function blocoContexto(alvo){
+  const C = ctxAtual();
+  alvo.appendChild(el("p", {class:"pergunta"}, "Datas, estação, observadores, horas de busca e tipo de serviço. Entram no esforço por ponto (quando a planilha não tem), na comparação seca e chuva, no texto de métodos e nas análises sugeridas. Ficam salvos em <b>contexto_campo.md</b>, na pasta do levantamento."));
+  const f = el("div", {class:"ctx"});
+  f.innerHTML = `<div class="duas"><label>Tipo de serviço<select data-c="servico">${SERV.map(([v, n]) => `<option value="${v}" ${C.servico === v ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></label>
+    <label>Finalidade<textarea data-c="finalidade" placeholder="Licenciamento de quê, fase, o que comparar...">${esc(C.finalidade)}</textarea></label></div>
+    <div class="rotulo" style="margin-top:12px">Campanhas</div><div class="camps"></div><button class="maiscamp">+ campanha</button>
+    <label class="cp">Observações do campo<textarea data-c="campo" placeholder="Imprevistos, pontos que não deu para amostrar, chuva forte numa noite...">${esc(C.campo)}</textarea></label>
+    <p class="esforco-prev"></p>`;
+  const camps = f.querySelector(".camps");
+  const ESTS = [["", "não informada"], ["chuvosa", "Chuvosa"], ["seca", "Seca"], ["transicao", "Transição"]];
+  const linha = (c, i) => { const d = el("div", {class:"camp"}); if (c.codigo) d.dataset.codigo = c.codigo;
+    const v = k => esc(c[k] ?? "");
+    d.innerHTML = `<div class="cab-camp"><input type="text" data-k="nome" value="${v("nome")}" ${c.codigo ? "readonly title='Nome da campanha na planilha'" : ""}>${c.codigo ? `<span class="nota">${esc(c.codigo)} na planilha</span>` : ""}${!c.codigo && i ? '<button class="tira">remover</button>' : ""}</div>
+      <div class="grade-camp"><label>Início<input type="date" data-k="inicio" value="${v("inicio")}"></label><label>Fim<input type="date" data-k="fim" value="${v("fim")}"></label>
+      <label>Estação<select data-k="estacao">${ESTS.map(([a, n]) => `<option value="${a}" ${(c.estacao || "") === a ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+      <label>Observadores<input type="number" min="1" step="1" data-k="observadores" value="${v("observadores")}"></label>
+      <label>Dias de campo<input type="number" min="1" step="1" data-k="dias" value="${v("dias")}"></label>
+      <label>Horas de busca em cada ponto<input type="number" min="0" step="0.25" data-k="horas_ponto" value="${v("horas_ponto")}"></label>
+      <label>Visitas a cada ponto<input type="number" min="1" step="1" data-k="visitas" value="${v("visitas")}" placeholder="1"></label>
+      <label>Horário<input type="text" data-k="horario" value="${v("horario")}" placeholder="18h às 23h"></label></div>
+      <div class="metodos">${METODOS.concat(arr(c.metodos).filter(m => !METODOS.includes(m))).map(m => `<label class="chip"><input type="checkbox" data-m="${esc(m)}" ${arr(c.metodos).includes(m) ? "checked" : ""}>${esc(m)}</label>`).join("")}</div>
+      <label class="cp">Tempo (chuva, lua, temperatura)<input type="text" data-k="clima" value="${v("clima")}"></label>`;
+    const t = d.querySelector(".tira"); if (t) t.onclick = () => { d.remove(); salva(); };
+    return d; };
+  C.campanhas.forEach((c, i) => camps.appendChild(linha(c, i)));
+  const le = () => ({servico:f.querySelector("[data-c=servico]").value, finalidade:f.querySelector("[data-c=finalidade]").value, campo:f.querySelector("[data-c=campo]").value,
+    campanhas:[...camps.querySelectorAll(".camp")].map(d => { const o = {}; if (d.dataset.codigo) o.codigo = d.dataset.codigo;
+      d.querySelectorAll("[data-k]").forEach(i => { if (i.value !== "") o[i.dataset.k] = i.type === "number" ? Number(i.value) : i.value; });
+      o.metodos = [...d.querySelectorAll("[data-m]:checked")].map(i => i.dataset.m); return o; })});
+  const prevEsf = v => { const np = nPontosCampo();
+    const t = v.campanhas.map(c => { const h = (c.observadores || 0) * (c.horas_ponto || 0) * (c.visitas || 1); return h ? `${esc(c.nome || "")}: ${nf(h, 1)} horas-pessoa por ponto, ${nf(h * np, 1)} nos ${np} pontos` : ""; }).filter(Boolean);
+    f.querySelector(".esforco-prev").innerHTML = t.length ? "<b>Esforço calculado:</b> " + t.join("; ") + "." : "Preencha observadores e horas de busca em cada ponto para o programa calcular o esforço."; };
+  const ok = el("span", {class:"salvo"}); let tm;
+  const salva = () => { const v = le(); H.contexto_json = v; store.set("herp.ctx." + H.meta.planilha, v); prevEsf(v); clearTimeout(tm);
+    tm = setTimeout(() => { if (LID) api("contexto", v).then(r => ok.textContent = r && r.erro ? r.erro : "guardado"); else ok.textContent = "guardado neste navegador"; }, 600); };
+  f.addEventListener("input", salva); f.addEventListener("change", ev => { salva(); if (ev.target.dataset.c === "servico") { sg.innerHTML = ""; blocoSugestoes(sg, ev.target.value); } });
+  f.querySelector(".maiscamp").onclick = () => { camps.appendChild(linha({nome:"Campanha " + (camps.children.length + 1)}, camps.children.length)); salva(); };
+  alvo.appendChild(f); prevEsf(le());
+  const bx = el("div", {class:"bts-ctx naoimprime"}); bx.appendChild(ok);
+  if (LID) { const br = el("button", {class:"acento"}, "Guardar e recalcular"), cx = el("div", {class:"tarefa"});
+    br.title = "Roda as análises de novo para usar o esforço, a estação e o texto de métodos";
+    br.onclick = () => { br.disabled = true; clearTimeout(tm); api("contexto", le()).then(() => api("refazer")).then(j => { if (j.erro) { avisoTopo(j.erro); br.disabled = false; return; }
+      acompanhar(j.tarefa, cx, t => { if (t.estado === "pronto") location.reload(); else { br.disabled = false; avisoTopo("O R não terminou: veja o log abaixo do botão."); } }); }); };
+    bx.prepend(br); alvo.append(bx, cx); }
+  const R = H.contexto_resumo;
+  if (R && R.texto) { const tx = el("div", {class:"resultado"}, "<b>Texto de métodos (gerado pelo R no último cálculo)</b>" + esc(R.texto)); const bc = el("button", {class:"naoimprime"}, "Copiar o texto");
+    bc.onclick = () => copia(R.texto, bc); alvo.append(tx, bc);
+    if (arr(R.campanhas).length) tabelaAuto(alvo, "contexto_campanhas", "Campanhas e esforço", arr(R.campanhas)); }
+  const ag = el("div", {class:"aviso naoimprime"}, `<span><span class="pill informação">agentes</span></span><div><b>Para o assistente e os agentes</b>O contexto vai para <code>contexto_campo.md</code> na pasta do levantamento. Para pedir a leitura do especialista ou a revisão da planilha, copie o pedido e cole numa conversa com o assistente.</div>`);
+  const bp = el("button", {style:"margin-left:auto"}, "Copiar pedido para o assistente");
+  bp.onclick = () => copia(`Leia o contexto do campo em "${pastaLev()}\\contexto_campo.md" e os resultados do Quadrante em "${pastaLev()}\\dados.js". Considerando o tipo de serviço, as estações e o esforço, escreva a leitura do especialista (o que os resultados dizem sobre o ambiente, com os limites) em leitura_especialista.md na mesma pasta, e rode o agente corretor-planilha-herpeto na planilha "${pastaLev()}\\planilha.xlsx".`, bp);
+  ag.appendChild(bp); alvo.appendChild(ag);
+  const sg = el("div"); alvo.appendChild(sg); blocoSugestoes(sg, C.servico);
+}
+let CATALOGO = null;
+const pegaCatalogo = () => (CATALOGO ? Promise.resolve(CATALOGO) : (LID ? fetch("/api/pedidos/catalogo", {cache:"no-store"}).then(r => r.json()) : Promise.resolve(null)))
+  .then(c => (CATALOGO = c && c.analises ? c : {analises:[], servicos:{}})).catch(() => (CATALOGO = {analises:[], servicos:{}}));
+function secaoExiste(id, sub){ const G = H.grupos[grupo] || {};
+  if (id === "laudo") { const R = G.relatorio; if (!R) return false; if (sub === "metodo") return !!R.por_metodo; if (sub === "esforco") return !!R.esforco; if (sub === "sazonal") return arr(R.sazonal).length > 0; return true; }
+  if (id === "campanhas") return !!G.campanhas; if (id === "fitofisionomias") return !!G.fitofisionomias;
+  if (["riqueza", "diversidade", "similaridade", "dominancia"].includes(id)) return !!G.acumulacao; return true; }
+const FALTA_SECAO = {campanhas:"precisa de 2 ou mais campanhas na planilha (coluna Campanha)", fitofisionomias:"precisa da fitofisionomia na aba de pontos",
+  laudo_esforco:"precisa do esforço: aba de pontos ou contexto do campo", laudo_sazonal:"precisa de 2 campanhas ou estações (coluna Estação ou contexto do campo)", laudo_metodo:"precisa da coluna Método na planilha"};
+function blocoSugestoes(alvo, servico){
+  const box = el("div", {class:"sugest"}); alvo.appendChild(box);
+  pegaCatalogo().then(C => {
+    const sv = servico != null ? servico : (H.contexto_json || {}).servico || "";
+    if (!sv || !C.servicos[sv]) { box.innerHTML = `<div class="rotulo">Análises sugeridas</div><p class="nota">Diga o tipo de serviço no Contexto do campo para ver as análises que esse serviço costuma pedir.</p>`;
+      if (aba !== "planilha") { const b = el("button", {}, "Abrir o contexto do campo"); b.onclick = vaiContexto; box.appendChild(b); } return; }
+    const S = C.servicos[sv], nu = (H.grupos[grupo] || {}).n_pontos || 0;
+    box.innerHTML = `<div class="rotulo">Análises sugeridas: ${esc(S.nome)} (${esc(grupo)})</div>`;
+    const ul = el("ul", {class:"lista-sug"});
+    for (const it of S.itens) {
+      const li = el("li"); let est = "", bt = null;
+      if (it.tipo === "secao") { const tem = secaoExiste(it.id, it.sub); est = tem ? "pronta no painel" : (FALTA_SECAO[it.id + (it.sub ? "_" + it.sub : "")] || FALTA_SECAO[it.id] || "sem dados para isto");
+        if (tem) { bt = el("button", {}, "Ver"); bt.onclick = () => irPara(it.id, it.sub); } }
+      else if (it.tipo === "pedido") { const pouco = ["nmds", "permanova"].includes(it.id) && nu < 6; est = pouco ? `precisa de 6 ou mais unidades amostrais (há ${nu}): o R vai recusar` : "o R confere os pressupostos e roda";
+        bt = el("button", {}, "Pedir"); bt.onclick = () => { PEDIDO_SEL = it.id; irPara("pedidos"); }; }
+      else est = "não se aplica a este serviço";
+      li.innerHTML = `<b>${esc(it.nome)}</b><span class="por">${esc(it.por)}</span><span class="est${est.startsWith("pronta") || est.startsWith("o R") ? "" : " falta"}">${esc(est)}</span>`;
+      if (bt) li.appendChild(bt); ul.appendChild(li);
+    }
+    box.appendChild(ul);
+  });
+}
+let PEDIDO_SEL = null;
+function fatoresDisponiveis(){ const P = arr(H.pontos), f = [];
+  if (P.some(p => p.fitofisionomia)) f.push(["fitofisionomia", "Fitofisionomia"]); if (P.some(p => p.grupo_amostral)) f.push(["grupo_amostral", "Grupo amostral"]);
+  if (arr(H.campanhas).length > 1) f.push(["campanha", "Campanha"]); if (new Set(arr((H.contexto_json || {}).campanhas).map(c => c.estacao).filter(Boolean)).size > 1) f.push(["estacao", "Estação"]); return f; }
+function naoAchou(res, q){
+  const pr = `No Quadrante (projetos/quadrante), acrescente ao catálogo de análises sob pedido (R/pedidos_catalogo.json e R/pedido.R) a análise: "${q}". Diga o pacote do R e a função, veja se o pacote está instalado em C:\\DadosBio\\envs\\R-herpetodados (instalar só com a minha aprovação), escreva a conferência dos pressupostos e a figura em ggplot2 no estilo do programa. Levantamento para testar: ${pastaLev()}.`;
+  res.innerHTML = `<div class="aviso"><span><span class="pill atenção">fora do catálogo</span></span><div><b>“${esc(q)}” não está no catálogo</b>Copie o pedido e cole numa conversa com o assistente para incluir a análise no catálogo, com pacote, pressupostos e figura.</div></div>`;
+  const b = el("button", {}, "Copiar o pedido para o assistente"); b.onclick = () => copia(pr, b); res.appendChild(b);
+}
+function cartaoPedido(a){
+  const c = el("div", {class:"cartao-pedido"}), fs = fatoresDisponiveis();
+  c.innerHTML = `<b>${esc(a.nome)}</b><p>${esc(a.responde)}</p><p class="nota">Pacote <code>${esc(a.pacote)}</code> · função <code>${esc(a.funcao)}</code></p><div class="rotulo">Pressupostos que o R vai conferir nos seus dados</div><ul>${a.pressupostos.map(p => `<li>${esc(p)}</li>`).join("")}</ul>`;
+  const lin = el("div", {class:"linha-pedido"}); let sf = null, sv = null;
+  if (a.usa_fator !== "nao") { sf = el("select"); if (a.usa_fator === "opcional") sf.appendChild(el("option", {value:""}, "sem comparar grupos"));
+    fs.forEach(([v, n]) => sf.appendChild(el("option", {value:v}, "Comparar por " + n.toLowerCase())));
+    if (a.usa_fator === "sim" && !fs.length) lin.appendChild(el("span", {class:"nota"}, "Sem fator para comparar neste levantamento (fitofisionomia, grupo amostral, campanhas ou estação): o R vai recusar.")); else lin.appendChild(sf); }
+  if (a.usa_variavel) { sv = el("select"); sv.innerHTML = '<option value="riqueza">Riqueza por unidade</option><option value="abundancia">Abundância por unidade</option>'; lin.appendChild(sv); }
+  const b = el("button", {class:"forte"}, "Conferir pressupostos e rodar"), cx = el("div", {class:"tarefa"});
+  b.onclick = () => { b.disabled = true; b.textContent = "O R está conferindo...";
+    api("pedido", {analise:a.id, grupo, fator:sf ? sf.value : "", variavel:sv ? sv.value : "riqueza"}).then(j => {
+      if (j.erro) { avisoTopo(j.erro); b.disabled = false; b.textContent = "Conferir pressupostos e rodar"; return; }
+      acompanhar(j.tarefa, cx, t => { if (t.estado !== "pronto") avisoTopo("O R não conseguiu: " + (t.log || []).slice(-2).join(" ")); render(); }); }); };
+  lin.appendChild(b); c.append(lin, cx); return c;
+}
+function resultadoPedido(R, aberto){
+  const d = el("details", {class:"res-pedido"}); if (aberto) d.open = true;
+  d.innerHTML = `<summary><b>${esc(R.nome)}</b>${R.fator_nome ? " · por " + esc(R.fator_nome.toLowerCase()) : ""} <span class="pill ${R.rodou ? "ok" : "erro"}">${R.rodou ? "rodou" : "não rodou"}</span><small>${esc(R.feito_em)} · ${esc(R.pacote)} ${esc(R.funcao)}</small></summary>`;
+  const corpo = el("div"); d.appendChild(corpo);
+  const NV = {ok:["ok", "ok"], "atenção":["atenção", "atenção"], falha:["erro", "não atende"]};
+  tabela(corpo, "pressup_" + R.pid, "Pressupostos conferidos", [{t:"", f:p => `<span class="pill ${(NV[p.nivel] || NV.ok)[0]}">${esc((NV[p.nivel] || [0, p.nivel])[1])}</span>`, csv:p => p.nivel},
+    {t:"Pressuposto", k:"item"}, {t:"Nos seus dados", f:p => esc(p.detalhe), csv:p => p.detalhe}], arr(R.pressupostos));
+  if (!R.rodou) corpo.appendChild(el("p", {class:"nota"}, "Não rodou porque um pressuposto marcado com “não atende” falhou. O que fazer está na coluna da direita."));
+  if (R.texto) texto(corpo, R.texto, true);
+  if (R.figura) { const f = el("div", {class:"figr"}), topo = el("div", {class:"topo"}); topo.appendChild(el("span", {class:"tit"}, esc(R.nome)));
+    const acs = el("span", {class:"acs naoimprime"}), jpg = R.figura.replace(/\.png$/, ".jpg"), bj = el("a", {href:`${jpg}?v=${versao}`, download:jpg.split("/").pop()});
+    bj.appendChild(el("button", {}, "JPEG 600 dpi")); acs.appendChild(bj); acs.appendChild(marcaRel("fig:ped:" + R.pid, {tipo:"fig", titulo:R.nome, arquivo:R.figura}));
+    topo.appendChild(acs); f.appendChild(topo); f.appendChild(el("div", {class:"quadro"}, `<img src="${R.figura}?v=${Date.now()}" alt="${esc(R.nome)}">`)); corpo.appendChild(f); }
+  const T = R.tabela || {}; Object.keys(T).forEach(k => tabelaAuto(corpo, "ped_" + R.pid + "_" + k, k === "por_grupo" ? R.nome + ": por grupo" : R.nome, arr(T[k])));
+  return d;
+}
+function secaoPedidos(){
+  const s = secao("pedidos", "Pedir uma análise", "Descreva a análise. O R procura no catálogo, confere os pressupostos nos seus dados e só roda se forem atendidos.");
+  if (!LID) { s.appendChild(el("p", {class:"semapp"}, "Abra o painel pelo Quadrante para pedir análises.")); return; }
+  const busca = el("input", {type:"search", class:"busca-pedido naoimprime", placeholder:"Ex.: PERMANOVA, NMDS, Kruskal, Mantel, espécies indicadoras..."});
+  const res = el("div", {class:"pedido-res"}), feitos = el("div"), sg = el("div"); s.append(busca, res, feitos, sg);
+  pegaCatalogo().then(C => {
+    const mostra = () => { res.innerHTML = ""; let L = C.analises; const q = semAc(busca.value).trim();
+      if (PEDIDO_SEL) { L = L.filter(a => a.id === PEDIDO_SEL); if (L[0]) busca.value = L[0].nome.split(" (")[0]; PEDIDO_SEL = null; }
+      else if (q.length > 1) L = L.filter(a => semAc(a.nome).includes(q) || a.palavras.some(p => semAc(p).includes(q) || (q.length > 3 && q.includes(semAc(p)))));
+      else { const p = el("p", {class:"nota"}, "No catálogo: " + C.analises.map(a => `<a href="#" data-a="${a.id}">${esc(a.nome.split(" (")[0])}</a>`).join(" · "));
+        p.querySelectorAll("[data-a]").forEach(x => x.onclick = ev => { ev.preventDefault(); PEDIDO_SEL = x.dataset.a; mostra(); }); res.appendChild(p); return; }
+      if (!L.length) return naoAchou(res, busca.value.trim());
+      L.forEach(a => res.appendChild(cartaoPedido(a))); };
+    busca.oninput = mostra; mostra();
+  });
+  fetch(`pedidos/indice.json?v=${Date.now()}`, {cache:"no-store"}).then(r => r.ok ? r.json() : []).catch(() => []).then(ind => {
+    ind = arr(ind).filter(x => x.grupo === grupo); if (!ind.length) return;
+    feitos.appendChild(el("div", {class:"rotulo", style:"margin-top:18px"}, "Análises já pedidas"));
+    ind.forEach((x, i) => { const lugar = el("div"); feitos.appendChild(lugar);
+      fetch(`pedidos/${x.pid}.json?v=${Date.now()}`, {cache:"no-store"}).then(r => r.json()).then(R => lugar.appendChild(resultadoPedido(R, i === 0))).catch(() => {}); });
+  });
+  blocoSugestoes(sg);
 }
 
 /* ---------------- correções pelo painel (botão Corrigir) ---------------- */
@@ -758,7 +1371,7 @@ function blocoCorrecoes(s1){
       d.onclick = () => { if (confirm("Desfazer esta correção e recalcular?")) enviaCorrecoes(feitas.filter(x => x.id !== c.id), cx, d); };
       it.append(d); b.append(it, cx); });
   }
-  if (H.tem_planilha_corrigida) b.appendChild(el("p", {style:"margin-top:10px"}, `<a href="planilha_corrigida.xlsx" download><button>Baixar a planilha corrigida</button></a> <span class="pergunta">registros como ficaram, com a coluna “Alterado no Herpetodados” e a lista das correções.</span>`));
+  if (H.tem_planilha_corrigida) b.appendChild(el("p", {style:"margin-top:10px"}, `<a href="planilha_corrigida.xlsx" download><button>Baixar a planilha corrigida</button></a> <span class="pergunta">registros como ficaram, com a coluna “Alterado no Quadrante” e a lista das correções.</span>`));
   s1.appendChild(b);
 }
 // tabela automática: mostra as colunas de um data.frame do R com nomes legíveis (números com vírgula)
@@ -797,15 +1410,15 @@ function tabela(alvo, id, titulo, cols, linhas, alto){
 // abas numa cápsula com pílula elástica (19/11/2026): ao clicar, a ponta da frente da pílula anda primeiro e a de trás alcança; depois o conteúdo troca
 function abas(alvo, opcoes, valor, ao){
   const a = el("div", {class:"abas naoimprime"}), pil = el("span", {class:"pilula-abas", "aria-hidden":"true"}); a.appendChild(pil);
-  const bts = [], SAI = "cubic-bezier(.55,0,.25,1)", CHEGA = "cubic-bezier(.3,1.25,.4,1)";
+  const bts = [], SAI = "cubic-bezier(.77,0,.175,1)", CHEGA = "cubic-bezier(.77,0,.175,1)";
   const poe = b => { pil.style.left = b.offsetLeft + "px"; pil.style.width = b.offsetWidth + "px"; pil.style.top = b.offsetTop + "px"; pil.style.height = b.offsetHeight + "px"; };
   const move = b => { pil.classList.add("movendo"); const esq = b.offsetLeft, dir = esq + b.offsetWidth, l = parseFloat(pil.style.left) || 0, w = parseFloat(pil.style.width) || 0, ida = esq > l;
     pil.style.top = b.offsetTop + "px"; pil.style.height = b.offsetHeight + "px";
-    pil.style.transition = ida ? `width .3s ${SAI}, left .42s ${CHEGA} .1s, top .3s ${CHEGA}` : `left .3s ${SAI}, width .42s ${CHEGA} .1s, top .3s ${CHEGA}`;
+    pil.style.transition = `left 250ms ${SAI}, width 250ms ${SAI}, top 250ms ${SAI}`;
     if (ida) { pil.style.width = (dir - l) + "px"; setTimeout(() => { pil.style.left = esq + "px"; pil.style.width = (dir - esq) + "px"; }, 16); }
     else { pil.style.left = esq + "px"; pil.style.width = (l + w - esq) + "px"; setTimeout(() => { pil.style.width = (dir - esq) + "px"; }, 16); } };
   for (const [v, tx] of opcoes){ const b = el("button", {"aria-pressed": String(v === valor)}, tx); bts.push(b);
-    b.onclick = () => { if (v === valor) return; move(b); bts.forEach(x => x.setAttribute("aria-pressed", String(x === b))); setTimeout(() => ao(v), matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 430); };
+    b.onclick = () => { if (v === valor) return; move(b); bts.forEach(x => x.setAttribute("aria-pressed", String(x === b))); ao(v); };
     a.appendChild(b); }
   alvo.appendChild(a);
   const at = bts[opcoes.findIndex(o => o[0] === valor)];
@@ -835,6 +1448,7 @@ const SECOES = [
   ["dominancia", "Dominância", "ranque das espécies"],
   ["laudo", "Para o laudo", "interesse, métodos, esforço"],
   ["campanhas", "Campanhas", "o que mudou entre campanhas"],
+  ["pedidos", "Pedir análise", "o R confere e roda"],
   ["relatorio", "Relatório", "o que você marcou"]
 ];
 function secao(id, titulo, pergunta){
@@ -850,9 +1464,9 @@ if (LID) Promise.all([fetch("/api/versao", {cache:"no-store"}).then(r => r.json(
   .then(([a, f]) => { if (a && a.codigo && (f.codigo || 0) + 1 < a.codigo) { FIG_ANTIGAS = true; avisoAntigas(); } });
 function avisoAntigas(){
   if (!FIG_ANTIGAS || document.getElementById("faixaAntigas")) return;
-  const fx = el("div", {id:"faixaAntigas", class:"aviso naoimprime", style:"margin:0 0 14px"}, `<span><span class="pill atenção">atenção</span></span><div><b>Figuras de uma versão anterior do programa</b>Algumas correções (rótulos com os pontos, títulos, cores, fundo branco) só aparecem depois de redesenhar. Leva alguns minutos.</div>`);
+  const fx = el("div", {id:"faixaAntigas", class:"aviso naoimprime", style:"margin:0 0 14px"}, `<span><span class="pill atenção">atenção</span></span><div><b>Figuras desatualizadas</b>Redesenhe para aplicar as correções de rótulos, títulos e cores (cerca de 2 min).</div>`);
   const b = el("button", {class:"acento", style:"margin-left:auto"}, "Redesenhar todas agora");
-  b.onclick = () => { b.disabled = true; b.textContent = "O R está redesenhando..."; redesenhar(null, t => { if (t.estado === "pronto") { FIG_ANTIGAS = false; fx.remove(); } else { b.disabled = false; b.textContent = "Deu erro: tentar de novo"; } }); };
+  b.onclick = () => { b.disabled = true; b.textContent = "Redesenhando"; redesenhar(null, t => { if (t.estado === "pronto") { FIG_ANTIGAS = false; fx.remove(); } else { b.disabled = false; b.textContent = "Falhou. Tentar de novo"; } }); };
   fx.appendChild(b); const m = $("#main"); if (m) m.prepend(fx);
 }
 function render(){
@@ -877,6 +1491,12 @@ function render(){
     // painel de destaque verde-sálvia com a curva de acumulação
     if (G.acumulacao){ const dz = el("div", {class:"destaque"}); s0.appendChild(dz); figuraR(dz, "acumulacao", "Curva de acumulação"); }
   }
+  // contexto do campo (19/11/2026): pede para preencher ou mostra o texto de métodos; depois, as análises sugeridas para o serviço
+  const temCtx = H.contexto_json && (H.contexto_json.servico || arr(H.contexto_json.campanhas).some(c => c.inicio || c.estacao || c.observadores));
+  if (!temCtx && LID) { const av = el("div", {class:"aviso naoimprime", style:"margin-top:14px"}, `<span><span class="pill atenção">contexto</span></span><div><b>Falta o contexto do campo</b>Datas, estação, observadores, horas de busca por ponto e tipo de serviço. Sem isso, o esforço e a comparação seca e chuva ficam de fora.</div>`);
+    const b = el("button", {class:"acento", style:"margin-left:auto"}, "Preencher o contexto"); b.onclick = vaiContexto; av.appendChild(b); s0.appendChild(av); }
+  else if (H.contexto_resumo && H.contexto_resumo.texto) s0.appendChild(el("div", {class:"resultado", style:"margin-top:14px"}, "<b>Campo</b>" + esc(H.contexto_resumo.texto)));
+  blocoSugestoes(s0);
   const lt = el("div", {class:"leitura", style:"margin-top:16px"}, H.leitura ? md(H.leitura) : "<p class='ital'>Sem leitura escrita ainda.</p>"); s0.appendChild(lt);
   if (LID){ const be = el("button", {class:"naoimprime"}, "Editar a leitura"), ta = el("textarea", {style:"min-height:320px;display:none;font-family:var(--f-mono);font-size:.85em"}), bs = el("button", {class:"forte naoimprime", style:"display:none;margin-left:8px"}, "Salvar");
     ta.value = H.leitura || ""; be.onclick = () => { const ed = ta.style.display === "none"; ta.style.display = ed ? "block" : "none"; lt.style.display = ed ? "none" : ""; bs.style.display = ed ? "inline-block" : "none"; };
@@ -885,7 +1505,7 @@ function render(){
   // ---- Planilha
   const s1 = secao("planilha", "Planilha e campo", "");
   const sub1 = store.get("herp.sub1", "conf");
-  abas(s1, [["conf","Conferência"],["campo","Sobre o campo"],["limites","Limites dos dados"]], sub1, v => { store.set("herp.sub1", v); render(); });
+  abas(s1, [["conf","Conferência"],["campo","Contexto do campo"],["limites","Limites dos dados"]], sub1, v => { store.set("herp.sub1", v); render(); });
   if (sub1 === "conf"){
     const cf = arr(H.conferencia), nErr = cf.filter(x => x.nivel === "erro").length, nAt = cf.filter(x => x.nivel === "atenção").length;
     s1.appendChild(el("p", {class:"resultado"}, nErr ? `<b>${nErr} erros</b> na planilha: corrija e envie de novo. ${nAt} pontos de atenção.` : `<b>Sem erros.</b> Os registros batem com a aba consolidada. ${nAt} pontos de atenção para conferir.`));
@@ -909,16 +1529,11 @@ function render(){
       {t:"", f:r => LID && CORRIGIVEL.has(r.tipo) ? `<button class="bcorr" data-ci="${r._i}">Corrigir</button>` : "", csv:() => ""}], cfi, true);
     s1.querySelectorAll("button.bcorr").forEach(b => b.onclick = () => formCorrecao(cf[+b.dataset.ci], fc));
   } else if (sub1 === "campo"){
-    const kC = "herp.ctx." + H.meta.planilha, ctx = H.contexto_json || store.get(kC, null) || {campo: H.contexto || "", finalidade: ""};
-    const d2 = el("div", {class:"duas"}), ta1 = el("textarea", {placeholder:"Datas, estação, chuva e lua, horário, pessoas, tempo por ponto, métodos..."}), ta2 = el("textarea", {placeholder:"Licenciamento de quê, fase (diagnóstico, monitoramento), o que comparar..."});
-    ta1.value = ctx.campo || ""; ta2.value = ctx.finalidade || "";
-    const c1 = el("div", {}, "<div class='rotulo'>Como foi o campo</div>"), c2 = el("div", {}, "<div class='rotulo'>Finalidade</div>"); c1.appendChild(ta1); c2.appendChild(ta2); d2.append(c1, c2); s1.appendChild(d2);
-    const ok = el("span", {class:"salvo"}); let tm; const salva = () => { const v = {campo:ta1.value, finalidade:ta2.value}; H.contexto_json = v; store.set(kC, v); clearTimeout(tm); tm = setTimeout(() => { if (LID) api("contexto", v).then(() => ok.textContent = "guardado"); else ok.textContent = "guardado neste navegador"; }, 700); };
-    ta1.oninput = salva; ta2.oninput = salva; s1.appendChild(ok);
+    blocoContexto(s1);
   } else for (const a of arr(H.avisos)) s1.insertAdjacentHTML("beforeend", `<div class="aviso"><span><span class="pill ${a.nivel}">${a.nivel}</span></span><div><b>${esc(a.tema)}</b>${esc(a.texto)}</div></div>`);
 
   // ---- Descritiva
-  const s2 = secao("descritiva", "Descrição da comunidade", "Sem testes estatísticos: o que foi encontrado, onde e em que quantidade.");
+  const s2 = secao("descritiva", "Descrição da comunidade", "O que foi registrado, onde e em que quantidade, sem testes estatísticos.");
   if (D){
     texto(s2, D.texto);
     const sub2 = store.get("herp.sub2", "familias");
@@ -939,10 +1554,11 @@ function render(){
         Object.values(D.categorias || {}).flatMap(arr), true); }
   }
 
+  secaoPedidos();
   if (!G.acumulacao){ montaMenu(); mostraAba(); return; }
 
   // ---- Riqueza: uma curva por vez
-  const s3 = secao("riqueza", "Quantas espécies a área tem", "Escolha a curva. Cada uma tem o seu resultado e a sua explicação.");
+  const s3 = secao("riqueza", "Riqueza estimada", "Curva de acumulação e estimadores de riqueza.");
   const CURVAS = [["acumulacao","Acumulação"],["curva_S","Observada"],["curva_chao","Chao 2"],["curva_jack1","Jackknife 1"],["curva_jack2","Jackknife 2"],["curva_boot","Bootstrap"],["curva_jack1_boot","Jack 1 + Boot + Observada"],["estimadores","Todas juntas"],["chao1_ace","Chao 1 e ACE"],["inext","iNEXT"]];
   abas(s3, CURVAS, curva, v => { curva = v; store.set("herp.curva", v); render(); });
   const TX = G.acumulacao.textos || {}, pool = arr(G.acumulacao.poolaccum), K = {curva_S:"S", curva_chao:"chao", curva_jack1:"jack1", curva_jack2:"jack2", curva_boot:"boot"};
@@ -969,7 +1585,7 @@ function render(){
       arr(G.inext.assintotico_abund).map(r => Object.assign({base:"Indivíduos"}, r)).concat(arr(G.inext.assintotico_inc).map(r => Object.assign({base:"Pontos"}, r)))); }
 
   // ---- Diversidade
-  const s4 = secao("diversidade", "Diversidade em cada ponto", "Qual ponto é mais diverso e qual é dominado por poucas espécies.");
+  const s4 = secao("diversidade", "Diversidade por ponto", "Shannon, Simpson e equitabilidade em cada ponto.");
   const sub4 = store.get("herp.sub4", "indices");
   abas(s4, [["indices","Índices por ponto"],["area","Equitabilidade da área"],["shannon","Shannon e teste de Hutcheson"]], sub4, v => { store.set("herp.sub4", v); render(); });
   if (sub4 === "indices"){
@@ -989,7 +1605,7 @@ function render(){
     tabela(s4, "hutcheson", "Teste t de Hutcheson entre pares de pontos", [{t:"Par", f:r => `${r.ponto_a} × ${r.ponto_b}`}, {t:"H′ a", f:r => nf(r.H_a, 3), num:1}, {t:"H′ b", f:r => nf(r.H_b, 3), num:1}, {t:"t", f:r => nf(r.t, 2), num:1}, {t:"gl", f:r => nf(r.gl, 0), num:1}, {t:"p (Holm)", f:r => r.p_holm < .001 ? "< 0,001" : nf(r.p_holm, 3), num:1}, {t:"Resultado", k:"diferenca"}], arr(G.hutcheson.pares), true); }
 
   // ---- Similaridade
-  const s5 = secao("similaridade", "Quanto os pontos se parecem", "Se cada ponto tem espécies próprias ou se todos repetem as mesmas.");
+  const s5 = secao("similaridade", "Similaridade entre pontos", "Quanto a composição de espécies se repete entre os pontos.");
   if (G.similaridade){
     const sub5 = store.get("herp.sub5", "pares");
     abas(s5, [["pares","Pares de pontos"],["dendro","Agrupamento"],["beta","Diversidade beta"]], sub5, v => { store.set("herp.sub5", v); render(); });
@@ -1006,7 +1622,7 @@ function render(){
   // ---- Fitofisionomias
   if (G.fitofisionomias){
     const F = G.fitofisionomias;
-    const s9 = secao("fitofisionomias", "O que cada fitofisionomia tem", "Pontos juntados pelo ambiente da aba de pontos: espécies, indivíduos e espécies só daquele ambiente.");
+    const s9 = secao("fitofisionomias", "Fitofisionomias", "Pontos agrupados pela fitofisionomia da aba Pontos: espécies, indivíduos e exclusivas.");
     const sub9 = store.get("herp.sub9", "resumo");
     abas(s9, [["resumo","Resumo"],["diversidade","Diversidade e rarefação"],["especies","Espécies e famílias"],["pares","Quanto se parecem"]], sub9, v => { store.set("herp.sub9", v); render(); });
     const colsT = [{t:"Sigla", k:"fitofisionomia"}, {t:"Fitofisionomia", k:"nome"}, {t:"Pontos", k:"pontos"}, {t:"Espécies", k:"riqueza", num:1}, {t:"Média por ponto", f:r => nf(r.riqueza_media_por_ponto, 1), num:1}, {t:"Indivíduos", k:"abundancia", num:1}, {t:"Exclusivas", k:"exclusivas", num:1}, {t:"Quais são exclusivas", f:r => `<span class="esp">${esc(r.especies_exclusivas)}</span>`, csv:r => r.especies_exclusivas}];
@@ -1028,7 +1644,7 @@ function render(){
   // ---- Para o laudo (o que os termos de referência costumam pedir)
   if (G.relatorio){
     const RF = G.relatorio;
-    const sL = secao("laudo", "O que o laudo costuma pedir", "Espécies de interesse, eficiência dos métodos, esforço amostral, campanhas e estações.");
+    const sL = secao("laudo", "Para o laudo", "Espécies de interesse, eficiência dos métodos, esforço amostral, campanhas e estações.");
     if (RF.aviso) sL.appendChild(el("div", {class:"aviso"}, `<span><span class="pill atenção">atenção</span></span><div>${esc(RF.aviso)}</div>`));
     const opL = [["interesse","Espécies de interesse"]].concat(RF.por_metodo ? [["metodo","Por método"]] : []).concat(RF.esforco ? [["esforco","Esforço"]] : [])
       .concat(arr(RF.sazonal).length ? [["sazonal","Campanhas e estações"]] : []).concat(RF.ipa ? [["ipa","IPA (aves)"]] : []);
@@ -1042,14 +1658,14 @@ function render(){
   }
 
   // ---- Dominância
-  const s6 = secao("dominancia", "Quem domina e quem é raro", "Espécies da mais para a menos abundante.");
+  const s6 = secao("dominancia", "Dominância", "Espécies da mais para a menos abundante.");
   figuraR(s6, "whittaker", "Curva de dominância"); texto(s6, G.abundancia.texto);
   tabela(s6, "dominancia", "Ranque de abundância", [{t:"#", k:"posicao", num:1}, {t:"Espécie", f:r => esc(r.especie), esp:1}, {t:"Indivíduos", k:"n", num:1}, {t:"Relativa", f:r => pc(r.relativa, 1), num:1}, {t:"Pontos", k:"pontos", num:1}, {t:"Constância", k:"constancia"}], arr(G.abundancia.tabela), true);
 
   // ---- Campanhas (só com 2 ou mais)
   if (G.campanhas){
     const C = G.campanhas, cods = arr(C.resumo).map(c => c.codigo);
-    const s8 = secao("campanhas", "O que mudou entre as campanhas", "Cada ponto em cada campanha conta como uma unidade amostral (" + arr(C.resumo).map(c => `<b>${esc(c.codigo)}</b> ${esc(c.campanha)}`).join(" · ") + ").");
+    const s8 = secao("campanhas", "Comparação entre campanhas", "Cada ponto em cada campanha conta como uma unidade amostral (" + arr(C.resumo).map(c => `<b>${esc(c.codigo)}</b> ${esc(c.campanha)}`).join(" · ") + ").");
     const sub8 = store.get("herp.sub8", "composicao");
     abas(s8, [["composicao","Espécies em comum"],["pontos","Cada ponto"],["especies","Lista por campanha"],["nmds","Ordenação e PERMANOVA"]], sub8, v => { store.set("herp.sub8", v); render(); });
     if (sub8 === "composicao"){ figuraR(s8, "campanhas", "Comparação entre campanhas"); texto(s8, C.texto);
@@ -1076,7 +1692,7 @@ function render(){
   });
   if (SEL.length){
     const b = el("button", {class:"acento naoimprime", style:"margin-top:14px"}, "Montar a pasta do relatório"), log = el("div", {class:"tarefa"});
-    b.onclick = () => { if (!LID) { alert("Abra pelo Herpetodados para montar a pasta."); return; } api("relatorio", SEL).then(r => { log.style.display = "block"; log.textContent = r.erro || `Pronto: ${r.figuras} figuras e ${r.tabelas} tabelas em\n${r.pasta}`; if (!r.erro) api("pasta?sub=relatorio"); }); };
+    b.onclick = () => { if (!LID) { alert("Abra pelo Quadrante para montar a pasta."); return; } api("relatorio", SEL).then(r => { log.style.display = "block"; log.textContent = r.erro || `Pronto: ${r.figuras} figuras e ${r.tabelas} tabelas em\n${r.pasta}`; if (!r.erro) api("pasta?sub=relatorio"); }); };
     s7.append(b, log);
     s7.appendChild(el("p", {class:"pergunta", style:"margin-top:10px"}, "A pasta <span class='mono'>relatorio</span> fica separada: figuras numeradas (Fig01, Fig02...) e tabelas numeradas em Excel, prontas para colar no laudo."));
   }
@@ -1121,6 +1737,8 @@ function carregaTitulos(){ const k = $("#selFig").value, t = E.titulos[k] || {};
 function montaEditor(){
   $("#btEditor").onclick = () => $("#editor").classList.toggle("aberto"); $("#fechaEditor").onclick = () => $("#editor").classList.remove("aberto");
   $("#btTema").onclick = () => { E.painel = E.painel === "escuro" ? "claro" : "escuro"; salvaE(); render(); sincroniza(); };
+  $("#btContexto").onclick = () => { $("#menu").classList.remove("aberto"); vaiContexto(); };
+  montaHarmonia();
   $("#btPasta").onclick = () => { if (LID) api("pasta"); else alert("Os arquivos estão na mesma pasta deste painel."); };
   $("#abreMenu").onclick = () => $("#menu").classList.toggle("aberto");
   if (!LID) $("#marcaLink").removeAttribute("href");
@@ -1133,7 +1751,7 @@ function montaEditor(){
   const sf = $("#selFig"); for (const k in CAT) sf.appendChild(el("option", {value:k}, CAT[k].nome)); sf.onchange = carregaTitulos;
   for (const [id, c] of [["tTitulo","titulo"],["tX","x"],["tY","y"],["tNota","nota"]]) $("#" + id).onchange = ev => { const k = sf.value; E.titulos[k] = Object.assign({}, E.titulos[k], {[c]: ev.target.value}); salvaE(); };
   $("#btPadrao").onclick = () => { E = JSON.parse(JSON.stringify(PADRAO)); salvaE(); render(); sincroniza(); carregaTitulos(); };
-  $("#btAplicarR").onclick = () => { const b = $("#btAplicarR"); b.classList.remove("pulsa"); b.disabled = true; b.textContent = "O R está redesenhando...";
+  $("#btAplicarR").onclick = () => { const b = $("#btAplicarR"); b.classList.remove("pulsa"); b.disabled = true; b.textContent = "Redesenhando";
     if (!redesenhar(null, t => { b.disabled = false; b.textContent = t.estado === "pronto" ? "Pronto. Redesenhar de novo" : "Deu erro (veja acima)"; })) { b.disabled = false; b.textContent = "Redesenhar no R"; } };
   const sg = $("#selGrupo"); for (const g in H.grupos) sg.appendChild(el("option", {value:g}, g)); if (!H.grupos[grupo]) grupo = Object.keys(H.grupos)[0]; sg.value = grupo;
   sg.onchange = () => { grupo = sg.value; store.set("herp.grupo", grupo); render(); };
@@ -1144,6 +1762,7 @@ function sincroniza(){
   $("#selLegenda").value = E.legenda; $("#ckFaixa").checked = E.faixa; $("#ckGrade").checked = E.grade; $("#ckTitulo").checked = E.mostrar_titulo; $("#nLarg").value = E.largura; $("#nAlt").value = E.altura; $("#selDpi").value = String(E.dpi);
   $("#segTema").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === E.tema)));
   $("#segPainel").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === E.painel)));
+  montaGaleria();
   const cx = $("#cores"); cx.innerHTML = ""; cores().forEach((c, i) => { const inp = el("input", {type:"color", value:c}); inp.onchange = () => { E.cores = cores().slice(); E.cores[i] = inp.value; E.paleta = "livre"; salvaE(); sincroniza(); avisoTopo("Cor guardada. Clique em \"Redesenhar no R\" para aplicar em todas as figuras.", "ok"); $("#btAplicarR").classList.add("pulsa"); }; cx.appendChild(inp); });
 }
 const iniciar = () => { montaEditor(); render(); sincroniza(); };

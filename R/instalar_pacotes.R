@@ -1,4 +1,4 @@
-# Instala os pacotes do Herpetodados na pasta r-pacotes do programa (versões travadas por data do CRAN).
+# Instala os pacotes do Quadrante na pasta r-pacotes do programa (versões travadas por data do CRAN).
 # Uso: Rscript R/instalar_pacotes.R   (o instalar.cmd faz isso sozinho)
 aqui <- dirname(normalizePath(sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE)[1])))
 lib  <- if (nzchar(Sys.getenv("HERP_RLIB"))) Sys.getenv("HERP_RLIB") else file.path(dirname(aqui), "r-pacotes")

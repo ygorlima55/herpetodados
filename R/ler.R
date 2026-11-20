@@ -1,4 +1,4 @@
-# Herpetodados: leitura da planilha de campo e conversão para tabela longa.
+# Quadrante: leitura da planilha de campo e conversão para tabela longa.
 # Formato aceito: aba de registros (um registro por linha) com colunas Ponto, Espécie e
 # contagem (Total ou Abundância). Família, Grupo/Classe, VO, AV e Campanha são opcionais.
 
@@ -71,7 +71,9 @@ grupo_padrao <- function(x) {
 
 ler_planilha <- function(arquivo) {
   tmp <- copiar_planilha(arquivo)
-  abas <- readxl::excel_sheets(tmp)
+  abas <- tryCatch(readxl::excel_sheets(tmp), error = function(e)
+    stop("O arquivo não abre como planilha do Excel: pode estar corrompido ou ser de outro tipo com o nome terminado em .xlsx. ",
+         "Abra no Excel e salve de novo como \"Pasta de Trabalho do Excel (.xlsx)\".", call. = FALSE))
   a_bru <- abas[grepl("brut|registro", sem_acento(abas))][1]
   if (is.na(a_bru)) {
     # sem aba de registros: monta os registros a partir da consolidada (espécie x P1..Pn)
@@ -134,6 +136,8 @@ ler_planilha <- function(arquivo) {
   vazia <- (is.na(reg$especie_completa) | reg$especie_completa == "") &
            (is.na(reg$ponto_original) | reg$ponto_original == "")
   reg <- reg[!vazia, ]
+  if (!nrow(reg)) stop("A aba '", a_bru, "' não tem nenhum registro (só o cabeçalho). ",
+                       "Preencha uma linha por registro, com Ponto, Espécie e Total.", call. = FALSE)
   reg$especie <- binomio(reg$especie_completa)
   reg$genero  <- sub(" .*$", "", reg$especie)
   g <- sem_acento(ifelse(is.na(reg$grupo), "", reg$grupo))

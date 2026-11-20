@@ -1,4 +1,4 @@
-# Herpetodados: figuras da descritiva em colunas, atributos, curvas juntas, iNEXT explicado e diversidade por ponto.
+# Quadrante: figuras da descritiva em colunas, atributos, curvas juntas, iNEXT explicado e diversidade por ponto.
 # - Descritiva em colunas com rótulos: famílias, famílias em cada ponto (uma coluna por família), forma de registro.
 # - Um gráfico para cada atributo das espécies.
 # - Curva com Observada + Jackknife 1 + Bootstrap juntas.

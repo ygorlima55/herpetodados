@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title Herpetodados
+title Quadrante
 setlocal
 set "AQUI=%~dp0"
 call "%AQUI%app\acha_r.cmd"
@@ -11,7 +11,7 @@ if not defined RSCRIPT (
 set "PLANILHA=%~1"
 if "%PLANILHA%"=="" (
   echo.
-  echo  HERPETODADOS - analises de comunidade no R
+  echo  QUADRANTE - analises de comunidade no R
   echo  Arraste a planilha .xlsx para cima deste arquivo, ou cole o caminho abaixo.
   echo.
   set /p "PLANILHA=Planilha: "
@@ -23,13 +23,13 @@ if not exist "%PLANILHA%" (
 )
 echo.
 echo Rodando as analises (leva alguns minutos)...
-"%RSCRIPT%" "%AQUI%R\herpetodados.R" "%PLANILHA%"
+"%RSCRIPT%" "%AQUI%R\quadrante.R" "%PLANILHA%"
 if errorlevel 1 (
   echo.
   echo Deu erro. A mensagem acima diz onde.
   pause & exit /b 1
 )
-for %%F in ("%PLANILHA%") do set "SAIDA=%%~dpFHerpetodados_%%~nF"
+for %%F in ("%PLANILHA%") do set "SAIDA=%%~dpFQuadrante_%%~nF"
 echo.
 echo Pronto. Abrindo o painel: "%SAIDA%\painel.html"
 start "" "%SAIDA%\painel.html"

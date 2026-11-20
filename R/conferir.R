@@ -1,5 +1,28 @@
-# Herpetodados: corretor da planilha. Confere os dados antes das análises e diz onde está cada problema.
+# Quadrante: corretor da planilha. Confere os dados antes das análises e diz onde está cada problema.
 # Níveis: "erro" (muda resultado), "atenção" (pode mudar; conferir), "informação" (registro do que foi feito).
+
+# Lê uma coordenada da aba de pontos nos dois formatos usados ("-15.70° -47.80°" ou "22 K 668628.87 m E 8080967.81 m S").
+# Devolve NULL se não der para ler; senão list(problema = NA ou o motivo de ser impossível, no_brasil = TRUE/FALSE).
+ler_coordenada <- function(s) {
+  s <- gsub(",", ".", trimws(s))
+  u <- regmatches(s, regexec("^([0-9]{1,2})\\s*([A-Za-z])?\\s+([0-9.]+)\\s*m?\\s*E\\s+([0-9.]+)\\s*m?\\s*[NS]?$", s))[[1]]
+  if (length(u) == 5) {
+    z <- as.numeric(u[2]); e <- as.numeric(u[4]); n <- as.numeric(u[5])
+    if (anyNA(c(z, e, n))) return(NULL)
+    pr <- if (z < 1 || z > 60) "zona UTM fora de 1 a 60" else if (e < 100000 || e > 900000) "leste (E) fora de 100 000 a 900 000 m"
+          else if (n < 0 || n > 10000000) "norte (N/S) fora de 0 a 10 000 000 m" else NA
+    return(list(problema = pr, no_brasil = z >= 18 && z <= 25))
+  }
+  letras <- toupper(gsub("[^A-Za-z]", "", s))
+  if (grepl("[^NSEWLO]", letras)) return(NULL)
+  g <- as.numeric(regmatches(s, gregexpr("-?[0-9]+(\\.[0-9]+)?", s))[[1]])
+  if (length(g) != 2) return(NULL)
+  la <- g[1]; lo <- g[2]
+  if (grepl("S", letras) && la > 0) la <- -la
+  if (grepl("[WO]", letras) && lo > 0) lo <- -lo
+  pr <- if (abs(la) > 90) "latitude fora de -90 a 90" else if (abs(lo) > 180) "longitude fora de -180 a 180" else NA
+  list(problema = pr, no_brasil = la >= -34 && la <= 6 && lo >= -74 && lo <= -28)
+}
 
 conferir_planilha <- function(L) {
   r <- L$registros
@@ -49,6 +72,21 @@ conferir_planilha <- function(L) {
     if (all(is.na(L$pontos$esforco)))
       add("atenção", L$aba_pontos, "", "Esforço", "Não há coluna de esforço (horas de busca, nº de pessoas) por ponto.",
           "Incluir uma coluna 'Esforço (h)' na aba de pontos. Sem ela, o programa supõe esforço igual em todos os pontos.")
+    # 2b. coordenadas (19/11/2026, F05): impossível = erro; ilegível, vazia ou fora do Brasil = atenção.
+    # Só confere quando a planilha tem alguma coordenada (sem a coluna, não há o que avisar ponto a ponto).
+    co <- L$pontos$coordenadas
+    if (any(!is.na(co) & trimws(co) != "")) for (i in seq_along(co)) {
+      pt <- L$pontos$ponto[i]; s <- co[i]
+      dica <- "Use graus decimais (ex.: -15.70 -47.80) ou UTM (ex.: 22 K 668628 m E 8080967 m S)."
+      if (is.na(s) || trimws(s) == "") { add("atenção", L$aba_pontos, "", "Coordenadas", sprintf("O %s não tem coordenada.", pt),
+          paste("Preencher a coordenada; sem ela as distâncias entre pontos não são calculadas.", dica), tipo = "coordenada", ponto = pt); next }
+      k <- ler_coordenada(s)
+      if (is.null(k)) add("atenção", L$aba_pontos, "", "Coordenadas", sprintf("Não consegui ler a coordenada do %s (\"%s\").", pt, s), dica, tipo = "coordenada", ponto = pt, dados = s)
+      else if (!is.na(k$problema)) add("erro", L$aba_pontos, "", "Coordenadas", sprintf("Coordenada impossível no %s (\"%s\"): %s.", pt, s, k$problema),
+          paste("Corrigir a coordenada.", dica), tipo = "coordenada", ponto = pt, dados = s)
+      else if (!k$no_brasil) add("atenção", L$aba_pontos, "", "Coordenadas", sprintf("A coordenada do %s (\"%s\") fica fora do Brasil.", pt, s),
+          "Conferir sinal (latitude sul e longitude oeste são negativas), a ordem latitude/longitude e a zona UTM.", tipo = "coordenada", ponto = pt, dados = s)
+    }
   }
   # 3. nomes
   for (i in seq_len(nrow(r))) {

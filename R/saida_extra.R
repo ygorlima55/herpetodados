@@ -1,4 +1,4 @@
-# Herpetodados: figuras da descritiva, curvas de cada estimador (com valores), dominância com nomes,
+# Quadrante: figuras da descritiva, curvas de cada estimador (com valores), dominância com nomes,
 # similaridade didática, diversidade beta e Shannon com IC. Ligadas ao catálogo de saida.R.
 
 catalogo_extra <- function() c(catalogo_camp(), catalogo_novas(), catalogo_fito(), list(

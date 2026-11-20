@@ -1,4 +1,4 @@
-# Herpetodados: matrizes e análises de comunidade (vegan + iNEXT).
+# Quadrante: matrizes e análises de comunidade (vegan + iNEXT).
 # Cada análise devolve dados para gráfico/tabela e um texto com: o que mede, resultado, interpretação e limites.
 
 fmt <- function(x, d = 2) formatC(x, format = "f", digits = d, decimal.mark = ",")

@@ -1,4 +1,4 @@
-# Herpetodados: figuras feitas no R (vegan, iNEXT, ggplot2 e gráficos base do R), tabelas em Excel e distâncias.
+# Quadrante: figuras feitas no R (vegan, iNEXT, ggplot2 e gráficos base do R), tabelas em Excel e distâncias.
 # Cada figura tem várias "formas" (catálogo abaixo). A forma escolhida, o tema, as cores, as letras e os títulos
 # vêm do estilo.json da pasta do levantamento, editado no painel.
 
@@ -11,7 +11,7 @@ estilo_padrao <- list(
   # explicativas (mostrar_nota), JPEG de alta resolução ao lado de cada PNG (dpi_jpeg).
   tema_r = "salvia", fonte = 11, familia = "Times New Roman", familia_titulo = "Times New Roman",
   tema = "claro", faixa = TRUE, grade = FALSE, linha = 1, ponto = 2.5,
-  legenda = "top", largura = 7, altura = 4.5, dpi = 300, dpi_jpeg = 600, mostrar_nota = FALSE, mostrar_titulo = TRUE, mostrar_grupo = FALSE, cores_fig = list(),
+  legenda = "top", largura = 7, altura = 4.5, dpi = 300, dpi_jpeg = 600, mostrar_nota = FALSE, mostrar_titulo = TRUE, mostrar_grupo = FALSE, cores_fig = list(), ajustes = list(),
   titulos = list(), formas = list()
 )
 
@@ -51,6 +51,7 @@ ler_estilo <- function(caminhos) {
   if (is.null(e$titulos) || !is.list(e$titulos)) e$titulos <- list()
   if (is.null(e$formas) || !is.list(e$formas)) e$formas <- list()
   if (is.null(e$cores_fig) || !is.list(e$cores_fig)) e$cores_fig <- list()
+  if (is.null(e$ajustes) || !is.list(e$ajustes)) e$ajustes <- list()
   e
 }
 
@@ -194,9 +195,11 @@ desenhar <- function(chave, forma, G, O, e, arq, w, h, dpi) {
   tp <- if (.Platform$OS.type == "windows") "windows" else "cairo"
   arq_jpg <- if (basename(dirname(arq)) == "figuras" && (e$dpi_jpeg %||% 0) > 0) sub("\\.png$", ".jpg", arq) else NULL
   gg <- function(p, ww = w, hh = h) {
+    # a legenda original vai para o painel (trocar cor, nome ou tirar um item); depois entram os ajustes pedidos
+    if (!is.null(arq_jpg)) legenda_cores(p, e$paleta, sub("\\.png$", ".cores.json", arq))
+    if (!is.null(arq_jpg)) p <- ajustar_fig(p, e$ajustes[[chave]])
     ggplot2::ggsave(arq, p, width = ww, height = hh, dpi = dpi, bg = k$fundo, device = "png", type = tp)
     if (!is.null(arq_jpg)) ggplot2::ggsave(arq_jpg, p, width = ww, height = hh, dpi = e$dpi_jpeg, bg = k$fundo, device = "jpeg", type = tp, quality = 100)
-    if (!is.null(arq_jpg)) legenda_cores(p, e$paleta, sub("\\.png$", ".cores.json", arq))
     invisible(arq)
   }
   base <- function(fun) {
@@ -418,7 +421,7 @@ pode_figura <- function(G) !isTRUE(G$insuficiente) && G$riqueza >= 3 && G$n_pont
 # versão do código das figuras = data (segundos) do arquivo .R mais novo da pasta R/ do programa
 versao_codigo <- function() {
   d <- if (exists("aqui", envir = globalenv())) get("aqui", envir = globalenv()) else "R"
-  fs <- list.files(d, "^(saida.*|fitofisionomias|campanhas|figuras)\\.R$", full.names = TRUE)   # só os arquivos que desenham figuras
+  fs <- list.files(d, "^(saida.*|fitofisionomias|campanhas|figuras|ajustes_fig)\\.R$", full.names = TRUE)   # só os arquivos que desenham figuras
   if (!length(fs)) return(0)
   as.numeric(max(file.mtime(fs), na.rm = TRUE))
 }

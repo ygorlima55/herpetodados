@@ -1,4 +1,4 @@
-# Herpetodados: análises que os relatórios de fauna para licenciamento pedem e que faltavam (levantamento de 17/11/2026,
+# Quadrante: análises que os relatórios de fauna para licenciamento pedem e que faltavam (levantamento de 17/11/2026,
 # 25 fontes: IN IBAMA 146/2007, TRs de SEMAD-GO, IEMA-ES, SEMA-MT, IMASUL, IAT-PR, IBRAM-DF, EIAs/PBAs e artigos de inventário).
 #   1. estimadores por abundância (Chao 1 e ACE) com a porcentagem da riqueza já amostrada;
 #   2. riqueza, abundância e espécies exclusivas por MÉTODO de registro (IN 146: "eficiência amostral");

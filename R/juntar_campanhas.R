@@ -1,4 +1,4 @@
-# Herpetodados: junta planilhas de campanhas diferentes numa planilha nova, com a coluna Campanha.
+# Quadrante: junta planilhas de campanhas diferentes numa planilha nova, com a coluna Campanha.
 # Uso: Rscript juntar_campanhas.R <saida.xlsx> "<nome campanha 1>" <planilha1.xlsx> "<nome campanha 2>" <planilha2.xlsx> [...]
 # - Planilha com aba de registros (brutos): os registros entram como estão.
 # - Planilha só com a aba consolidada (espécie x P1..Pn): cada célula com número vira um registro (Total),
@@ -77,7 +77,7 @@ linhas[[length(linhas) + 1]] <- c("Total", "", as.character(tot), as.character(s
 larg <- max(lengths(linhas)); cons <- as.data.frame(do.call(rbind, lapply(linhas, function(x) c(x, rep("", larg - length(x))))), stringsAsFactors = FALSE)
 
 reg$esp <- NULL
-notas <- c(paste("Planilha montada pelo Herpetodados (juntar_campanhas.R) em", format(Sys.time(), "%d/%m/%Y %H:%M")), notas,
+notas <- c(paste("Planilha montada pelo Quadrante (juntar_campanhas.R) em", format(Sys.time(), "%d/%m/%Y %H:%M")), notas,
            "A aba 'Dados consolidados' desta planilha SOMA as campanhas por ponto; para os números de cada campanha, ver a coluna Campanha em 'Dados brutos (campo)'.",
            "As planilhas originais não foram alteradas.")
 # primeira linha vira cabeçalho (nomes vazios repetidos viram espaços, para o Excel aceitar)

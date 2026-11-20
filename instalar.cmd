@@ -1,10 +1,10 @@
 @echo off
 chcp 65001 >nul
-title Herpetodados - instalacao
+title Quadrante - instalacao
 setlocal
 set "AQUI=%~dp0"
 echo.
-echo  HERPETODADOS - instalacao
+echo  QUADRANTE - instalacao
 echo  ==========================
 echo  Precisa de: R (4.3 ou mais novo), Python 3 e os pacotes do R (baixados agora, ~150 MB).
 echo  Nada e enviado para fora do seu computador; as planilhas ficam na pasta "levantamentos".
@@ -41,10 +41,10 @@ echo [ 50%%] Instalando os pacotes do R na pasta r-pacotes (so na primeira vez; 
 if errorlevel 1 ( echo. & echo Os pacotes nao instalaram. Confira a internet e rode de novo. & pause & exit /b 1 )
 
 echo.
-echo [ 98%%] Criando o atalho Herpetodados na area de trabalho...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$d=[Environment]::GetFolderPath('Desktop'); $w=New-Object -ComObject WScript.Shell; $s=$w.CreateShortcut((Join-Path $d 'Herpetodados.lnk')); $s.TargetPath='%AQUI%abrir_herpetodados.cmd'; $s.WorkingDirectory='%AQUI%'; $s.IconLocation='%AQUI%identidade\herpetodados.ico,0'; $s.WindowStyle=7; $s.Description='Herpetodados'; $s.Save()" >nul 2>nul
-echo [100%%] Tudo pronto. Para usar: dois cliques no atalho "Herpetodados" da area de trabalho
-echo        (ou em "abrir_herpetodados.cmd"). Ele abre numa janela propria; ao fechar, encerra sozinho.
+echo [ 98%%] Criando o atalho Quadrante na area de trabalho...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$d=[Environment]::GetFolderPath('Desktop'); $w=New-Object -ComObject WScript.Shell; $s=$w.CreateShortcut((Join-Path $d 'Quadrante.lnk')); $s.TargetPath='%AQUI%abrir_quadrante.cmd'; $s.WorkingDirectory='%AQUI%'; $s.IconLocation='%AQUI%identidade\quadrante.ico,0'; $s.WindowStyle=7; $s.Description='Quadrante'; $s.Save()" >nul 2>nul
+echo [100%%] Tudo pronto. Para usar: dois cliques no atalho "Quadrante" da area de trabalho
+echo        (ou em "abrir_quadrante.cmd"). Ele abre numa janela propria; ao fechar, encerra sozinho.
 echo Para testar, solte a planilha da pasta "exemplo" na pagina que abrir.
 pause
 exit /b 0

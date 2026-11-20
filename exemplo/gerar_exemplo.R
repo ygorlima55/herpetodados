@@ -1,4 +1,4 @@
-# Gera a planilha de EXEMPLO FICTÍCIO do Herpetodados (exemplo/planilha_exemplo_ficticia.xlsx).
+# Gera a planilha de EXEMPLO FICTÍCIO do Quadrante (exemplo/planilha_exemplo_ficticia.xlsx).
 # Os nomes das espécies são reais, mas pontos, coordenadas e contagens são inventados só para testar o programa.
 # Uso: Rscript exemplo/gerar_exemplo.R
 local({ raiz <- dirname(dirname(normalizePath(sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE)[1]))))
@@ -56,7 +56,7 @@ for (i in seq_len(nrow(pontos))) for (j in seq_len(nrow(esp))) {
 }
 reg <- do.call(rbind, reg)
 leia <- data.frame(`EXEMPLO FICTÍCIO` = c(
-  "Esta planilha é só para testar o Herpetodados.",
+  "Esta planilha é só para testar o Quadrante.",
   "Os nomes das espécies são reais, mas pontos, coordenadas, fitofisionomias e contagens são INVENTADOS.",
   "Não use estes números em nenhum relatório.",
   "Siglas das fitofisionomias: MG = Mata de Galeria; VR = Vereda; CE = Cerrado sentido restrito; AA = Área antropizada.",

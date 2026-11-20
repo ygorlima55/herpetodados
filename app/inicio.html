@@ -2,8 +2,8 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Herpetodados</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' rx='13' fill='%23161716'/%3E%3Cpath d='M8 34 C 12 19, 18 14, 36 12.5' fill='none' stroke='%23b9d7a8' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='28.5' cy='13.6' r='5' fill='%23b9d7a8'/%3E%3C/svg%3E">
+<title>Quadrante</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' fill='%232a2620'/%3E%3Crect x='6' y='6' width='16' height='16' fill='%23b5552c'/%3E%3Crect x='6' y='6' width='32' height='32' fill='none' stroke='%23e9dfc8' stroke-width='2.4'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="/identidade/prancha.css">
 <style>
 *{box-sizing:border-box}
@@ -64,7 +64,7 @@ details.ajuda summary{cursor:pointer;color:var(--acento-2);font-size:.95em;margi
 .arvore{font:13px/1.6 var(--f-mono);background:var(--papel);border:1px solid var(--fio);padding:12px 16px;white-space:pre;overflow:auto}
 @media (max-width:980px){.menu{display:none}main{margin:0;padding:16px}.passos,.formato,.guia{grid-template-columns:1fr}}
 
-/* ===== Herpetodados · Direção A "Sálvia" (17/11/2026) =====
+/* ===== Quadrante · Direção A "Sálvia" (17/11/2026) =====
    Referências: painel de cafeteira da Orbix (fundo cinza quente, cartões brancos, faixa de indicadores, destaque verde-sálvia,
    botões pretos em pílula) e menu "nido" da Felvra (vidro fosco, valor de cada item à direita, ativo em pílula preta com círculo verde).
    Este bloco substitui a Direção C (cópia em versoes/direcao-c-sintese-2026-11-17). Letras do Windows, para funcionar sem internet. */
@@ -149,27 +149,182 @@ details.ajuda summary{color:var(--acento)}
 .barra.com-esfera .info,.barra.com-esfera .info *{color:rgba(255,255,255,.78)!important}
 .barra.com-esfera.terminou{background:transparent;color:inherit}.barra.com-esfera.terminou canvas{display:none}
 .barra.com-esfera.terminou{grid-template-columns:minmax(0,1fr)}.barra.com-esfera.terminou .info,.barra.com-esfera.terminou .info *{color:inherit!important}
+
+/* >>> quadrante.css >>> */
+/* ===== Quadrante · identidade visual (escolhida em 19/11/2026, prévia identidade/propostas-2026-11-19/identidades.html, direção B) =====
+   Parcela de campo em quadrantes, papel quadriculado de caderno de campo, títulos em letra de livro técnico (Sitka),
+   números em Bahnschrift, terracota como cor de destaque. Substitui o bloco do vidro (19/11). Fica por cima da base Sálvia.
+   20/11/2026 (manhã): pedido: TIRAR a aparência de caderno (papel quadriculado, linhas, letra de livro) e voltar
+   com o orbe de partículas, remodelado. Fica: marca Quadrante, terracota, vidro, lente, botões em pílula.
+   20/11/2026: pedido: juntar com o jeito Apple: menu de vidro com seleção em lente, abas em botão segmentado,
+   cartões arredondados com sombra suave, botões em pílula e a tela de análise em vidro fosco.
+   Edite AQUI e rode: python -I identidade/aplica_identidade.py
+   Movimento pelas regras de Emil Kowalski (lidas, não instaladas): ease-out (.23,1,.32,1) para entrar e sair,
+   ease-in-out (.77,0,.175,1) para o que se move; menu e abas até 250 ms; aperto de botão scale .97 em 160 ms. */
+/* base limpa, sem papel nem quadriculado: cinza claro neutro, cartões brancos, letra do sistema; terracota como destaque */
+:root{
+  color-scheme: light;
+  --papel:#f2f2f0; --papel-2:#ebebe8; --papel-3:#e3e3df; --cartao:#ffffff; --fig:#ffffff;
+  --tinta:#1d1d1f; --tinta-2:#62625f; --tinta-3:#8e8e8a; --fio:#dcdcd7; --fio-2:#ececea; --linha:#dcdcd7;
+  --acento:#b5552c; --acento-2:#2f6e86; --salvia:#5f7a3a; --salvia-2:#c9962f; --preto:#1d1d1f; --sobre-preto:#ffffff;
+  --vidro:#ebebe8; --vidro-borda:#dcdcd7; --vidro-brilho:#ffffff;
+  --sombra:0 1px 0 rgba(0,0,0,.03);
+  --f-titulo:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
+  --f-leitura:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
+  --f-texto:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
+  --f-num:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;
+  --f-mono:"Cascadia Mono",Consolas,monospace;
+  --ease-out:cubic-bezier(.23,1,.32,1); --ease-in-out:cubic-bezier(.77,0,.175,1);
+  --menu-w:264px;
+  --raio:14px; --raio-p:18px; --lente:#ffffff; --trilho:rgba(118,118,128,.12);
+  --sombra-c:0 1px 2px rgba(0,0,0,.05),0 8px 24px -14px rgba(0,0,0,.22);
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --papel:#0f0f10; --papel-2:#18181a; --papel-3:#232326; --cartao:#1c1c1e; --fig:#ffffff;
+  --tinta:#f5f5f7; --tinta-2:#a1a1a6; --tinta-3:#77777c; --fio:#2f2f33; --fio-2:#262629; --linha:#2f2f33;
+  --acento:#e07a4c; --acento-2:#6fb0c9; --preto:#f5f5f7; --sobre-preto:#111;
+  --vidro:#18181a; --vidro-borda:#2f2f33; --vidro-brilho:#1c1c1e;
+  --lente:#3a3a3d; --trilho:rgba(255,255,255,.08); --sombra-c:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.8);
+}
+html{background:var(--papel)}
+/* fundo liso com duas manchas suaves de cor, para o vidro ter o que mostrar (sem linhas) */
+body{font-family:var(--f-texto);-webkit-font-smoothing:antialiased;background:
+  radial-gradient(44vw 40vw at 6% 0%, rgba(181,85,44,.10), transparent 70%),
+  radial-gradient(40vw 36vw at 96% 8%, rgba(47,110,134,.10), transparent 70%),
+  var(--papel)!important;background-attachment:fixed!important}
+:root[data-theme="dark"] body{background:
+  radial-gradient(44vw 40vw at 6% 0%, rgba(224,122,76,.12), transparent 70%),
+  radial-gradient(40vw 36vw at 96% 8%, rgba(111,176,201,.10), transparent 70%),
+  var(--papel)!important}
+body::before,.formulas,.fundo-formulas{display:none!important}
+
+h1,h2,.prancha h2,.menu .marca b,.menu .nomep,.relitem .n{font-family:var(--f-titulo)!important;font-weight:700!important;letter-spacing:-.022em}
+.prancha h2{font-size:1.9em;line-height:1.1}
+h1{font-size:2.1em;line-height:1.08}
+.prancha .pergunta,.lead{color:var(--tinta-2)}
+.numeros .v,.passos b,.pc,table td.num,.num{font-family:var(--f-num)!important;font-variant-numeric:tabular-nums}
+.numeros .v{font-weight:600!important;letter-spacing:-.02em}
+.rotulo{font-family:var(--f-texto);letter-spacing:.03em;text-transform:uppercase;font-size:.72em;color:var(--tinta-3)}
+
+/* menu de vidro encostado na lateral */
+.menu{left:0!important;top:0!important;bottom:0!important;width:var(--menu-w)!important;border-radius:0!important;background:color-mix(in srgb,var(--papel-2) 72%,transparent)!important;
+  border:0!important;border-right:1px solid var(--fio)!important;box-shadow:none!important;backdrop-filter:blur(24px) saturate(1.6)!important;-webkit-backdrop-filter:blur(24px) saturate(1.6)!important}
+main{margin-left:calc(var(--menu-w) + 28px)!important}
+.menu .marca svg,.menu .logo svg{border-radius:0}
+.menu .lev select,.menu select{border-radius:9px!important;background:var(--cartao)!important;border:1px solid var(--fio)!important}
+.menu nav::before,.menu nav .feito,.menu nav .marcador::before{display:none!important}
+.menu nav{padding-left:8px!important;padding-right:8px!important}
+.menu nav .marcador{left:8px!important;right:8px!important;border-radius:10px!important;background:var(--lente)!important;box-shadow:0 1px 2px rgba(42,38,32,.08),0 4px 12px -6px rgba(42,38,32,.3)!important}
+.menu nav .marcador.pronta{transition:transform 250ms var(--ease-in-out),height 250ms var(--ease-in-out)!important}
+.menu nav a,.menu a:not(.marca){border-radius:10px!important;padding:7px 12px 7px 10px!important;margin:1px 0!important;box-shadow:none!important}
+.menu nav a:hover,.menu a:not(.marca):hover{background:rgba(42,38,32,.04)!important}
+.menu nav a .n,.menu a:not(.marca) .n{width:auto!important;height:auto!important;border:0!important;background:none!important;border-radius:0!important;
+  font:500 .8em var(--f-num)!important;color:var(--tinta-3)!important;box-shadow:none!important}
+.menu nav a.ativo,.menu a:not(.marca).ativo{background:transparent!important;color:var(--tinta)!important;font-weight:600}
+.menu a:not(.marca).ativo{background:var(--lente)!important;box-shadow:0 1px 2px rgba(42,38,32,.08),0 4px 12px -6px rgba(42,38,32,.3)!important}
+.menu nav a.ativo .n,.menu a:not(.marca).ativo .n{color:var(--acento)!important;background:none!important}
+.menu nav a.ativo .val{color:var(--tinta-2)!important}
+.menu .acoes button,.menu .tema{border-radius:12px!important;background:var(--cartao)!important;border:1px solid var(--fio)!important}
+
+/* seções e cartões: papel liso com fio fino, cantos quase retos */
+section.prancha,#inserir,#levantamentos,#guia,#arquivos,main > section{background:color-mix(in srgb,var(--cartao) 88%,transparent)!important;border:1px solid var(--fio)!important;border-radius:var(--raio-p)!important;box-shadow:var(--sombra-c)!important;backdrop-filter:blur(10px)!important}
+.figr,.tabbox,.leitura,.numeros > div,.numeros > div:last-child,.corr,.corrlista,.edtit,#lista,.passos div,.guia div,.solta,.explica div,.arvore{
+  background:var(--cartao)!important;border:1px solid var(--fio)!important;border-radius:var(--raio)!important;box-shadow:none!important}
+.prancha .figr,.prancha .tabbox,.prancha .numeros > div{background:var(--papel)!important}
+.figr .quadro{background:var(--fig);border:1px solid var(--fio-2);border-radius:10px!important;overflow:hidden}
+.destaque{background:var(--tinta)!important;color:var(--papel)!important;border-radius:var(--raio-p)!important;box-shadow:var(--sombra-c)!important}
+.destaque .figr{background:transparent!important;border:0!important}
+.destaque .figr .topo .tit{color:var(--papel)!important}
+.destaque .figr .topo .acs button,.destaque .rel{background:var(--papel)!important;color:var(--tinta)!important;border-color:transparent!important}
+.resultado,.como{background:var(--cartao)!important;border:0!important;border-left:3px solid var(--acento)!important;border-radius:4px var(--raio) var(--raio) 4px!important}
+.resultado b{color:var(--acento)}
+.numeros .v.ac,.numeros .ac .v{color:var(--acento)}
+.solta{border:1.5px dashed var(--tinta-3)!important}
+.solta.sobre{background:var(--papel-3)!important;border-color:var(--acento)!important}
+
+/* abas em botão segmentado (jeito Apple): trilho cinza quente e lente branca que desliza */
+.abas,.seg{background:var(--trilho)!important;border:0!important;border-radius:11px!important;padding:2px!important;gap:2px!important;box-shadow:none!important;backdrop-filter:none!important}
+.abas .pilula-abas{display:block!important;border-radius:9px!important;background:var(--lente)!important;box-shadow:0 1px 2px rgba(42,38,32,.1),0 3px 8px -2px rgba(42,38,32,.22)!important}
+.abas button,.seg button{background:transparent!important;border:0!important;border-radius:9px!important;padding:5px 13px!important;box-shadow:none!important;color:var(--tinta-2)!important;transition:color 150ms ease!important}
+.abas button[aria-pressed="true"],.seg button[aria-pressed="true"]{color:var(--tinta)!important;font-weight:600}
+.abas:not(:has(.pilula-abas.pronta)) button[aria-pressed="true"],.seg button[aria-pressed="true"]{background:var(--lente)!important;box-shadow:0 1px 2px rgba(42,38,32,.1)!important}
+
+/* botões em pílula; o principal em grafite */
+button,select,input[type=text],input[type=number]{border-radius:999px!important}
+textarea{border-radius:12px!important}
+button,select,input[type=text],input[type=number],textarea{border:1px solid var(--fio);background:var(--cartao);color:var(--tinta);box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;
+  transition:transform 160ms var(--ease-out),border-color 150ms ease}
+button:active{transform:scale(.97)}
+@media (hover:hover) and (pointer:fine){button:hover{border-color:var(--tinta-3)}}
+button.forte,button.acento,button.bcorr,.abrir,#escolher{background:var(--tinta)!important;color:var(--papel)!important;border-color:var(--tinta)!important;box-shadow:none!important}
+.figr .topo .acs button,.figr .topo .acs a button,.rel,table.lev .acs button:not(.abrir){background:var(--cartao)!important;border-color:var(--fio)!important}
+.rel.on{background:var(--acento)!important;color:#fff!important;border-color:var(--acento)!important}
+.pill{border-radius:999px!important}
+
+/* tabelas de relatório */
+th{background:transparent!important;color:var(--tinta-2);font:600 .78em var(--f-texto);text-transform:uppercase;letter-spacing:.04em;border-bottom:1.5px solid var(--tinta)!important}
+td{border-bottom:1px solid var(--fio-2)}
+tbody tr:hover td{background:rgba(181,85,44,.05)}
+
+aside.editor{border-radius:0!important;background:color-mix(in srgb,var(--papel-2) 80%,transparent)!important;border:0!important;border-left:1px solid var(--fio)!important;top:0!important;right:0!important;bottom:0!important;box-shadow:-12px 0 30px -20px rgba(0,0,0,.3)!important;backdrop-filter:blur(24px) saturate(1.5)!important;transition:transform 250ms var(--ease-out)!important}
+#tip{border-radius:8px!important;background:var(--tinta)!important;color:var(--papel)!important;transition:opacity 125ms var(--ease-out)!important}
+.tarefa,.log{border-radius:10px!important;background:var(--papel-2)!important;border-left:2px solid var(--fio)!important}
+
+/* barra pequena de andamento (fica no lugar quando a análise sai da tela cheia) */
+.barra.quad{display:none;margin:12px 0 4px}
+.barra.quad .info{display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:5px}
+.barra.quad .et{color:var(--tinta-2)}
+.barra.quad .pc{font-family:var(--f-num);color:var(--acento)}
+.barra.quad .trilho{height:6px!important;background:var(--fio)!important;border:0!important;border-radius:999px!important}
+.barra.quad .enche{height:100%;background:var(--acento)!important;border-radius:999px!important;transition:width 400ms linear}
+.barra.quad .reabre{font-size:12px;padding:2px 8px;margin-left:8px}
+
+/* análise em andamento: orbe de partículas sobre vidro escuro, cobrindo a área de conteúdo (o menu fica livre) */
+#analiseQuad{position:fixed;top:14px;right:14px;bottom:14px;left:calc(var(--menu-w) + 14px);z-index:50;display:none;grid-template-rows:auto 1fr auto;gap:10px;padding:26px 32px;border-radius:24px;
+  background:rgba(14,14,15,.86);backdrop-filter:blur(26px) saturate(1.4);-webkit-backdrop-filter:blur(26px) saturate(1.4);border:1px solid rgba(255,255,255,.08);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 30px 80px -30px rgba(0,0,0,.6);color:#f5f5f7;opacity:0;transition:opacity 250ms var(--ease-out)}
+#analiseQuad.on{display:grid}
+#analiseQuad.visivel{opacity:1}
+#analiseQuad .cabq{display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
+#analiseQuad .rotq{font:600 11px var(--f-texto);letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.45)}
+#analiseQuad h4{font:700 26px/1.15 var(--f-titulo);letter-spacing:-.02em;color:#fff;margin-top:4px}
+#analiseQuad .etq{font:15px var(--f-texto);color:rgba(255,255,255,.65);margin-top:2px;min-height:1.4em}
+#analiseQuad .pcq{font:600 46px/1 var(--f-num);color:#f19a6d;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+#analiseQuad canvas{width:100%;height:100%;min-height:260px;display:block}
+#analiseQuad .peq{display:flex;justify-content:space-between;align-items:center;gap:16px;font:12.5px var(--f-texto);color:rgba(255,255,255,.5)}
+#analiseQuad .peq button{font-size:13px;background:rgba(255,255,255,.1)!important;color:#fff!important;border:1px solid rgba(255,255,255,.14)!important}
+@media (max-width:980px){#analiseQuad{left:8px;top:8px;right:8px;bottom:8px;padding:18px}main{margin-left:0!important}.menu{width:280px!important}}
+
+/* figura redesenhando: orbe pequeno */
+.figr .quadro .aviso-r{background:rgba(14,14,15,.72)!important;color:#fff!important;backdrop-filter:blur(6px)}
+
+.figr .quadro .aviso-r canvas{width:130px!important;height:130px!important}
+
+@media (prefers-reduced-motion:reduce){button,.menu nav .marcador,aside.editor,#analiseQuad,.abas .pilula-abas{transition:none!important}button:active{transform:none}}
+@media (prefers-reduced-transparency:reduce){.menu,section.prancha,main > section,aside.editor,#analiseQuad{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:var(--papel-2)!important}}
+@media print{#analiseQuad,.barra.quad{display:none!important}body{background:#fff!important}}
+/* <<< quadrante.css <<< */
 </style>
 </head>
 <body>
 <div class="formulas" aria-hidden="true"><span style="left:62%;top:8%">H′ = − Σ pᵢ ln pᵢ</span><span style="left:74%;top:46%;font-size:24px">S<sub>Chao2</sub> = S<sub>obs</sub> + Q₁² / 2Q₂</span><span style="left:44%;top:78%;font-size:24px">S<sub>jack1</sub> = S<sub>obs</sub> + Q₁ (m − 1)/m</span></div>
 <aside class="menu">
-  <div class="logo"><svg viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" rx="13" fill="#161716"/><path d="M8 34 C 12 19, 18 14, 36 12.5" fill="none" stroke="#b9d7a8" stroke-width="2.6" stroke-linecap="round"/><circle cx="28.5" cy="13.6" r="4.6" fill="#161716" stroke="#b9d7a8" stroke-width="2"/><rect x="26" y="12.7" width="5" height="1.9" rx=".95" fill="#b9d7a8"/></svg><div><div class="nomep">Herpetodados</div><div class="sub">análises de comunidade no R</div></div></div>
-  <a href="#inserir" class="ativo"><span class="n">1</span><span>Inserir planilha<small>soltar o arquivo e rodar no R</small></span></a>
-  <a href="#levantamentos"><span class="n">2</span><span>Levantamentos<small>abrir painéis já feitos</small></span></a>
-  <a href="#guia"><span class="n">3</span><span>Ajuda<small>o que faz cada parte, onde ficam os arquivos</small></span></a>
-  <div class="pe">Roda só neste computador. R 4.6.2 · vegan · iNEXT · ggplot2.<br>Para fechar o programa, feche a janela preta.
-    <button class="tema" id="btTema" type="button"><span>Claro e escuro</span><b id="btTemaTx">Escuro</b></button></div>
+  <div class="logo"><svg viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" fill="#2a2620"/><rect x="7" y="7" width="15" height="15" fill="#b5552c"/><g fill="none" stroke="#e9dfc8" stroke-width="1.4"><rect x="7" y="7" width="30" height="30"/><line x1="22" y1="7" x2="22" y2="37"/><line x1="7" y1="22" x2="37" y2="22"/></g><path d="M23.5 34.5c3-6 6-9 12-10.3" fill="none" stroke="#e9dfc8" stroke-width="1" opacity=".7"/><circle cx="29.5" cy="29" r="1.7" fill="#e9dfc8"/></svg><div><div class="nomep">Quadrante</div><div class="sub">análises de comunidade no R</div></div></div>
+  <a href="#inserir" class="ativo"><span class="n">1</span><span>Nova análise<small>enviar planilha</small></span></a>
+  <a href="#levantamentos"><span class="n">2</span><span>Levantamentos<small>painéis prontos</small></span></a>
+  <a href="#guia"><span class="n">3</span><span>Ajuda<small>partes do painel e arquivos</small></span></a>
+  <div class="pe">R 4.6.2 · vegan · iNEXT · ggplot2<br>Para fechar, feche a janela preta.
+    <button class="tema" id="btTema" type="button"><span>Tema</span><b id="btTemaTx">Escuro</b></button></div>
 </aside>
 <main>
   <section id="inserir">
-    <div class="cab"><span class="rotulo">Inserir planilha</span><span class="rotulo"></span></div>
-    <h1>Da planilha de campo ao laudo</h1>
-    <p class="lead">Solte a planilha do levantamento aqui. O R confere os dados, monta as matrizes, roda as análises de comunidade e desenha as figuras; depois o painel abre sozinho.</p>
+    <h1>Nova análise</h1>
+    <p class="lead">Envie a planilha do levantamento. O R confere os dados e roda as análises; o painel abre quando terminar.</p>
     <div class="solta" id="solta">
-      <div class="grande">Solte a planilha .xlsx aqui</div>
+      <div class="grande">Arraste a planilha .xlsx para cá</div>
       <p class="lead" style="margin:6px auto 12px">ou</p>
-      <button id="escolher">Escolher arquivo no computador</button>
+      <button id="escolher">Escolher arquivo</button>
       <input type="file" id="arquivo" accept=".xlsx,.xls">
     </div>
     <div class="log" id="log"></div>
@@ -178,7 +333,7 @@ details.ajuda summary{color:var(--acento)}
       <div><b>1</b>Confere a planilha e aponta linha e coluna de cada erro.</div>
       <div><b>2</b>Monta as matrizes ponto × espécie (abundância e presença).</div>
       <div><b>3</b>Roda no R: acumulação, Chao, Jackknife, Bootstrap, iNEXT, Shannon, Simpson, Bray-Curtis, Jaccard.</div>
-      <div><b>4</b>Abre o painel com figuras do R, tabelas e explicação.</div>
+      <div><b>4</b>Abre o painel com as figuras e as tabelas.</div>
     </div>
     <div class="formato">
       <div><div class="rotulo" style="margin-bottom:6px">A planilha precisa ter</div>
@@ -194,33 +349,28 @@ details.ajuda summary{color:var(--acento)}
   </section>
 
   <section id="levantamentos">
-    <div class="cab"><span class="rotulo">Levantamentos</span><span class="rotulo"></span></div>
     <h2>Levantamentos analisados</h2>
-    <div id="lista"><p class="vazio">Carregando...</p></div>
+    <div id="lista"><p class="vazio">Carregando.</p></div>
   </section>
 
   <section id="guia"><details class="ajuda"><summary>O que faz cada parte do painel</summary>
-    <div class="cab"><span class="rotulo">Guia</span><span class="rotulo">o que faz cada parte</span></div>
-    <h2>O que faz cada parte do painel</h2>
     <div class="guia">
-      <div><b><span>I</span>Sobre o campo</b><br>Espaço para escrever como foi a campanha e a finalidade. Fica salvo na pasta e sai na impressão.</div>
-      <div><b><span>I</span>Conferência da planilha</b><br>O corretor: erros e pontos de atenção com aba, linha e o que fazer.</div>
+      <div><b><span>I</span>Sobre o campo</b><br>Como foi a campanha e a finalidade do levantamento. Fica salvo na pasta e sai na impressão.</div>
+      <div><b><span>I</span>Conferência da planilha</b><br>Erros e pontos de atenção, com aba, linha e como corrigir.</div>
       <div><b><span>I</span>Pressupostos e limites</b><br>O que os dados permitem concluir: número de pontos, esforço, coros, independência.</div>
-      <div><b><span>II</span>Resumo e leitura</b><br>Números principais e a interpretação do que eles dizem sobre o ambiente (editável).</div>
+      <div><b><span>II</span>Resumo e leitura</b><br>Números principais e a leitura do ambiente, que você pode editar.</div>
       <div><b><span>III</span>Riqueza</b><br>Curva de acumulação (vegan) e curvas de Chao 2, Jackknife 1 e 2 e Bootstrap ponto a ponto.</div>
       <div><b><span>III</span>Rarefação</b><br>iNEXT com números de Hill, por indivíduos e por pontos; rarefação de cada ponto (rarecurve).</div>
       <div><b><span>III</span>Diversidade</b><br>Shannon, Simpson, Pielou e perfil de Rényi em cada ponto.</div>
       <div><b><span>III</span>Similaridade e dominância</b><br>Jaccard e Bray-Curtis (heatmap e dendrogramas) e curva de dominância com radfit.</div>
-      <div><b><span>⟳</span>Outras formas</b><br>Embaixo de cada figura: o mesmo resultado desenhado de 2 a 4 jeitos pelo R. Clique para trocar.</div>
-      <div><b><span>✎</span>Aparência</b><br>Tema do ggplot (papel, cinza, bw, classic), cores, letras, títulos, eixos e tamanho para o laudo. O R redesenha.</div>
+      <div><b><span>⟳</span>Outras formas</b><br>Abaixo de cada figura, de 2 a 4 desenhos do mesmo resultado. Clique para trocar.</div>
+      <div><b><span>✎</span>Aparência</b><br>Tema do ggplot, cores, letras, títulos, eixos e tamanho da figura para o laudo.</div>
     </div>
   </details></section>
 
   <section id="arquivos"><details class="ajuda"><summary>Onde ficam os arquivos</summary>
-    <div class="cab"><span class="rotulo">Arquivos</span><span class="rotulo">onde fica cada coisa</span></div>
-    <h2>Onde ficam os arquivos</h2>
-    <p class="lead">Cada levantamento tem uma pasta própria. O botão <b>Pasta</b> na lista acima abre ela no Explorer.</p>
-    <div class="arvore">herpetodados\levantamentos\&lt;levantamento&gt;\
+    <p class="lead">Cada levantamento tem uma pasta. O botão <b>Pasta</b>, na lista acima, abre essa pasta no Explorer.</p>
+    <div class="arvore">quadrante\levantamentos\&lt;levantamento&gt;\
   planilha.xlsx               cópia da planilha enviada (a original não é alterada)
   figuras\                    FIGURAS: PNG do laudo, no tamanho e resolução escolhidos
   tabelas\                    PLANILHAS de resultado, uma por tema (01 descritiva ... 06 dominância)
@@ -239,7 +389,7 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;
 const nf = (x, d=1) => x == null ? "–" : Number(x).toLocaleString("pt-BR", {maximumFractionDigits:d});
 function lista(){
   fetch("/api/levantamentos").then(r => r.json()).then(L => {
-    if (!L.length) { $("#lista").innerHTML = "<p class='vazio'>Nenhum levantamento ainda. Solte uma planilha na prancha 1.</p>"; return; }
+    if (!L.length) { $("#lista").innerHTML = "<p class='vazio'>Nenhum levantamento ainda. Envie uma planilha em Nova análise.</p>"; return; }
     let h = "<table class='lev'><tr><th>Levantamento</th><th>Analisado em</th><th class='num'>Espécies</th><th class='num'>Indivíduos</th><th class='num'>Pontos</th><th class='num'>Chao 2</th><th>Conferência</th><th></th></tr>";
     for (const l of L){
       const r = l.resumo || {}, o = l.origem || {};
@@ -253,7 +403,7 @@ function lista(){
     document.querySelectorAll("[data-u]").forEach(b => b.onclick = () => { const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".xlsx,.xls";
       inp.onchange = () => { const f = inp.files[0]; if (!f) return; fetch(`/api/l/${b.dataset.u}/planilha?nome=${encodeURIComponent(f.name)}`, {method:"POST", body:f}).then(r => r.json()).then(j => { if (j.erro) { alert(j.erro); return; } acompanhar(j.tarefa, b.dataset.u); }); };
       inp.click(); });
-    document.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { if (!confirm("Rodar as análises de novo com a mesma planilha?")) return; b.disabled = true; fetch(`/api/l/${b.dataset.r}/refazer`, {method:"POST"}).then(r => r.json()).then(j => { if (j.erro) { alert(j.erro); b.disabled = false; return; } acompanhar(j.tarefa, b.dataset.r); }).catch(() => { alert("O programa Herpetodados não respondeu. Abra de novo pelo atalho e tente outra vez."); b.disabled = false; }); });
+    document.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { if (!confirm("Rodar as análises de novo com a mesma planilha?")) return; b.disabled = true; fetch(`/api/l/${b.dataset.r}/refazer`, {method:"POST"}).then(r => r.json()).then(j => { if (j.erro) { alert(j.erro); b.disabled = false; return; } acompanhar(j.tarefa, b.dataset.r); }).catch(() => { alert("O Quadrante não respondeu. Abra de novo pelo atalho e tente outra vez."); b.disabled = false; }); });
   });
 }
 /* esfera de partículas enquanto o R roda (19/11/2026; ref. "Particle Sphere"): 260 pontos, uma volta a cada 8 s, onda de luz a cada 1,6 s */
@@ -276,21 +426,134 @@ function esferaParticulas(cv){
   };
   requestAnimationFrame(quadro);
 }
-function barra(caixa, t){
-  let b = caixa.previousElementSibling; if (!b || !b.classList.contains("barra")) { b = document.createElement("div"); b.className = "barra com-esfera"; b.innerHTML = '<canvas width="144" height="144" aria-hidden="true"></canvas><div class="trilho-e">' + '<div class="trilho"><div class="enche"></div></div><div class="info"><span class="et"></span><span class="pc"></span></div></div>'; caixa.parentNode.insertBefore(b, caixa); }
-  const p = t.estado === "pronto" ? 100 : (t.pct || 0), s = Math.max(0, Math.round(Date.now() / 1000 - (t.inicio || Date.now() / 1000)));
-  b.style.display = "grid"; b.classList.toggle("terminou", t.estado !== "rodando"); if (t.estado === "rodando") esferaParticulas(b.querySelector("canvas")); b.querySelector(".enche").style.width = p + "%"; b.querySelector(".pc").textContent = p + "%";
-  b.querySelector(".et").textContent = (t.etapa || "Rodando no R") + (t.estado === "rodando" ? ` · ${Math.floor(s / 60)} min ${s % 60} s` : "");
+/* >>> analise-quadrante.js >>> */
+/* Quadrante: animação de análise (20/11/2026, pedido do usuário: "volte com o efeito de orbe, remodelado").
+   Enquanto o R roda, a área de conteúdo mostra um orbe de partículas em terracota e areia sobre vidro escuro:
+   gira devagar, uma faixa de luz passa por ele, partículas de dados vêm das bordas e são puxadas para dentro
+   e um anel em volta mostra o andamento. "Continuar usando o painel" recolhe para a barra pequena.
+   Nas figuras que estão sendo redesenhadas aparece um orbe pequeno. Copiado para painel/painel.html e
+   app/inicio.html por identidade/aplica_identidade.py. Edite AQUI e rode o script. */
+const QUAD_PARADO = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function quadPrep(cv){ const d = devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return null;
+  if (cv.width !== Math.round(w * d) || cv.height !== Math.round(h * d)) { cv.width = Math.round(w * d); cv.height = Math.round(h * d); }
+  const x = cv.getContext("2d"); x.setTransform(d, 0, 0, d, 0, 0); return [x, w, h]; }
+function quadPontos(N){ const P = []; for (let i = 0; i < N; i++) { const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), a = i * Math.PI * (3 - Math.sqrt(5)); P.push([Math.cos(a) * r, y, Math.sin(a) * r]); } return P; }
+
+/* um quadro do orbe. est guarda as partículas que chegam; p = andamento (0 a 1) ou null sem anel */
+function quadOrbe(cx, w, h, t, p, est, grande){
+  const X = w / 2, Y = h / 2, R = Math.min(w, h) * (grande ? .3 : .4), a = (t / 9) * Math.PI * 2, inc = .38, onda = ((t % 1.8) / 1.8) * 2.8 - 1.4;
+  cx.clearRect(0, 0, w, h);
+  if (grande) {   // brilho de fundo
+    const g = cx.createRadialGradient(X, Y, R * .2, X, Y, R * 1.9); g.addColorStop(0, "rgba(224,122,76,.20)"); g.addColorStop(1, "rgba(224,122,76,0)");
+    cx.fillStyle = g; cx.fillRect(0, 0, w, h);
+  }
+  // partículas de dados chegando das bordas e sendo puxadas em espiral
+  if (grande && est) {
+    if (!QUAD_PARADO && (p == null || p < 1) && t - est.ult > .025) { est.ult = t; const ang = Math.random() * Math.PI * 2;
+      est.voo.push({ang, r0: Math.max(w, h) * (.45 + Math.random() * .2), t0: t, dur: 1.4 + Math.random() * 1.2, gira: (Math.random() < .5 ? -1 : 1) * (.6 + Math.random() * .8), tam: .8 + Math.random() * 1.4}); }
+    est.voo = est.voo.filter(q => t - q.t0 < q.dur);
+    for (const q of est.voo) { const f = (t - q.t0) / q.dur, e = f * f * (3 - 2 * f), rr = q.r0 + (R * .98 - q.r0) * e, an = q.ang + q.gira * e;
+      cx.fillStyle = `rgba(255,214,176,${(.15 + .7 * f) * (f > .9 ? (1 - f) * 10 : 1)})`;
+      cx.beginPath(); cx.arc(X + Math.cos(an) * rr, Y + Math.sin(an) * rr, q.tam * (1 - .4 * f), 0, 7); cx.fill(); }
+  }
+  // o orbe
+  const P = est && est.P || quadPontos(grande ? 640 : 220);
+  if (est && !est.P) est.P = P;
+  const pr = P.map(([x, y, z]) => { const x1 = x * Math.cos(a) + z * Math.sin(a), z1 = -x * Math.sin(a) + z * Math.cos(a);
+    return [x1, y * Math.cos(inc) - z1 * Math.sin(inc), y * Math.sin(inc) + z1 * Math.cos(inc), y]; }).sort((u, v) => u[2] - v[2]);
+  const k = R / 120;
+  for (const [x, y, z, y0] of pr) { const prof = (z + 1) / 2, br = Math.exp(-Math.pow((-y0 - onda) * 3.4, 2));
+    const rr = Math.round(181 + 74 * br), gg = Math.round(85 + 129 * br * .9 + prof * 30), bb = Math.round(44 + 130 * br * .8 + prof * 20);
+    cx.fillStyle = `rgba(${rr},${gg},${bb},${Math.min(1, .14 + prof * .66 + br * .3)})`;
+    cx.beginPath(); cx.arc(X + x * R, Y + y * R, (.9 + prof * 1.5 + br * 1.4) * k, 0, 7); cx.fill(); }
+  // anel de andamento
+  if (grande && p != null) {
+    const Ra = R * 1.24, ini = -Math.PI / 2, fim = ini + Math.PI * 2 * Math.max(.002, p);
+    cx.lineWidth = 2; cx.strokeStyle = "rgba(255,255,255,.08)"; cx.beginPath(); cx.arc(X, Y, Ra, 0, 7); cx.stroke();
+    cx.lineWidth = 3; cx.lineCap = "round"; cx.strokeStyle = "#e07a4c"; cx.shadowColor = "rgba(224,122,76,.7)"; cx.shadowBlur = 12;
+    cx.beginPath(); cx.arc(X, Y, Ra, ini, fim); cx.stroke(); cx.shadowBlur = 0;
+    cx.fillStyle = "#ffd9bd"; cx.beginPath(); cx.arc(X + Math.cos(fim) * Ra, Y + Math.sin(fim) * Ra, 4, 0, 7); cx.fill();
+  }
 }
+
+/* orbe pequeno no aviso de cada figura (o painel chama esferaParticulas) */
+function esferaParticulas(cv){
+  if (!cv || cv._anim) return; cv._anim = true;
+  const t0 = performance.now(), est = {voo: [], ult: 0};
+  const quadro = () => { if (!cv.isConnected) { cv._anim = false; return; }
+    const r = quadPrep(cv); if (r) quadOrbe(r[0], r[1], r[2], (performance.now() - t0) / 1000, null, est, false);
+    if (!QUAD_PARADO) setTimeout(quadro, 40); else cv._anim = false; };
+  quadro();
+}
+
+/* tela de análise sobre a área de conteúdo */
+const QUAD = {el: null, p: 0, alvo: 0, t0: 0, anim: false, dispensada: false, est: null};
+function quadTela(){
+  if (QUAD.el) return QUAD.el;
+  const d = document.createElement("div"); d.id = "analiseQuad"; d.setAttribute("role", "status"); d.setAttribute("aria-live", "polite");
+  d.innerHTML = '<div class="cabq"><div><div class="rotq">Análise em andamento</div><h4>Analisando os dados</h4><div class="etq"></div></div><div class="pcq">0%</div></div>'
+    + '<canvas aria-hidden="true"></canvas><div class="peq"><span>O R está calculando. Você pode continuar usando o painel.</span><span><button type="button" class="segue">Continuar usando o painel</button></span></div>';
+  document.body.appendChild(d);
+  d.querySelector(".segue").onclick = () => { QUAD.dispensada = true; quadFecha(); };
+  QUAD.el = d; return d;
+}
+function quadAbre(){
+  const d = quadTela(); if (d.classList.contains("on")) return;
+  const m = document.querySelector(".menu"); if (m) document.documentElement.style.setProperty("--menu-w", Math.round(m.getBoundingClientRect().right) + "px");
+  QUAD.t0 = performance.now(); QUAD.p = 0; QUAD.est = {voo: [], ult: 0};
+  d.classList.add("on"); setTimeout(() => d.classList.add("visivel"), 20);
+  if (!QUAD.anim) { QUAD.anim = true; quadPasso(); }
+}
+function quadFecha(){ const d = QUAD.el; if (!d) return; d.classList.remove("visivel"); setTimeout(() => d.classList.remove("on"), 260); }
+function quadPasso(){
+  const d = QUAD.el; if (!d || !d.classList.contains("on")) { QUAD.anim = false; return; }
+  // segue o andamento do R e, enquanto ele não avança, anda devagar até um pouco além do último passo
+  const meta = QUAD.alvo >= 1 ? 1 : Math.min(.97, QUAD.alvo + .05);
+  QUAD.p += (meta - QUAD.p) * (QUAD.p < QUAD.alvo ? .12 : .01);
+  const r = quadPrep(d.querySelector("canvas")); if (r) quadOrbe(r[0], r[1], r[2], (performance.now() - QUAD.t0) / 1000, QUAD.p, QUAD.est, true);
+  if (QUAD_PARADO) { QUAD.anim = false; return; }
+  setTimeout(quadPasso, 33);
+}
+function barra(caixa, t){
+  let b = caixa.previousElementSibling;
+  if (b && b.classList.contains("barra") && !b.classList.contains("quad")) { b.remove(); b = null; }
+  if (!b || !b.classList.contains("barra")) { b = document.createElement("div"); b.className = "barra quad";
+    b.innerHTML = '<div class="info"><span class="et"></span><span><span class="pc"></span><button type="button" class="reabre">Ver análise</button></span></div><div class="trilho"><div class="enche"></div></div>';
+    b.querySelector(".reabre").onclick = () => { QUAD.dispensada = false; quadAbre(); };
+    caixa.parentNode.insertBefore(b, caixa); }
+  const p = t.estado === "pronto" ? 100 : (t.pct || 0), rodando = t.estado === "rodando", s = Math.max(0, Math.round(Date.now() / 1000 - (t.inicio || Date.now() / 1000)));
+  const etapa = (t.etapa || "Rodando no R"), tempo = rodando ? ` · ${Math.floor(s / 60)} min ${s % 60} s` : "";
+  b.style.display = "block"; b.querySelector(".enche").style.width = p + "%"; b.querySelector(".pc").textContent = p + "%";
+  b.querySelector(".et").textContent = etapa + tempo; b.querySelector(".reabre").style.display = rodando ? "" : "none";
+  QUAD.alvo = p / 100;
+  if (rodando) { if (!QUAD.dispensada) quadAbre();
+    const d = quadTela(); d.querySelector(".etq").textContent = etapa + tempo; d.querySelector(".pcq").textContent = p + "%"; }
+  else { QUAD.alvo = 1; QUAD.dispensada = false; setTimeout(quadFecha, t.estado === "pronto" ? 700 : 0); }
+}
+/* <<< analise-quadrante.js <<< */
 function acompanhar(tid, id){
   const log = $("#log"); log.style.display = "block"; log.classList.remove("erro"); log.textContent = "Rodando no R...";
   location.hash = "inserir";
-  const passo = () => fetch("/api/tarefa/" + tid).then(r => r.json()).then(t => {
+  // 19/11/2026 (F14): uma consulta que falha (rede, programa ocupado, resposta quebrada) não pode parar o acompanhamento.
+  // Tenta de novo cada vez mais devagar (até 5 s) e, a partir da 3ª falha seguida, avisa que perdeu o contato.
+  let falhas = 0;
+  const passo = () => fetch("/api/tarefa/" + tid, {cache:"no-store"}).then(r => r.json()).then(t => {
+    falhas = 0;
+    if (t.estado === "desconhecida") { log.classList.add("erro"); log.textContent = "O programa foi reiniciado e perdeu o andamento desta análise. Se ela não aparece completa na lista abaixo, use \"Rodar de novo\"."; lista(); return; }
     barra(log, t); log.textContent = (t.log || []).filter(l => !/scale|Scale|Adding another/.test(l)).join("\n");
     log.scrollTop = log.scrollHeight;
     if (t.estado === "rodando") setTimeout(passo, 1000);
-    else if (t.estado === "pronto") { log.textContent += "\n\nPronto. Abrindo o painel..."; lista(); setTimeout(() => location.href = `/l/${id}/`, 900); }
-    else { log.classList.add("erro"); log.textContent += "\n\nDeu erro. A mensagem acima diz onde está o problema."; lista(); }
+    else if (t.estado === "pronto") { log.textContent += "\n\nPronto. Abrindo o painel."; lista(); setTimeout(() => location.href = `/l/${id}/`, 900); }
+    else { log.classList.add("erro"); log.textContent += "\n\nA análise parou. A mensagem acima mostra a causa."; lista(); }
+  }).catch(() => {
+    falhas++;
+    if (falhas >= 3) {
+      const aviso = `Sem resposta do Quadrante (${falhas} tentativas). A análise pode continuar rodando. Se a janela preta foi fechada, abra o programa de novo.`;
+      const linhas = log.textContent.split("\n").filter(l => !l.startsWith("Sem resposta do Quadrante"));
+      log.textContent = linhas.concat(aviso).join("\n"); log.scrollTop = log.scrollHeight;
+      if (falhas % 5 === 0) lista();
+    }
+    setTimeout(passo, Math.min(2000 * falhas, 5000));
   });
   passo();
 }

@@ -1,4 +1,4 @@
-# Herpetodados: correções feitas no painel (botão "Corrigir" da conferência).
+# Quadrante: correções feitas no painel (botão "Corrigir" da conferência).
 # Ficam em correcoes.json na pasta do levantamento e são aplicadas sobre os dados lidos, antes da conferência e das análises.
 # A planilha enviada não muda; a "planilha_corrigida.xlsx" mostra o resultado e a lista do que foi alterado.
 #
@@ -94,7 +94,7 @@ gravar_planilha_corrigida <- function(L, saida) {
   r <- L$registros
   out <- data.frame(Campanha = r$campanha, Ponto = r$ponto_original, `Espécie` = r$especie_completa, `Família` = r$familia, Grupo = r$grupo,
     VO = r$vo, AV = r$av, `Sem forma anotada` = r$sem_forma, Total = r$total, `Observação` = r$observacao,
-    `Alterado no Herpetodados` = ifelse(is.na(r$alterado %||% NA) | (r$alterado %||% "") == "", ifelse(grepl("consolidada", r$anotacao %||% ""), "completado pela consolidada", ""), r$alterado),
+    `Alterado no Quadrante` = ifelse(is.na(r$alterado %||% NA) | (r$alterado %||% "") == "", ifelse(grepl("consolidada", r$anotacao %||% ""), "completado pela consolidada", ""), r$alterado),
     check.names = FALSE, stringsAsFactors = FALSE)
   folhas <- list(`Dados brutos (corrigido)` = out)
   if (!is.null(L$correcoes_aplicadas)) folhas[["Correções feitas"]] <- L$correcoes_aplicadas

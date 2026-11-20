@@ -1,4 +1,4 @@
-# Herpetodados: análise descritiva (sem estatística) e análises complementares.
+# Quadrante: análise descritiva (sem estatística) e análises complementares.
 # Descritiva: famílias, espécies, riqueza e abundância por família e por ponto, forma de registro e atributos
 # (endemismo, hábito, dependência, sensibilidade, SALVE, IUCN) da aba consolidada.
 # Complementares: diversidade beta (Whittaker e partição de Baselga com Sørensen), teste t de Hutcheson entre pontos,

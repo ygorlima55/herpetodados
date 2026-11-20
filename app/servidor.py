@@ -1,4 +1,4 @@
-"""Herpetodados: app local (só neste computador, 127.0.0.1).
+"""Quadrante: app local (só neste computador, 127.0.0.1).
 
 Serve a página inicial (inserir planilhas, lista de levantamentos, guia), o painel de cada levantamento
 e uma pequena API que roda o R:
@@ -6,7 +6,9 @@ e uma pequena API que roda o R:
   GET  /api/levantamentos                  lista com o resumo de cada um
   GET  /api/tarefa/<id>                    andamento de uma tarefa (log do R)
   POST /api/l/<id>/estilo                  grava estilo.json e refaz só as figuras do R
-  POST /api/l/<id>/contexto                grava contexto_campo.txt
+  POST /api/l/<id>/contexto                grava contexto.json e contexto_campo.txt
+  POST /api/l/<id>/pedido                  análise sob pedido (R/pedido.R): confere pressupostos e roda
+  GET  /api/pedidos/catalogo               catálogo das análises sob pedido e sugestões por serviço
   POST /api/l/<id>/leitura                 grava leitura_especialista.md
   POST /api/l/<id>/refazer                 roda as análises de novo (mesma planilha)
   POST /api/l/<id>/planilha?nome=          troca a planilha pela versão corrigida (guarda a anterior) e roda de novo
@@ -44,7 +46,7 @@ os.makedirs(LEV, exist_ok=True)
 TAREFAS = {}
 PING = {"ultimo": None}   # sinal de vida das páginas abertas (a janela do programa)
 TRAVA = threading.Lock()
-ACOES_COM_R = ("refazer", "planilha", "correcoes", "estilo")   # rodam o R na pasta do levantamento: uma de cada vez
+ACOES_COM_R = ("refazer", "planilha", "correcoes", "estilo", "pedido")   # rodam o R na pasta do levantamento: uma de cada vez
 RESERVADOS = set()   # levantamentos com um desses pedidos sendo atendido agora (antes de a tarefa entrar em TAREFAS)
 
 
@@ -165,7 +167,7 @@ def rodar(cmd, lid, rotulo, env_extra=None):
 def analisar(lid):
     p = os.path.join(LEV, lid)
     meta = json.load(open(os.path.join(p, "origem.json"), encoding="utf-8"))
-    return rodar([RSCRIPT, os.path.join(RAIZ, "R", "herpetodados.R"), os.path.join(p, "planilha.xlsx"), p], lid,
+    return rodar([RSCRIPT, os.path.join(RAIZ, "R", "quadrante.R"), os.path.join(p, "planilha.xlsx"), p], lid,
                  "Análises", {"HERP_NOME": meta.get("nome", "planilha.xlsx")})
 
 
@@ -225,9 +227,11 @@ class Manipulador(SimpleHTTPRequestHandler):
         u = urlparse(self.path); caminho = unquote(u.path)
         if caminho in ("/", "/index.html"):
             self.path = "/app/inicio.html"; return super().do_GET()
+        if caminho == "/api/pedidos/catalogo":   # análises que o R roda sob pedido (R/pedido.R)
+            return self.json(json.load(open(os.path.join(RAIZ, "R", "pedidos_catalogo.json"), encoding="utf-8")))
         if caminho == "/api/versao":   # data do arquivo .R mais novo (o painel compara com figuras/_versao.json)
             rs = [os.path.join(RAIZ, "R", f) for f in os.listdir(os.path.join(RAIZ, "R"))
-                  if re.fullmatch(r"(saida.*|fitofisionomias|campanhas|figuras)\.R", f)]   # só os arquivos que desenham figuras
+                  if re.fullmatch(r"(saida.*|fitofisionomias|campanhas|figuras|ajustes_fig)\.R", f)]   # só os arquivos que desenham figuras
             return self.json({"codigo": max((os.path.getmtime(f) for f in rs), default=0)})
         if caminho == "/api/ping":
             PING["ultimo"] = time.time()
@@ -272,7 +276,7 @@ class Manipulador(SimpleHTTPRequestHandler):
                 json.dump({"nome": nome, "enviado_em": time.strftime("%Y-%m-%d %H:%M:%S"), "titulo": re.sub(r"\.(xlsx|xls)$", "", nome, flags=re.I)},
                           open(os.path.join(p, "origem.json"), "w", encoding="utf-8"), ensure_ascii=False)
                 return self.json({"id": lid, "tarefa": analisar(lid)})
-            m = re.fullmatch(r"/api/l/([a-z0-9-]+)/(estilo|contexto|leitura|refazer|pasta|titulo|selecao|relatorio|planilha|correcoes)", caminho)
+            m = re.fullmatch(r"/api/l/([a-z0-9-]+)/(estilo|contexto|leitura|refazer|pasta|titulo|selecao|relatorio|planilha|correcoes|pedido)", caminho)
             if not m:
                 return self.send_error(404)
             lid, acao = m.groups(); p = pasta_ok(lid)
@@ -359,10 +363,24 @@ class Manipulador(SimpleHTTPRequestHandler):
                 so = so if re.fullmatch(r"[a-z_]{1,40}", so) else ""
                 return self.json({"tarefa": rodar([RSCRIPT, os.path.join(RAIZ, "R", "figuras.R"), p] + ([so] if so else []), lid,
                                                   "Figura " + so if so else "Figuras")})
+            if acao == "pedido":   # análise sob pedido: o R confere os pressupostos e só roda se passarem
+                j = json.loads(corpo)
+                ids = {a["id"] for a in json.load(open(os.path.join(RAIZ, "R", "pedidos_catalogo.json"), encoding="utf-8"))["analises"]}
+                an, gr = j.get("analise", ""), str(j.get("grupo", ""))[:60]
+                fa = j.get("fator") or "-"; va = j.get("variavel") or "riqueza"
+                if an not in ids or not gr or fa not in ("-", "fitofisionomia", "grupo_amostral", "campanha", "estacao") or va not in ("riqueza", "abundancia"):
+                    return self.json({"erro": "Pedido de análise inválido."}, 400)
+                if not os.path.exists(os.path.join(p, "resultados.rds")):
+                    return self.json({"erro": "Rode as análises deste levantamento primeiro."}, 400)
+                return self.json({"tarefa": rodar([RSCRIPT, os.path.join(RAIZ, "R", "pedido.R"), p, an, gr, fa, va], lid, "Pedido: " + an)})
             if acao == "contexto":
                 j = json.loads(corpo)
-                open(os.path.join(p, "contexto_campo.txt"), "w", encoding="utf-8").write(
-                    "COMO FOI O CAMPO\n" + j.get("campo", "") + "\n\nFINALIDADE\n" + j.get("finalidade", "") + "\n")
+                if not isinstance(j, dict):
+                    return self.json({"erro": "Contexto inválido."}, 400)
+                linhas = ["SERVIÇO: " + str(j.get("servico", "")), "", "FINALIDADE", str(j.get("finalidade", "")), "", "COMO FOI O CAMPO", str(j.get("campo", ""))]
+                for c in j.get("campanhas") or []:
+                    linhas += ["", "CAMPANHA " + str(c.get("nome", "")), "  " + "; ".join(f"{k}: {v}" for k, v in c.items() if k != "nome" and v not in ("", None, []))]
+                open(os.path.join(p, "contexto_campo.txt"), "w", encoding="utf-8").write("\n".join(linhas) + "\n")
                 json.dump(j, open(os.path.join(p, "contexto.json"), "w", encoding="utf-8"), ensure_ascii=False)
                 return self.json({"ok": True})
             if acao == "leitura":
@@ -381,7 +399,7 @@ class Manipulador(SimpleHTTPRequestHandler):
 
 
 def ja_aberto(url):
-    """True se o Herpetodados já está rodando nesta porta (segundo clique no atalho)."""
+    """True se o Quadrante já está rodando nesta porta (segundo clique no atalho)."""
     import urllib.request
     try:
         with urllib.request.urlopen(url + "api/levantamentos", timeout=2) as r:
@@ -403,12 +421,12 @@ def acha_navegador_app():
 
 
 def abre_janela(url):
-    """Abre o Herpetodados numa janela própria. Devolve o processo (quando dá para saber quando ela fecha) ou None."""
+    """Abre o Quadrante numa janela própria. Devolve o processo (quando dá para saber quando ela fecha) ou None."""
     exe = acha_navegador_app()
     if not exe:
         webbrowser.open(url)
         return None
-    perfil = os.path.join(os.environ.get("LOCALAPPDATA", RAIZ), "Herpetodados", "janela")   # perfil só do Herpetodados
+    perfil = os.path.join(os.environ.get("LOCALAPPDATA", RAIZ), "Quadrante", "janela")   # perfil só do Quadrante
     os.makedirs(perfil, exist_ok=True)
     try:
         return subprocess.Popen([exe, f"--app={url}", f"--user-data-dir={perfil}", "--window-size=1440,920",
@@ -422,7 +440,7 @@ def abre_janela(url):
 def main():
     url = f"http://127.0.0.1:{PORTA}/"
     if ja_aberto(url):
-        print("O Herpetodados já está aberto; abrindo a janela dele.")
+        print("O Quadrante já está aberto; abrindo a janela dele.")
         if "--sem-navegador" not in sys.argv:
             abre_janela(url)
         time.sleep(1)
@@ -431,7 +449,7 @@ def main():
     class Servidor(ThreadingHTTPServer):
         allow_reuse_address = False   # no Windows, True deixaria dois programas na mesma porta
     srv = Servidor(("127.0.0.1", PORTA), Manipulador)
-    print(f"Herpetodados aberto em {url}  (fechar a janela do programa encerra tudo)")
+    print(f"Quadrante aberto em {url}  (fechar a janela do programa encerra tudo)")
     if "--sem-navegador" not in sys.argv:
         JANELA = {"proc": None}
         threading.Timer(0.6, lambda: JANELA.update(proc=abre_janela(url))).start()
@@ -452,7 +470,7 @@ def main():
                     continue
                 if any(t.get("estado") == "rodando" for t in TAREFAS.values()):
                     continue
-                print("Janela fechada; encerrando o Herpetodados.")
+                print("Janela fechada; encerrando o Quadrante.")
                 srv.shutdown()
                 return
         threading.Thread(target=vigia, daemon=True).start()

@@ -1,4 +1,4 @@
-# Herpetodados
+# Quadrante
 
 Análises de comunidade de fauna **feitas no R** a partir da planilha de campo, sem precisar abrir o RStudio nem escrever código.
 Feito para levantamentos de fauna em licenciamento e monitoramento ambiental: herpetofauna, aves, mamíferos, insetos ou qualquer outro grupo.
@@ -27,7 +27,7 @@ Cada figura tem **outras formas** de apresentar o mesmo resultado, **títulos ed
    - o **Python 3**.
 
    Se faltar algum, ele oferece instalar pelo `winget` ou abre a página de download. Depois, baixa os pacotes do R (cerca de 150 MB, só na primeira vez) para a pasta `r-pacotes`.
-3. Pronto. Para usar: dois cliques em **`abrir_herpetodados.cmd`**. O programa abre no navegador; deixe a janela preta aberta enquanto usar.
+3. Pronto. Para usar: dois cliques em **`abrir_quadrante.cmd`**. O programa abre no navegador; deixe a janela preta aberta enquanto usar.
 
 Para testar, solte a planilha **`exemplo/planilha_exemplo_ficticia.xlsx`** (dados inventados).
 

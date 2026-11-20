@@ -1,4 +1,4 @@
-# Herpetodados: análise por fitofisionomia dos pontos (coluna "Fitofisionomia" da aba de pontos).
+# Quadrante: análise por fitofisionomia dos pontos (coluna "Fitofisionomia" da aba de pontos).
 # Duas leituras:
 # - classe como está escrita (ex.: "MG/VR" é uma classe);
 # - componente: cada sigla de um ponto misto conta separado (P1 "MG/VR" entra em MG e em VR).
