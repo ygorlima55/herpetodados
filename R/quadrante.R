@@ -11,7 +11,7 @@ set.seed(20261117)
 
 args <- commandArgs(TRUE)
 aqui <- dirname(normalizePath(sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE)[1])))
-for (f in c("ler.R", "conferir.R", "analises.R", "descritiva.R", "saida.R", "ajustes_fig.R", "saida_extra.R", "saida_novas.R", "campanhas.R", "fitofisionomias.R", "correcoes.R", "relatorio_fauna.R", "contexto.R")) source(file.path(aqui, f), encoding = "UTF-8")
+for (f in c("ler.R", "conferir.R", "desenho.R", "analises.R", "descritiva.R", "saida.R", "ajustes_fig.R", "saida_extra.R", "saida_novas.R", "campanhas.R", "fitofisionomias.R", "correcoes.R", "relatorio_fauna.R", "contexto.R")) source(file.path(aqui, f), encoding = "UTF-8")
 if (!length(args)) stop("Informe a planilha: Rscript quadrante.R planilha.xlsx")
 planilha <- normalizePath(args[1], mustWork = TRUE)
 base <- tools::file_path_sans_ext(basename(planilha))
@@ -51,7 +51,8 @@ if (nrow(L$fora_da_analise)) {
 if (!nrow(L$registros)) stop("Nenhum registro válido para analisar: confira as colunas Espécie e Total da aba de registros.")
 msg(sum(conf$nivel == "erro"), "erros,", sum(conf$nivel == "atenção"), "pontos de atenção,", sum(conf$nivel == "informação"), "informações")
 
-if (length(unique(L$registros$campanha)) >= 2) {
+campanhas_cadastradas <- na.omit(L$pontos$campanha)
+if (length(unique(c(L$registros$campanha, campanhas_cadastradas[nzchar(campanhas_cadastradas)]))) >= 2) {
   L <- unidades_campanha(L)
   msg(nrow(L$campanhas), "campanhas:", paste(L$campanhas$codigo, L$campanhas$campanha, sep = " = ", collapse = "; "), "| unidade amostral = ponto x campanha")
 }
@@ -73,11 +74,11 @@ for (g in names(grupos)) {
 }
 avisos <- avisos_pressupostos(L, R)
 dist <- distancias_pontos(L$pontos_campo %||% L$pontos)
-if (!is.null(dist)) {
+if (!is.null(dist) && any(is.finite(dist[upper.tri(dist)]))) {
   d <- dist; diag(d) <- NA; k <- which(d == min(d, na.rm = TRUE), arr.ind = TRUE)[1, ]
   avisos[[length(avisos) + 1]] <- list(tema = "Distância entre pontos", nivel = if (min(d, na.rm = TRUE) < 500) "atenção" else "informação",
     texto = sprintf("A menor distância entre pontos é %s m (%s e %s); a maior é %s m. %s", format(min(d, na.rm = TRUE), big.mark = ".", decimal.mark = ","), rownames(d)[k[1]], colnames(d)[k[2]],
-                    format(max(d, na.rm = TRUE), big.mark = ".", decimal.mark = ","), if (min(d, na.rm = TRUE) < 500) "Cantos (anuros, aves) são ouvidos a várias centenas de metros e animais que se deslocam podem passar por mais de um ponto: pontos tão próximos podem registrar os mesmos indivíduos." else "Distâncias suficientes para tratar os pontos como independentes para a maioria das espécies."))
+                    format(max(d, na.rm = TRUE), big.mark = ".", decimal.mark = ","), if (min(d, na.rm = TRUE) < 500) "Cantos (anuros, aves) são ouvidos a várias centenas de metros e animais que se deslocam podem passar por mais de um ponto: pontos tão próximos podem registrar os mesmos indivíduos." else "A independência também depende da espécie, do método e do período de amostragem."))
 }
 
 if (!is.null(dist)) for (g in names(R)) if (!is.null(R[[g]]$similaridade$pares)) {
@@ -118,12 +119,12 @@ out <- list(
 js <- jsonlite::toJSON(out, auto_unbox = TRUE, na = "null", digits = NA, dataframe = "rows", pretty = FALSE)
 writeLines(c("window.HERP = ", js, ";"), file.path(saida, "dados.js"), useBytes = TRUE)
 file.copy(file.path(dirname(aqui), "painel", "painel.html"), file.path(saida, "painel.html"), overwrite = TRUE)
-A <- R[["Anuros"]] %||% R[[1]]
+A <- R[[tail(names(grupos), 1L)]]
 resumo <- list(planilha = out$meta$planilha, gerado_em = out$meta$gerado_em, grupos = names(R),
   riqueza = A$riqueza, individuos = A$n_individuos, pontos = A$n_pontos,
   chao2 = if (!is.null(A$acumulacao)) A$acumulacao$estimadores$valor[2] else NA,
   erros = sum(conf$nivel == "erro"), atencao = sum(conf$nivel == "atenção"),
-  campanhas = length(unique(L$registros$campanha)))
+  campanhas = if (is.null(L$campanhas)) 1L else nrow(L$campanhas))
 writeLines(jsonlite::toJSON(resumo, auto_unbox = TRUE, na = "null"), file.path(saida, "resumo.json"), useBytes = TRUE)
 progresso(100, "Pronto")
 msg("Pronto. Abra:", file.path(saida, "painel.html"))

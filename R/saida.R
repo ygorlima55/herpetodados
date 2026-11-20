@@ -519,21 +519,23 @@ exportar_tabelas <- function(L, conf, R, saida) {
 
 # distâncias entre pontos a partir de "22 K 668628.87 m E 8080967.81 m S" ou "-14.75° -47.95°"
 distancias_pontos <- function(P) {
-  if (is.null(P) || all(is.na(P$coordenadas))) return(NULL)
-  xy <- t(sapply(P$coordenadas, function(s) {
-    s <- gsub(",", ".", s)
-    u <- regmatches(s, regexec("([0-9]+)\\s*[A-Z]\\s+([0-9.]+)\\s*m?\\s*E\\s+([0-9.]+)", s))[[1]]
-    if (length(u) == 4) return(c(as.numeric(u[3]), as.numeric(u[4]), 0))
-    g <- as.numeric(regmatches(s, gregexpr("-?[0-9]+\\.[0-9]+", s))[[1]])
-    if (length(g) >= 2) return(c(g[2], g[1], 1))
-    c(NA, NA, NA)
-  }))
-  if (any(is.na(xy[, 1]))) return(NULL)
-  n <- nrow(xy); D <- matrix(0, n, n, dimnames = list(P$ponto, P$ponto))
-  for (i in 1:n) for (j in 1:n) {
-    D[i, j] <- if (xy[i, 3] == 0) sqrt((xy[i, 1] - xy[j, 1])^2 + (xy[i, 2] - xy[j, 2])^2) else {
-      la1 <- xy[i, 2] * pi / 180; la2 <- xy[j, 2] * pi / 180; dl <- (xy[j, 1] - xy[i, 1]) * pi / 180
-      6371000 * acos(pmin(1, sin(la1) * sin(la2) + cos(la1) * cos(la2) * cos(dl))) }
+  if (is.null(P) || nrow(P) < 2 || is.null(P$coordenadas)) return(NULL)
+  coords <- lapply(P$coordenadas, function(s) if (!is.na(s) && nzchar(s)) ler_coordenada(s))
+  D <- matrix(NA_real_, nrow(P), nrow(P), dimnames = list(P$ponto, P$ponto))
+  for (i in seq_along(coords)) {
+    a <- coords[[i]]
+    if (is.null(a) || !is.na(a$problema) || is.na(a$crs)) next
+    D[i, i] <- 0
+    for (j in seq_len(i - 1L)) {
+      b <- coords[[j]]
+      if (is.null(b) || !is.na(b$problema) || !identical(a$crs, b$crs)) next
+      if (a$crs == "graus") {
+        rad <- pi / 180
+        h <- sin((a$y - b$y) * rad / 2)^2 + cos(a$y * rad) * cos(b$y * rad) * sin((a$x - b$x) * rad / 2)^2
+        d <- 2 * 6371000 * asin(sqrt(min(1, max(0, h))))
+      } else d <- sqrt((a$x - b$x)^2 + (a$y - b$y)^2)
+      D[i,j] <- D[j,i] <- round(d)
+    }
   }
-  round(D)
+  if (any(is.finite(D[upper.tri(D)]))) D else NULL
 }

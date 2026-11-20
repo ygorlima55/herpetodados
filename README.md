@@ -1,7 +1,7 @@
 # Quadrante
 
 Análises de comunidade de fauna **feitas no R** a partir da planilha de campo, sem precisar abrir o RStudio nem escrever código.
-Feito para levantamentos de fauna em licenciamento e monitoramento ambiental: herpetofauna, aves, mamíferos, insetos ou qualquer outro grupo.
+O catálogo atende a inventários, monitoramentos, pesquisas e outros estudos de comunidades de fauna. A escolha da análise depende da pergunta ecológica e dos dados disponíveis.
 
 Você solta a planilha numa página do navegador, o R confere os dados, roda as análises e monta um painel com as figuras, as tabelas e a explicação de cada resultado em português.
 

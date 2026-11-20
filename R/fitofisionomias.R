@@ -31,8 +31,8 @@ analisar_fito <- function(m, pontos_info, fam = NULL) {
     tab <- data.frame(fitofisionomia = nomes, nome = nome_fito(nomes), pontos = vapply(grupos, paste, "", collapse = ", "), n_pontos = lengths(grupos),
       riqueza = rowSums(pres), abundancia = rowSums(ab), riqueza_media_por_ponto = round(vapply(grupos, function(p) mean(rowSums(m[p, , drop = FALSE] > 0)), 1), 1),
       exclusivas = excl,
-      shannon = round(apply(ab, 1, function(v) vegan::diversity(v, "shannon")), 3),
-      hill1 = round(apply(ab, 1, function(v) exp(vegan::diversity(v, "shannon"))), 2),
+      shannon = round(apply(ab, 1, function(v) if (sum(v)) vegan::diversity(v, "shannon") else NA_real_), 3),
+      hill1 = round(apply(ab, 1, function(v) if (sum(v)) exp(vegan::diversity(v, "shannon")) else NA_real_), 2),
       hill2 = round(apply(ab, 1, function(v) if (sum(v) > 0) 1 / sum((v / sum(v))^2) else NA), 2),
       pielou = round(apply(ab, 1, function(v) { s <- sum(v > 0); if (s > 1) vegan::diversity(v, "shannon") / log(s) else NA }), 3),
       especies_exclusivas = vapply(seq_along(nomes), function(i) paste(colnames(m)[pres[i, ] & colSums(pres[-i, , drop = FALSE]) == 0], collapse = "; "), ""),
@@ -43,12 +43,15 @@ analisar_fito <- function(m, pontos_info, fam = NULL) {
     esp <- esp[order(esp$familia, esp$especie), ]; rownames(esp) <- NULL
     pares <- if (length(nomes) >= 2) do.call(rbind, combn(nomes, 2, simplify = FALSE, FUN = function(p) {
       a <- pres[p[1], ]; b <- pres[p[2], ]; data.frame(fito_a = p[1], fito_b = p[2], comuns = sum(a & b), so_a = sum(a & !b), so_b = sum(b & !a),
-        jaccard = round(sum(a & b) / max(1, sum(a | b)), 3), stringsAsFactors = FALSE) })) else NULL
+        jaccard = if (any(a | b)) round(sum(a & b) / sum(a | b), 3) else NA_real_, stringsAsFactors = FALSE) })) else NULL
     if (!is.null(pares)) pares <- pares[order(-pares$jaccard), ]
     fams <- if (!is.null(fam)) do.call(rbind, lapply(nomes, function(nm) { e <- colnames(m)[pres[nm, ]]; if (!length(e)) return(NULL)
       t <- table(fam[e]); data.frame(fitofisionomia = nm, familia = names(t), especies = as.integer(t), stringsAsFactors = FALSE) })) else NULL
     jac <- matrix(1, length(nomes), length(nomes), dimnames = list(nomes, nomes))
-    for (i in seq_along(nomes)) for (j in seq_along(nomes)) if (i != j) jac[i, j] <- round(sum(pres[i, ] & pres[j, ]) / max(1, sum(pres[i, ] | pres[j, ])), 3)
+    for (i in seq_along(nomes)) for (j in seq_along(nomes)) {
+      uniao <- sum(pres[i, ] | pres[j, ])
+      jac[i, j] <- if (uniao) round(sum(pres[i, ] & pres[j, ]) / uniao, 3) else NA_real_
+    }
     rar <- NULL
     vs <- lapply(nomes, function(nm) { v <- sort(ab[nm, ab[nm, ] > 0], decreasing = TRUE); v })
     names(vs) <- nomes; vs <- vs[vapply(vs, function(v) length(v) >= 2 && sum(v) >= 4, TRUE)]

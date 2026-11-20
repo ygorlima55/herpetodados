@@ -46,7 +46,7 @@ os.makedirs(LEV, exist_ok=True)
 TAREFAS = {}
 PING = {"ultimo": None}   # sinal de vida das páginas abertas (a janela do programa)
 TRAVA = threading.Lock()
-ACOES_COM_R = ("refazer", "planilha", "correcoes", "estilo", "pedido")   # rodam o R na pasta do levantamento: uma de cada vez
+ACOES_COM_R = ("refazer", "planilha", "correcoes", "estilo", "pedido", "relatorio")   # rodam o R na pasta do levantamento: uma de cada vez
 RESERVADOS = set()   # levantamentos com um desses pedidos sendo atendido agora (antes de a tarefa entrar em TAREFAS)
 
 
@@ -76,7 +76,8 @@ def xlsx_simples(caminho, abas):
     """Grava um .xlsx só com a biblioteca padrão. abas = [(nome, [linha0 (cabeçalho), linha1, ...]), ...].
     Números escritos como "12", "0,53" ou "42%" viram números de verdade (a % com formato de porcentagem)."""
     import zipfile
-    from xml.sax.saxutils import escape
+    from xml.sax.saxutils import escape, quoteattr
+    import math
 
     def col(i):
         n = ""
@@ -89,6 +90,14 @@ def xlsx_simples(caminho, abas):
         t = "" if v is None else str(v).strip()
         if cab:
             return f'<c r="{ref}" t="inlineStr" s="2"><is><t xml:space="preserve">{escape(t)}</t></is></c>'
+        if isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v):
+            return f'<c r="{ref}"><v>{v}</v></c>'
+        # Seleções antigas contêm tanto números JS quanto texto formatado em português.
+        # Preserve como texto uma cadeia ambígua, como "1.234", em vez de mudar sua escala.
+        if re.fullmatch(r"-?\d+\.\d+", t):
+            if re.fullmatch(r"-?[1-9]\d{0,2}\.\d{3}", t):
+                return f'<c r="{ref}" t="inlineStr"><is><t>{t}</t></is></c>'
+            return f'<c r="{ref}"><v>{float(t)}</v></c>'
         m = re.fullmatch(r"(-?\d{1,3}(?:\.\d{3})+|-?\d+)(,\d+)?(%)?", t)
         if m and t not in ("-", ""):
             num = float(m.group(1).replace(".", "") + (m.group(2) or "").replace(",", "."))
@@ -115,7 +124,7 @@ def xlsx_simples(caminho, abas):
                    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>')
         z.writestr("xl/workbook.xml", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
                    'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'
-                   + "".join(f'<sheet name="{escape(n)}" sheetId="{i + 1}" r:id="rId{i + 1}"/>' for i, n in enumerate(nomes)) + "</sheets></workbook>")
+                   + "".join(f'<sheet name={quoteattr(n)} sheetId="{i + 1}" r:id="rId{i + 1}"/>' for i, n in enumerate(nomes)) + "</sheets></workbook>")
         z.writestr("xl/_rels/workbook.xml.rels", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
                    + "".join(f'<Relationship Id="rId{i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet{i + 1}.xml"/>' for i in range(len(abas)))
                    + f'<Relationship Id="rId{len(abas) + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>')
@@ -261,6 +270,7 @@ class Manipulador(SimpleHTTPRequestHandler):
         if self.headers.get("Origin") not in (None, f"http://127.0.0.1:{PORTA}", f"http://localhost:{PORTA}"):
             return self.send_error(403)
         reservou = None
+        rel_temporario = None
         try:
             if caminho == "/api/enviar":
                 nome = os.path.basename(parse_qs(u.query).get("nome", ["planilha.xlsx"])[0])
@@ -302,15 +312,18 @@ class Manipulador(SimpleHTTPRequestHandler):
                 return self.json({"ok": True})
             if acao == "relatorio":
                 sel = json.loads(self.corpo().decode("utf-8"))
-                rel = os.path.join(p, "relatorio"); shutil.rmtree(rel, ignore_errors=True); os.makedirs(rel)
+                if not isinstance(sel, list) or not sel or not all(isinstance(it, dict) and it.get("tipo") in ("fig", "tab") for it in sel):
+                    return self.json({"erro": "Selecione ao menos uma figura ou tabela válida."}, 400)
+                import tempfile
+                rel = rel_temporario = tempfile.mkdtemp(prefix=".relatorio_", dir=p)
                 nfig = ntab = 0; leia = ["Itens do relatório (na ordem escolhida no painel)", ""]
                 abas = []; indice = [["Aba", "Tabela"]]
                 limpa = lambda t: re.sub(r"[^A-Za-z0-9]+", "_", unicodedata.normalize("NFKD", t).encode("ascii", "ignore").decode()).strip("_")[:60]
                 for it in sel:
                     if it.get("tipo") == "fig":
-                        orig = os.path.normpath(os.path.join(p, it.get("arquivo", "")))
-                        if not orig.startswith(p) or not os.path.exists(orig):
-                            continue
+                        orig = os.path.realpath(os.path.join(p, it.get("arquivo", "")))
+                        if os.path.commonpath([os.path.realpath(p), orig]) != os.path.realpath(p) or not orig.lower().endswith(".png") or not os.path.isfile(orig):
+                            return self.json({"erro": "Uma figura selecionada está indisponível. Confira a seleção antes de exportar."}, 400)
                         nfig += 1; nome = f"Fig{nfig:02d}_{limpa(it.get('titulo', 'figura'))}.png"
                         shutil.copyfile(orig, os.path.join(rel, nome)); leia.append(f"Figura {nfig}. {it.get('titulo', '')}  ->  {nome}")
                         jpg = orig[:-4] + ".jpg"   # JPEG de alta resolução (600 dpi), quando o R gravou
@@ -324,7 +337,18 @@ class Manipulador(SimpleHTTPRequestHandler):
                 if abas:
                     xlsx_simples(os.path.join(rel, "Tabelas_do_relatorio.xlsx"), [("Índice", indice)] + abas)
                 open(os.path.join(rel, "LEIA-ME.txt"), "w", encoding="utf-8").write("\n".join(leia) + "\n\nTodas as tabelas estão numa planilha só (Tabelas_do_relatorio.xlsx), uma aba por tabela; a aba Índice lista todas.\n")
-                return self.json({"figuras": nfig, "tabelas": ntab, "pasta": rel})
+                destino = os.path.join(p, "relatorio")
+                anterior = None
+                if os.path.isdir(destino):
+                    anterior = os.path.join(p, "relatorio_anterior_" + time.strftime("%Y%m%d_%H%M%S") + "_" + uuid.uuid4().hex[:8])
+                    os.rename(destino, anterior)
+                try:
+                    os.rename(rel, destino)
+                except OSError:
+                    if anterior is not None:
+                        os.rename(anterior, destino)
+                    raise
+                return self.json({"figuras": nfig, "tabelas": ntab, "pasta": destino})
             if acao == "correcoes":
                 try:
                     lista = json.loads(self.corpo().decode("utf-8"))
@@ -393,6 +417,8 @@ class Manipulador(SimpleHTTPRequestHandler):
         except (ValueError, json.JSONDecodeError) as e:
             return self.json({"erro": str(e)}, 400)
         finally:
+            if rel_temporario and os.path.isdir(rel_temporario):
+                shutil.rmtree(rel_temporario, ignore_errors=True)
             if reservou:
                 with TRAVA:
                     RESERVADOS.discard(reservou)
@@ -437,6 +463,21 @@ def abre_janela(url):
         return None
 
 
+def janela_aberta():
+    """True se a janela do programa (Edge/Chrome com o perfil próprio do Quadrante) ainda existe.
+    O Edge troca de processo ao abrir, então o processo lançado não serve para saber disso."""
+    perfil = os.path.join(os.environ.get("LOCALAPPDATA", RAIZ), "Quadrante", "janela")
+    cmd = ("Get-CimInstance Win32_Process -Filter \"Name='msedge.exe' or Name='chrome.exe'\" | "
+           "Where-Object { $_.CommandLine -like '*" + perfil.replace("'", "''") + "*' -and $_.CommandLine -notlike '*--type=*' } | "
+           "Measure-Object | Select-Object -ExpandProperty Count")
+    try:
+        out = subprocess.run(["powershell", "-NoProfile", "-Command", cmd], capture_output=True, text=True, timeout=20,
+                             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout.strip()
+        return int(out or 0) > 0
+    except Exception:  # noqa: BLE001
+        return None   # não deu para saber
+
+
 def main():
     url = f"http://127.0.0.1:{PORTA}/"
     if ja_aberto(url):
@@ -468,6 +509,8 @@ def main():
                 limite = 45 if proc is not None else 900
                 if u is None or time.time() - u < limite:
                     continue
+                if proc is not None and janela_aberta() is not False:
+                    continue                      # janela minimizada ou atrás de outra: o navegador espaça os sinais
                 if any(t.get("estado") == "rodando" for t in TAREFAS.values()):
                     continue
                 print("Janela fechada; encerrando o Quadrante.")

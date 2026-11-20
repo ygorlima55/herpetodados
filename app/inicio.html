@@ -385,6 +385,15 @@ html.trocando-tema,html.trocando-tema body,html.trocando-tema main > section,htm
 /* narração e orbe: materializam com desfoque e escala (§12) */
 #narraQuad{filter:blur(4px)}#narraQuad.visivel{filter:none}
 #narraQuad{transition:opacity 400ms var(--ease-out),transform 400ms var(--ease-out),filter 400ms var(--ease-out)!important}
+/* enquanto o R roda (body.analisando): o vidro fica mais fino para o orbe aparecer por trás dos quadros, e volta ao normal no fim */
+body.analisando section.prancha,body.analisando main > section,body.analisando #inserir,body.analisando #levantamentos,body.analisando #guia,body.analisando #arquivos{background:color-mix(in srgb,var(--cartao) 30%,transparent)!important;
+  backdrop-filter:blur(4px) saturate(160%)!important;-webkit-backdrop-filter:blur(4px) saturate(160%)!important}
+body.analisando .figr,body.analisando .tabbox,body.analisando .numeros > div,body.analisando #lista,body.analisando #lista table,body.analisando .solta,body.analisando #solta,body.analisando .passos div,body.analisando .guia div{background:color-mix(in srgb,var(--cartao) 42%,transparent)!important}
+body.analisando .figr .quadro{opacity:.94}
+main > section,section.prancha,.figr,.tabbox,.numeros > div,#lista,.solta{transition:background-color 700ms ease,backdrop-filter 700ms ease}
+body.analisando #analiseQuad.visivel{opacity:1!important}
+/* caixa de log vazia não aparece */
+.log:empty,.tarefa:empty{display:none!important}
 @media (prefers-reduced-motion:reduce){button,.menu nav .marcador,aside.editor,#analiseQuad,.abas .pilula-abas{transition:none!important}button:active{transform:none}.abas .pilula-abas.pousa::before,#narraQuad .ponto,#narraQuad .txt::after{animation:none!important}main > section.prancha.ativa{animation:esmaece 200ms ease!important}}
 @media (prefers-reduced-transparency:reduce){.menu,section.prancha,main > section,aside.editor,#narraQuad,.abas::before{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:var(--papel-2)!important}section.prancha,main > section{background:var(--cartao)!important}.abas::before{background:#1d1d1f!important}}
 @media print{#analiseQuad,.barra.quad{display:none!important}body{background:#fff!important}}

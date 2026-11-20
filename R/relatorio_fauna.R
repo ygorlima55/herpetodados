@@ -1,7 +1,6 @@
-# Quadrante: análises que os relatórios de fauna para licenciamento pedem e que faltavam (levantamento de 17/11/2026,
-# 25 fontes: IN IBAMA 146/2007, TRs de SEMAD-GO, IEMA-ES, SEMA-MT, IMASUL, IAT-PR, IBRAM-DF, EIAs/PBAs e artigos de inventário).
+# Quadrante: análises complementares de comunidades de fauna.
 #   1. estimadores por abundância (Chao 1 e ACE) com a porcentagem da riqueza já amostrada;
-#   2. riqueza, abundância e espécies exclusivas por MÉTODO de registro (IN 146: "eficiência amostral");
+#   2. riqueza, abundância e espécies exclusivas por MÉTODO de registro;
 #   3. taxas por ESFORÇO (indivíduos e espécies por hora), quando a aba de pontos traz "Esforço (h)";
 #   4. quadro de ESPÉCIES DE INTERESSE (ameaçadas, quase ameaçadas, endêmicas, cinegéticas, xerimbabo, interesse médico,
 #      exóticas, bioindicadoras, migratórias, raras na amostra);
@@ -54,7 +53,7 @@ analisar_relatorio <- function(reg, m, nome, pontos_info = NULL, consol = NULL, 
     out$por_metodo <- tab
     out$metodo_especies <- cbind(especie = colnames(mm), as.data.frame(t(mm)), row.names = NULL)
     out$texto_metodo <- txt(
-      "Compara o que cada método de registro rendeu: espécies, indivíduos e espécies que só ele registrou. É o que a IN IBAMA 146/2007 chama de eficiência amostral.",
+      "Resume quantas espécies e indivíduos cada método registrou e quais espécies apareceram exclusivamente em cada método.",
       sprintf("%s.", paste(sprintf("%s: %d espécies (%s), %d indivíduos, %d exclusivas", tab$metodo, tab$riqueza, pct(tab$pct_especies), tab$abundancia, tab$exclusivas), collapse = "; ")),
       "Métodos com muitas espécies exclusivas são complementares e não devem ser retirados do monitoramento.",
       "Métodos com esforços diferentes não se comparam pela riqueza bruta; informe o esforço de cada um (horas, baldes-noite, pontos de escuta).")
@@ -63,15 +62,18 @@ analisar_relatorio <- function(reg, m, nome, pontos_info = NULL, consol = NULL, 
   # 3. esforço (horas por ponto, da aba de pontos)
   if (!is.null(pontos_info) && any(!is.na(pontos_info$esforco))) {
     ef <- pontos_info$esforco[match(rownames(m), pontos_info$ponto)]
+    valido <- is.finite(ef) & ef > 0
+    ef[!valido] <- NA_real_
     tab <- data.frame(ponto = rownames(m), horas = ef, riqueza = rowSums(m > 0), abundancia = rowSums(m),
       individuos_por_hora = round(rowSums(m) / ef, 2), especies_por_hora = round(rowSums(m > 0) / ef, 2), stringsAsFactors = FALSE, row.names = NULL)
-    tot <- sum(ef, na.rm = TRUE)
+    tot <- if (all(valido)) sum(ef) else NA_real_
     out$esforco <- rbind(tab, data.frame(ponto = "Total", horas = tot, riqueza = S, abundancia = N,
       individuos_por_hora = round(N / tot, 2), especies_por_hora = round(S / tot, 2)))
-    out$texto_esforco <- txt("Taxa de encontro: indivíduos e espécies registrados por hora de amostragem em cada ponto, para comparar pontos com esforços diferentes.",
-      sprintf("Esforço total de %s h; %s indivíduos por hora e %s espécies por hora no conjunto.", fmt(tot, 1), fmt(N / tot), fmt(S / tot)),
-      "Pontos com taxa muito acima dos outros concentram a atividade da fauna naquela campanha.",
-      "Usa o esforço da aba de pontos; se o esforço variou por método ou por noite, a taxa é aproximada.")
+    out$texto_esforco <- txt("Taxa de encontro por hora de amostragem, com as horas informadas para cada unidade.",
+      if (all(valido)) sprintf("Esforço total de %s h. No conjunto, %s indivíduos por hora e %s espécies por hora.", fmt(tot, 1), fmt(N / tot), fmt(S / tot))
+      else sprintf("Há esforço positivo informado para %d de %d unidades. As taxas aparecem para as unidades com esforço conhecido.", sum(valido), length(ef)),
+      "A taxa depende do método, da atividade da fauna e da detectabilidade.",
+      "A razão entre riqueza observada e horas descreve este levantamento. A riqueza não cresce linearmente com o esforço.")
   }
 
   # 4. espécies de interesse
@@ -112,20 +114,28 @@ analisar_relatorio <- function(reg, m, nome, pontos_info = NULL, consol = NULL, 
   # 5. sazonalidade / campanhas: riqueza e abundância por ponto em cada campanha (ou estação), teste pareado
   comp_tempo <- function(rotulo, chave) {
     rr <- r[!is.na(r[[chave]]) & nzchar(r[[chave]]), , drop = FALSE]
-    if (length(unique(rr[[chave]])) < 2) return(NULL)
     pc <- if (!is.null(rr$ponto_campo)) rr$ponto_campo else rr$ponto
-    niv <- sort(unique(rr[[chave]]))
+    campo <- if (!is.null(reg$ponto_campo)) reg$ponto_campo else reg$ponto
+    visitas <- unique(data.frame(ponto = campo, nivel = reg[[chave]]))
+    if (chave == "campanha" && !is.null(pontos_info$campanha)) {
+      visitas <- unique(rbind(visitas, data.frame(ponto = sub(" C[0-9]+$", "", pontos_info$ponto), nivel = pontos_info$campanha)))
+    }
+    visitas <- visitas[!is.na(visitas$nivel) & nzchar(visitas$nivel), , drop = FALSE]
+    niv <- sort(unique(visitas$nivel))
+    if (length(niv) < 2) return(NULL)
     tab <- do.call(rbind, lapply(niv, function(x) { s <- rr[rr[[chave]] == x, ]
-      data.frame(nivel = x, riqueza = length(unique(s$especie)), abundancia = sum(s$total), pontos = length(unique(pc[rr[[chave]] == x])), stringsAsFactors = FALSE) }))
+      data.frame(nivel = x, riqueza = length(unique(s$especie)), abundancia = sum(s$total), pontos = sum(visitas$nivel == x), stringsAsFactors = FALSE) }))
     teste <- NULL
     if (length(niv) == 2) {
-      pts <- intersect(unique(pc[rr[[chave]] == niv[1]]), unique(pc[rr[[chave]] == niv[2]]))
+      pts <- intersect(visitas$ponto[visitas$nivel == niv[1]], visitas$ponto[visitas$nivel == niv[2]])
       if (length(pts) >= 5) {
         sp <- function(x, p) length(unique(rr$especie[rr[[chave]] == x & pc == p]))
         a <- vapply(pts, function(p) sp(niv[1], p), 1); b <- vapply(pts, function(p) sp(niv[2], p), 1)
-        w <- tryCatch(suppressWarnings(stats::wilcox.test(a, b, paired = TRUE, exact = FALSE)), error = function(e) NULL)
-        if (!is.null(w)) teste <- data.frame(comparacao = paste(niv, collapse = " x "), pontos_pareados = length(pts), media_riqueza_1 = round(mean(a), 2),
-          media_riqueza_2 = round(mean(b), 2), V = unname(w$statistic), p = signif(w$p.value, 3))
+        if (any(a != b)) {
+          w <- tryCatch(suppressWarnings(stats::wilcox.test(a, b, paired = TRUE, exact = TRUE)), error = function(e) NULL)
+          if (!is.null(w) && is.finite(w$p.value)) teste <- data.frame(comparacao = paste(niv, collapse = " x "), pontos_pareados = length(pts), media_riqueza_1 = round(mean(a), 2),
+            media_riqueza_2 = round(mean(b), 2), V = unname(w$statistic), p = w$p.value)
+        }
       }
     }
     list(tipo = rotulo, tabela = tab, teste = teste)
@@ -140,7 +150,7 @@ analisar_relatorio <- function(reg, m, nome, pontos_info = NULL, consol = NULL, 
       if (!is.null(s$teste)) sprintf("teste de Wilcoxon pareado por ponto (%d pontos): p = %s", s$teste$pontos_pareados, fmt(s$teste$p, 3)))))
     out$texto_sazonal <- txt("Compara campanhas (ou estações chuvosa e seca) pela riqueza e abundância; com dois períodos e pelo menos 5 pontos amostrados nos dois, testa se a riqueza por ponto mudou (Wilcoxon pareado).",
       paste0(paste(tt, collapse = ". "), "."),
-      "A IN IBAMA 146/2007 pede campanhas na chuva e na seca: diferenças grandes entre elas mostram que uma campanha só não representa a comunidade.",
+      "As diferenças descrevem os períodos amostrados. Considere a repetição de pontos, as datas e o esforço ao interpretar a variação temporal.",
       "Com poucos pontos o teste tem pouco poder; p alto não prova que as campanhas são iguais. Clima da noite e esforço também mudam entre campanhas.")
   }
 
@@ -167,7 +177,7 @@ ficha_metodos <- function(L, R) {
                       "Rarefação e extrapolação", "Diversidade", "Equitabilidade", "Similaridade e agrupamento", "Dados secundários", "Planilha de origem"),
              valor = c(R.version.string, v,
                        if (!is.null(L$campanhas)) "ponto x campanha" else "ponto amostral",
-                       "vegan::specaccum, método aleatório, 999 permutações", "vegan::specpool e poolaccum (Chao 2, Jackknife 1 e 2, Bootstrap), 199 permutações",
+                       "vegan::specaccum, método aleatório, todas as ordens até 999, senão 999 sorteios", "vegan::specpool e poolaccum (Chao 2, Jackknife 1 e 2, Bootstrap), até 199 ordens",
                        "vegan::estimateR (Chao 1, ACE)", "iNEXT (números de Hill q = 0, 1, 2), 200 réplicas bootstrap",
                        "Shannon (log natural), Simpson, Berger-Parker, Margalef, Menhinick, alfa de Fisher, números de Hill",
                        "Pielou J', Simpson E, razão de Hill E2,1, Evar (Smith & Wilson 1996)",

@@ -5,13 +5,15 @@
 # Devolve NULL se não der para ler; senão list(problema = NA ou o motivo de ser impossível, no_brasil = TRUE/FALSE).
 ler_coordenada <- function(s) {
   s <- gsub(",", ".", trimws(s))
-  u <- regmatches(s, regexec("^([0-9]{1,2})\\s*([A-Za-z])?\\s+([0-9.]+)\\s*m?\\s*E\\s+([0-9.]+)\\s*m?\\s*[NS]?$", s))[[1]]
-  if (length(u) == 5) {
+  u <- regmatches(s, regexec("^([0-9]{1,2})\\s*([C-HJ-NP-X])?\\s+([0-9.]+)\\s*M?\\s*E\\s+([0-9.]+)\\s*M?\\s*([NS])?$", toupper(s)))[[1]]
+  if (length(u) == 6) {
     z <- as.numeric(u[2]); e <- as.numeric(u[4]); n <- as.numeric(u[5])
     if (anyNA(c(z, e, n))) return(NULL)
     pr <- if (z < 1 || z > 60) "zona UTM fora de 1 a 60" else if (e < 100000 || e > 900000) "leste (E) fora de 100 000 a 900 000 m"
           else if (n < 0 || n > 10000000) "norte (N/S) fora de 0 a 10 000 000 m" else NA
-    return(list(problema = pr, no_brasil = z >= 18 && z <= 25))
+    banda <- u[3]
+    hemisferio <- if (nzchar(banda)) { if (banda < "N") "S" else "N" } else u[6]
+    return(list(problema = pr, no_brasil = z >= 18 && z <= 25, crs = if (nzchar(hemisferio)) paste(z, hemisferio) else NA_character_, x = e, y = n))
   }
   letras <- toupper(gsub("[^A-Za-z]", "", s))
   if (grepl("[^NSEWLO]", letras)) return(NULL)
@@ -21,7 +23,7 @@ ler_coordenada <- function(s) {
   if (grepl("S", letras) && la > 0) la <- -la
   if (grepl("[WO]", letras) && lo > 0) lo <- -lo
   pr <- if (abs(la) > 90) "latitude fora de -90 a 90" else if (abs(lo) > 180) "longitude fora de -180 a 180" else NA
-  list(problema = pr, no_brasil = la >= -34 && la <= 6 && lo >= -74 && lo <= -28)
+  list(problema = pr, no_brasil = la >= -34 && la <= 6 && lo >= -74 && lo <= -28, crs = "graus", x = lo, y = la)
 }
 
 conferir_planilha <- function(L) {
@@ -40,8 +42,8 @@ conferir_planilha <- function(L) {
       add("erro", ab, x$linha_planilha, "Total", sprintf("Contagem vazia ou não numérica (\"%s\") para %s.", x$total_txt %||% "", x$especie_completa),
           "Preencher o número de indivíduos.", tipo = "contagem", especie = x$especie, ponto = x$ponto)
     } else {
-      if (x$total < 0 || x$total != round(x$total))
-        add("erro", ab, x$linha_planilha, "Total", sprintf("Contagem %s não é um inteiro positivo.", x$total), "Corrigir o número.", tipo = "contagem", especie = x$especie, ponto = x$ponto)
+      if (!total_de_campo_valido(x$total))
+        add("erro", ab, x$linha_planilha, "Total", sprintf("Contagem %s não é um inteiro finito não negativo.", x$total), "Corrigir o número.", tipo = "contagem", especie = x$especie, ponto = x$ponto)
       if (x$total == 0)
         add("atenção", ab, x$linha_planilha, "Total", sprintf("%s com total 0 no %s.", x$especie, x$ponto), "Apagar a linha ou corrigir a contagem.", tipo = "total_zero", especie = x$especie, ponto = x$ponto)
       partes <- c(x$vo, x$av, x$sem_forma)
@@ -57,7 +59,7 @@ conferir_planilha <- function(L) {
   sf <- !is.na(r$sem_forma) & r$sem_forma > 0
   if (any(sf))
     add("informação", ab, paste(r$linha_planilha[sf], collapse = ", "), "Forma de registro",
-        sprintf("%d registros (%d indivíduos) sem forma de registro anotada, nos pontos %s.", sum(sf), sum(r$sem_forma[sf]), paste(sort(unique(r$ponto[sf])), collapse = ", ")),
+        sprintf("%d registros (%s indivíduos) sem forma de registro anotada, nos pontos %s.", sum(sf), sum(r$sem_forma[sf]), paste(sort(unique(r$ponto[sf])), collapse = ", ")),
         "Se souber, separar em VO (canto) e AV (visual). Não muda as análises, mas o laudo costuma pedir.")
   # 2. pontos
   if (any(is.na(r$ponto) | r$ponto == ""))
@@ -129,7 +131,7 @@ conferir_planilha <- function(L) {
     irmas <- irmas[!grepl(" (sp\\.|cf\\.|aff\\.|gr\\.)", irmas)]
     if (length(irmas))
       add("atenção", ab, paste(r$linha_planilha[r$especie == e], collapse = ", "), "Espécie",
-          sprintf("%s pode ser a mesma espécie já registrada (%s). Fica fora da riqueza e das análises de composição; entra só na abundância total.", e, paste(irmas, collapse = ", ")),
+          sprintf("%s pode ser a mesma espécie já registrada (%s). Fica fora da riqueza e das análises de composição; permanece apenas no inventário bruto.", e, paste(irmas, collapse = ", ")),
           "Se a gravação ou a foto permitir, identificar até espécie.", tipo = "nome", especie = e, dados = paste(irmas, collapse = " | "))
     else
       add("informação", ab, paste(r$linha_planilha[r$especie == e], collapse = ", "), "Espécie",
@@ -187,7 +189,7 @@ completar_com_consolidada <- function(L) {
   if (length(unique(r$campanha)) > 1) { L$completados <- vazio; L$aviso_completar <- "Há mais de uma campanha nos registros e a consolidada não separa campanhas: nada foi completado automaticamente."; return(L) }
   pcols <- grep("^P\\d+$", names(k), value = TRUE); novos <- list(); feitos <- list()
   for (i in seq_len(nrow(k))) for (p in pcols) {
-    v_con <- k[[p]][i]; if (is.na(v_con) || v_con <= 0) next
+    v_con <- k[[p]][i]; if (!total_de_campo_valido(v_con) || v_con <= 0) next
     v_reg <- somar_totais_de_campo(r$total[r$especie == k$especie[i] & r$ponto == p])
     if (v_con > v_reg) {
       dif <- v_con - v_reg

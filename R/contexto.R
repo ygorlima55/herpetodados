@@ -12,9 +12,9 @@ num_ctx <- function(x) { v <- suppressWarnings(as.numeric(gsub(",", ".", as.char
 data_br <- function(x) { x <- as.character(x %||% ""); if (!nzchar(x) || is.na(x)) return(""); d <- tryCatch(as.Date(x), error = function(e) NA)
   if (is.na(d)) x else format(d, "%d/%m/%Y") }
 ESTACOES <- c(chuvosa = "Chuvosa", seca = "Seca", transicao = "Transição")
-SERVICOS <- c(diagnostico = "diagnóstico para licenciamento (EIA/RIMA, RAS, PCA)", monitoramento = "monitoramento de fauna",
+SERVICOS <- c(diagnostico = "diagnóstico ecológico", monitoramento = "monitoramento de fauna",
               inventario = "inventário ou levantamento rápido", resgate = "resgate e afugentamento de fauna",
-              pesquisa = "pesquisa científica", outro = "outro serviço")
+              pesquisa = "pesquisa científica", outro = "outro estudo ecológico")
 
 ler_contexto <- function(saida) {
   f <- file.path(saida, "contexto.json")
@@ -29,12 +29,10 @@ ler_contexto <- function(saida) {
 # índice da campanha do contexto para cada valor de campanha da planilha (ou a única campanha do contexto)
 campanha_ctx <- function(cs, valores) {
   if (is.null(cs)) return(rep(NA_integer_, length(valores)))
-  if (nrow(cs) == 1) return(rep(1L, length(valores)))
   nm <- sem_acento(trimws(as.character(cs$nome %||% rep("", nrow(cs))))); cd <- sem_acento(trimws(as.character(cs$codigo %||% rep("", nrow(cs)))))
   v <- sem_acento(trimws(as.character(valores)))
   i <- match(v, nm); j <- match(v, cd); k <- ifelse(is.na(i), j, i)
-  # planilha sem coluna Campanha (ou com uma só) e nenhum nome batendo: vale a 1ª campanha do contexto
-  if (all(is.na(k)) && length(unique(v[!is.na(v) & nzchar(v)])) <= 1) k <- rep(1L, length(valores))
+  if (nrow(cs) == 1 && all(is.na(v) | !nzchar(v) | v == "campanha unica")) k[] <- 1L
   k
 }
 
@@ -43,17 +41,21 @@ aplicar_contexto <- function(L, ctx) {
   if (is.null(cs)) return(L)
   r <- L$registros
   # 1. estação
-  if (all(is.na(r$estacao) | !nzchar(r$estacao)) && !is.null(cs$estacao) && any(nzchar(cs$estacao %||% ""), na.rm = TRUE)) {
+  falta <- is.na(r$estacao) | !nzchar(r$estacao)
+  if (any(falta) && !is.null(cs$estacao)) {
     k <- campanha_ctx(cs, r$campanha); est <- unname(ESTACOES[as.character(cs$estacao[k])])
-    if (any(!is.na(est))) { r$estacao <- est; L$registros <- r; L$estacao_do_contexto <- TRUE }
+    preencher <- falta & !is.na(est)
+    if (any(preencher)) { r$estacao[preencher] <- est[preencher]; L$registros <- r; L$estacao_do_contexto <- TRUE }
   }
   # 2. esforço por ponto (horas-pessoa)
-  if (!is.null(L$pontos) && all(is.na(L$pontos$esforco))) {
+  if (!is.null(L$pontos) && any(is.na(L$pontos$esforco))) {
     vis <- num_ctx(cs$visitas); vis[is.na(vis)] <- 1
     h <- num_ctx(cs$observadores) * num_ctx(cs$horas_ponto) * vis
     if (any(!is.na(h))) {
-      k <- campanha_ctx(cs, if (!is.null(L$pontos$campanha)) L$pontos$campanha else rep(NA, nrow(L$pontos)))
-      L$pontos$esforco <- h[k]; L$esforco_do_contexto <- TRUE
+      campanha <- if (!is.null(L$pontos$campanha)) L$pontos$campanha else rep(r$campanha[1], nrow(L$pontos))
+      k <- campanha_ctx(cs, campanha)
+      preencher <- is.na(L$pontos$esforco) & is.finite(h[k]) & h[k] > 0
+      if (any(preencher)) { L$pontos$esforco[preencher] <- h[k][preencher]; L$esforco_do_contexto <- TRUE }
     }
   }
   L
@@ -63,7 +65,7 @@ aplicar_contexto <- function(L, ctx) {
 texto_contexto <- function(ctx, L) {
   if (is.null(ctx)) return(NULL)
   cs <- ctx$campanhas; partes <- character()
-  sv <- SERVICOS[ctx$servico %||% ""]; if (!is.na(sv) && length(sv)) partes <- c(partes, sprintf("Serviço: %s.", sv))
+  sv <- SERVICOS[ctx$servico %||% ""]; if (!is.na(sv) && length(sv)) partes <- c(partes, sprintf("Tipo de estudo: %s.", sv))
   if (nzchar(ctx$finalidade %||% "")) partes <- c(partes, sprintf("Finalidade: %s", sub("([^.])$", "\\1.", trimws(ctx$finalidade))))
   np <- if (!is.null(L$pontos_campo)) nrow(L$pontos_campo) else if (!is.null(L$pontos)) nrow(L$pontos) else length(unique(L$registros$ponto))
   tab <- NULL
@@ -86,13 +88,13 @@ texto_contexto <- function(ctx, L) {
     })
     tot <- sum(tab$esforco_horas_pessoa, na.rm = TRUE)
     if (nrow(tab) > 1 && tot > 0) partes <- c(partes, sprintf("Esforço total: %s horas-pessoa em %d campanhas.", fmt(tot, 1), nrow(tab)))
-    est <- unique(tab$estacao[nzchar(tab$estacao)])
-    nplan0 <- length(unique(L$registros$campanha[!is.na(L$registros$campanha) & nzchar(L$registros$campanha)]))
-    if (all(c("Chuvosa", "Seca") %in% est) && nplan0 >= 2) partes <- c(partes, "As campanhas cobrem a estação chuvosa e a seca, como pede a IN IBAMA 146/2007 para o diagnóstico de fauna.")
-    else if (length(est) == 1) partes <- c(partes, sprintf("Só há amostragem na estação %s: espécies ativas só na outra estação (anuros de reprodução explosiva nas primeiras chuvas, por exemplo) podem faltar na lista. A IN IBAMA 146/2007 pede as duas estações.", tolower(est)))
+    est <- unique(as.character(L$registros$estacao))
+    est <- est[!is.na(est) & nzchar(est)]
+    if (length(est) == 1) partes <- c(partes, sprintf("Os registros com estação informada descrevem o período %s.", tolower(est)))
+    if (length(est) > 1) partes <- c(partes, sprintf("Estações informadas nos registros: %s.", paste(tolower(est), collapse = ", ")))
   }
   nplan <- length(unique(L$registros$campanha[!is.na(L$registros$campanha) & nzchar(L$registros$campanha)]))
-  if (!is.null(cs) && nrow(cs) > max(1, nplan)) partes <- c(partes, sprintf("O contexto descreve %d campanhas, mas a planilha tem registros de %s: as análises usam só os registros da planilha; a estação e o esforço vêm da 1ª campanha do contexto%s.", nrow(cs), if (nplan <= 1) "uma só" else nplan, if (nplan <= 1) "" else " que tem o mesmo nome"))
+  if (!is.null(cs) && nrow(cs) > max(1, nplan)) partes <- c(partes, sprintf("O contexto descreve %d campanhas, mas a planilha tem registros de %s: as comparações usam as visitas documentadas na planilha.", nrow(cs), if (nplan <= 1) "uma só" else nplan))
   if (isTRUE(L$esforco_do_contexto)) partes <- c(partes, "O esforço por ponto veio do contexto do campo (observadores x horas por ponto x visitas), porque a aba de pontos não tem a coluna Esforço.")
   if (isTRUE(L$estacao_do_contexto)) partes <- c(partes, "A estação de cada registro veio do contexto do campo, porque a planilha não tem a coluna Estação.")
   if (nzchar(ctx$campo %||% "")) partes <- c(partes, paste("Observações de campo:", trimws(ctx$campo)))

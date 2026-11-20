@@ -36,8 +36,9 @@ acha_coluna <- function(nomes, padroes) {
 # "Ponto 05", "P5", "5", "Ponto 5" -> "P5"
 norm_ponto <- function(x) {
   x <- norm_txt(x)
-  num <- suppressWarnings(as.integer(sub("^\\D*(\\d+).*$", "\\1", x)))
-  ifelse(is.na(num), x, paste0("P", num))
+  numerico <- grepl("^(?:p(?:onto)?\\s*[-_]?\\s*)?[0-9]+$", x, ignore.case = TRUE, perl = TRUE)
+  x[numerico] <- paste0("P", sub("^0+(?=[0-9])", "", sub("^[^0-9]*", "", x[numerico]), perl = TRUE))
+  x
 }
 
 # binômio sem autoria: "Rhinella diptycha (Cope, 1862)" -> "Rhinella diptycha"
@@ -48,6 +49,7 @@ binomio <- function(x) {
     if (length(v) < 2) return(v[1] %||% "")
     if (v[2] %in% c("sp.", "sp", "spp.", "cf.", "aff.", "gr.")) {
       if (v[2] %in% c("cf.", "aff.", "gr.") && length(v) >= 3) return(paste(v[1:3], collapse = " "))
+      if (length(v) >= 3 && grepl("^[0-9]+[A-Za-z]?$", v[3])) return(paste(v[1], "sp.", v[3]))
       return(paste(v[1], "sp."))
     }
     paste(v[1:2], collapse = " ")
@@ -163,6 +165,7 @@ ler_planilha <- function(arquivo) {
     cm <- acha_coluna(names(p), c("metodo"))
     cg <- acha_coluna(names(p), c("grupo amostral", "^grupo", "tratamento"))
     ce <- acha_coluna(names(p), c("esforco", "horas"))
+    ccam <- acha_coluna(names(p), c("^campanha$"))
     if (!is.na(cp)) {
       pontos <- data.frame(
         ponto = norm_ponto(p[[cp]]),
@@ -173,7 +176,8 @@ ler_planilha <- function(arquivo) {
         grupo_amostral = if (!is.na(cg)) norm_txt(p[[cg]]) else NA,
         esforco = if (!is.na(ce)) suppressWarnings(as.numeric(gsub(",", ".", p[[ce]]))) else NA,
         stringsAsFactors = FALSE)
-      pontos <- pontos[!is.na(pontos$nome) & pontos$nome != "" & grepl("\\d", pontos$nome), ]
+      if (!is.na(ccam)) pontos$campanha <- norm_txt(p[[ccam]])
+      pontos <- pontos[!is.na(pontos$nome) & nzchar(pontos$nome), , drop = FALSE]
     }
   }
 
@@ -190,7 +194,7 @@ ler_planilha <- function(arquivo) {
        registros = reg, pontos = pontos, consolidada = consol, secundarios = secundarios)
 }
 
-total_de_campo_valido <- function(x) !is.na(x) & x >= 0
+total_de_campo_valido <- function(x) is.finite(x) & x >= 0 & x == floor(x)
 somar_totais_de_campo <- function(x) sum(x[total_de_campo_valido(x)])
 
 # Tira das análises os registros que o corretor marca como erro e que quebram ou distorcem os cálculos:
@@ -200,9 +204,13 @@ registros_para_analise <- function(L) {
   r <- L$registros
   sem_esp <- is.na(r$especie_completa) | trimws(r$especie_completa) == "" | is.na(r$especie) | trimws(r$especie) == ""
   tot_ruim <- !total_de_campo_valido(r$total)
-  fora <- sem_esp | tot_ruim
+  sem_ponto <- is.na(r$ponto) | !nzchar(trimws(r$ponto))
+  sem_campanha <- is.na(r$campanha) | !nzchar(trimws(r$campanha))
+  fora <- sem_esp | tot_ruim | sem_ponto | sem_campanha
   L$fora_da_analise <- r[fora, , drop = FALSE]
-  L$fora_da_analise$motivo <- ifelse(sem_esp[fora], "sem nome de espécie", "Total vazio, não numérico ou negativo")
+  motivo <- ifelse(sem_esp, "sem nome de espécie", ifelse(sem_ponto, "sem ponto",
+    ifelse(sem_campanha, "campanha não informada", "Total deve ser inteiro, finito e não negativo")))
+  L$fora_da_analise$motivo <- motivo[fora]
   L$registros <- r[!fora, , drop = FALSE]
   L
 }
@@ -232,13 +240,13 @@ ler_consolidada <- function(tmp, a_con) {
   consol <- NULL
     k <- as.data.frame(readxl::read_excel(tmp, sheet = a_con, col_names = FALSE, col_types = "text", .name_repair = "minimal"))
     h <- which(apply(k, 1, function(r) any(grepl("^P ?\\d+$", norm_txt(r)))))[1]
-    if (!is.na(h)) {
+    if (!is.na(h) && h < nrow(k)) {
       cab <- norm_txt(unlist(k[h, ]))
       cps <- which(grepl("^P ?\\d+$", cab))
       ctot <- which(sem_acento(cab) == "total")[1]
       linhas <- k[(h + 1):nrow(k), , drop = FALSE]
       nomes <- norm_txt(linhas[[1]])
-      vals <- sapply(cps, function(j) suppressWarnings(as.numeric(gsub(",", ".", ifelse(norm_txt(linhas[[j]]) %in% c("-", "–", ""), "0", linhas[[j]])))))
+      vals <- do.call(cbind, lapply(cps, function(j) suppressWarnings(as.numeric(gsub(",", ".", ifelse(norm_txt(linhas[[j]]) %in% c("-", "–", ""), "0", linhas[[j]]))))))
       tem <- rowSums(!is.na(vals)) > 0 & !is.na(nomes) & !(sem_acento(nomes) %in% c("total", ""))
       if (any(tem)) {
         consol <- data.frame(linha_planilha = which(tem) + h, especie_completa = nomes[tem],

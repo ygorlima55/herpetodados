@@ -19,6 +19,7 @@ descritiva <- function(reg, M, consol) {
   esp <- colnames(M$abund); m <- M$abund
   r <- reg[reg$especie %in% esp, ]
   fam <- tapply(r$familia, r$especie, function(x) x[!is.na(x)][1])[esp]
+  fam[is.na(fam) | !nzchar(trimws(fam))] <- "Família não informada"
   # por família
   tf <- do.call(rbind, lapply(sort(unique(fam)), function(f) {
     e <- esp[fam == f]; data.frame(familia = f, riqueza = length(e), abundancia = sum(m[, e, drop = FALSE]),
@@ -71,6 +72,7 @@ descritiva <- function(reg, M, consol) {
 
 # ---- diversidade beta: Whittaker e partição de Baselga (Sørensen) ----
 beta_baselga <- function(pr) {
+  media_amostrada <- mean(rowSums(pr))
   pr <- pr[rowSums(pr) > 0, , drop = FALSE]; pr <- pr[, colSums(pr) > 0, drop = FALSE]
   S <- rowSums(pr); ST <- ncol(pr); n <- nrow(pr)
   a_tot <- sum(S) - ST; mins <- 0; maxs <- 0
@@ -81,7 +83,7 @@ beta_baselga <- function(pr) {
     if (i < j) { mins <- mins + min(b, cc); maxs <- maxs + max(b, cc) }
   }
   bsor <- (mins + maxs) / (2 * a_tot + mins + maxs); bsim <- mins / (a_tot + mins)
-  list(whittaker = round(ST / mean(S) - 1, 4), gama = ST, alfa_media = round(mean(S), 2),
+  list(whittaker = round(ST / media_amostrada - 1, 4), gama = ST, alfa_media = round(media_amostrada, 2),
        sorensen = round(bsor, 4), turnover = round(bsim, 4), aninhamento = round(bsor - bsim, 4),
        par_sorensen = round(sor, 3), par_turnover = round(sim, 3), par_aninhamento = round(sor - sim, 3))
 }
@@ -89,18 +91,23 @@ beta_baselga <- function(pr) {
 # ---- teste t de Hutcheson (Shannon) entre pares de pontos ----
 hutcheson <- function(m) {
   m <- m[rowSums(m) > 1, , drop = FALSE]
+  if (nrow(m) < 2) return(NULL)
   st <- t(apply(m, 1, function(x) { x <- x[x > 0]; N <- sum(x); p <- x / N
     H <- -sum(p * log(p)); v <- (sum(p * log(p)^2) - sum(p * log(p))^2) / N + (length(x) - 1) / (2 * N^2); c(H = H, var = v, N = N) }))
   pares <- combn(rownames(m), 2); out <- list()
   for (k in seq_len(ncol(pares))) {
     a <- pares[1, k]; b <- pares[2, k]
-    t <- (st[a, "H"] - st[b, "H"]) / sqrt(st[a, "var"] + st[b, "var"])
-    gl <- (st[a, "var"] + st[b, "var"])^2 / (st[a, "var"]^2 / st[a, "N"] + st[b, "var"]^2 / st[b, "N"])
+    variancia <- st[a, "var"] + st[b, "var"]
+    t <- gl <- NA_real_
+    if (variancia > 0) {
+      t <- (st[a, "H"] - st[b, "H"]) / sqrt(variancia)
+      gl <- variancia^2 / (st[a, "var"]^2 / st[a, "N"] + st[b, "var"]^2 / st[b, "N"])
+    }
     out[[k]] <- data.frame(ponto_a = a, ponto_b = b, H_a = round(st[a, "H"], 3), H_b = round(st[b, "H"], 3), t = round(t, 3), gl = round(gl, 1),
-                           p = signif(2 * stats::pt(-abs(t), gl), 3), stringsAsFactors = FALSE)
+                           p = 2 * stats::pt(-abs(t), gl), stringsAsFactors = FALSE)
   }
-  tt <- do.call(rbind, out); tt$p_holm <- signif(stats::p.adjust(tt$p, "holm"), 3)
-  tt$diferenca <- ifelse(tt$p_holm < 0.05, "diferente", "não diferente")
+  tt <- do.call(rbind, out); tt$p_holm <- stats::p.adjust(tt$p, "holm")
+  tt$diferenca <- ifelse(is.na(tt$p_holm), "indeterminado", ifelse(tt$p_holm < 0.05, "diferente", "não diferente"))
   ic <- data.frame(ponto = rownames(st), H = round(st[, "H"], 3), li = round(st[, "H"] - 1.96 * sqrt(st[, "var"]), 3), ls = round(st[, "H"] + 1.96 * sqrt(st[, "var"]), 3), N = st[, "N"])
   list(pares = tt, ic = ic)
 }
@@ -116,21 +123,21 @@ textos_estimadores <- function(G, pool) {
             sprintf("Com todos os pontos, %d espécies.%s", round(ob), fim("S")),
             "Se a curva ainda sobe no fim, a lista está incompleta. É a base para comparar com os estimadores: a diferença entre eles e a observada é o número de espécies que provavelmente faltaram.",
             "Depende do esforço e da época. Não estima espécies não registradas."),
-    chao = txt("Chao 2 estima a riqueza total a partir das espécies registradas em um único ponto (únicas, Q1) e em exatamente dois pontos (duplicadas, Q2): S = Sobs + Q1² / 2Q2. Muitas únicas e poucas duplicadas indicam muitas espécies ainda não encontradas.",
+    chao = txt("Chao 2 usa as espécies vistas em um ponto (Q1) e em dois (Q2). Com m pontos e Q2 > 0, o vegan soma [(m − 1)/m] × Q1²/(2Q2) à riqueza observada. Se Q2 = 0, o termo é [(m − 1)/m] × Q1(Q1 − 1)/2.",
             sprintf("Chao 2 = %s espécies (erro padrão %s), %s acima da observada; únicas = %d, duplicadas = %d.%s%s", fmt(v("Chao 2"), 1), fmt(ep("Chao 2"), 2), fmt(v("Chao 2") - ob, 1), G$acumulacao$unicas, G$acumulacao$duplicadas, fim("chao"), frase_est("chao")),
             "É o estimador mais usado como limite inferior da riqueza real. Valor próximo da observada indica inventário quase completo para o método e a época.",
-            "Com poucos pontos é instável: no início da curva costuma superestimar e pular muito. Precisa de pelo menos uma duplicada para não explodir."),
+            "Com poucas unidades a incerteza pode ser grande, inclusive quando nenhuma espécie ocorre em exatamente duas unidades."),
     jack1 = txt("Jackknife de primeira ordem soma à riqueza observada as espécies únicas corrigidas pelo número de pontos: S = Sobs + Q1 (m − 1) / m, em que m é o número de pontos.",
             sprintf("Jackknife 1 = %s espécies (erro padrão %s), %s acima da observada.%s%s", fmt(v("Jackknife 1"), 1), fmt(ep("Jackknife 1"), 2), fmt(v("Jackknife 1") - ob, 1), fim("jack1"), frase_est("jack1")),
             "Costuma dar valores um pouco acima do Chao 2 com poucas amostras e é bastante usado em inventários de fauna no Brasil. Leia junto com o Chao 2: se os dois concordam, a estimativa é mais confiável.",
             "Cresce com o número de únicas; com 5 pontos, uma espécie rara a mais muda bastante o resultado."),
     jack2 = txt("Jackknife de segunda ordem usa as únicas e as duplicadas: S = Sobs + Q1 (2m − 3)/m − Q2 (m − 2)² / [m(m − 1)].",
             sprintf("Jackknife 2 = %s espécies, %s acima da observada.%s%s", fmt(v("Jackknife 2"), 1), fmt(v("Jackknife 2") - ob, 1), fim("jack2"), frase_est("jack2")),
-            "Tende a dar o maior valor quando há muitas espécies raras. Serve como teto provável da riqueza.",
+             "Compare o valor com os demais estimadores. O Jackknife 2 não estabelece um limite superior para a riqueza.",
             "É o mais instável com poucas unidades amostrais e não tem erro padrão calculado pelo vegan."),
     boot = txt("Bootstrap reamostra os pontos com reposição e soma a contribuição de cada espécie conforme a fração de pontos em que ela falta: S = Sobs + Σ (1 − pk)^m.",
             sprintf("Bootstrap = %s espécies (erro padrão %s), %s acima da observada.%s%s", fmt(v("Bootstrap"), 1), fmt(ep("Bootstrap"), 2), fmt(v("Bootstrap") - ob, 1), fim("boot"), frase_est("boot")),
-            "Costuma ser o estimador mais conservador (mais perto da observada). Se até o Bootstrap fica acima da observada, faltaram espécies com certeza.",
+            "Uma estimativa acima da riqueza observada sugere a possibilidade de espécies ainda não detectadas.",
             "Subestima a riqueza quando há muitas espécies raras; use como limite inferior, junto com o Chao 2.")
   )
 }

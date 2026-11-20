@@ -6,24 +6,46 @@
 codigo_campanhas <- function(camp) { u <- sort(unique(camp)); setNames(paste0("C", seq_along(u)), u) }
 
 unidades_campanha <- function(L) {
-  r <- L$registros; cod <- codigo_campanhas(r$campanha)
+  r <- L$registros
+  camp_pontos <- L$pontos$campanha
+  cod <- codigo_campanhas(c(r$campanha, camp_pontos[!is.na(camp_pontos) & nzchar(camp_pontos)]))
   r$ponto_campo <- r$ponto; r$camp_cod <- unname(cod[r$campanha]); r$ponto <- paste(r$ponto, r$camp_cod)
   L$registros <- r
-  if (!is.null(L$pontos)) {
-    P <- L$pontos; L$pontos_campo <- P; sem_grupo <- all(is.na(P$grupo_amostral) | P$grupo_amostral == "")
-    L$pontos <- do.call(rbind, lapply(names(cod), function(cn) {
-      q <- P; q$ponto <- paste(P$ponto, cod[[cn]]); q$nome <- paste(P$nome, cod[[cn]]); q$campanha <- cn
-      if (sem_grupo) q$grupo_amostral <- cod[[cn]]
-      q }))
+  P <- L$pontos
+  if (is.null(P)) P <- data.frame(ponto = character(), nome = character(), fitofisionomia = character(),
+    coordenadas = character(), metodo = character(), grupo_amostral = character(), esforco = numeric())
+  L$pontos_campo <- P[!duplicated(P$ponto), , drop = FALSE]
+  for (pt in unique(P$ponto[duplicated(P$ponto)])) {
+    co <- unique(na.omit(P$coordenadas[P$ponto == pt]))
+    L$pontos_campo$coordenadas[L$pontos_campo$ponto == pt] <- if (length(co) == 1) co else NA_character_
   }
+  sem_grupo <- all(is.na(P$grupo_amostral) | P$grupo_amostral == "")
+  L$pontos <- do.call(rbind, lapply(names(cod), function(cn) {
+    especificos <- if ("campanha" %in% names(P)) which(P$campanha == cn) else integer()
+    gerais <- if ("campanha" %in% names(P)) which(is.na(P$campanha) | !nzchar(P$campanha)) else seq_len(nrow(P))
+    cadastro <- P[c(especificos, gerais), , drop = FALSE]
+    locais <- unique(c(r$ponto_campo[r$campanha == cn], P$ponto[especificos]))
+    q <- cadastro[match(locais, cadastro$ponto), , drop = FALSE]
+    q$ponto <- paste(locais, cod[[cn]])
+    q$nome <- paste(ifelse(is.na(q$nome), locais, q$nome), cod[[cn]])
+    q$campanha <- cn
+    if (sem_grupo) q$grupo_amostral <- cod[[cn]]
+    q
+  }))
   L$campanhas <- data.frame(codigo = unname(cod), campanha = names(cod), stringsAsFactors = FALSE)
   L
 }
 
-comparar_campanhas <- function(reg, excluidas, campanhas) {
+comparar_campanhas <- function(reg, excluidas, campanhas, pontos_info = NULL) {
+  visitas <- unique(reg[c("ponto_campo", "camp_cod")])
+  if (!is.null(pontos_info$campanha)) {
+    cadastro <- data.frame(ponto_campo = sub(" C[0-9]+$", "", pontos_info$ponto),
+      camp_cod = campanhas$codigo[match(pontos_info$campanha, campanhas$campanha)])
+    visitas <- unique(rbind(visitas, cadastro[!is.na(cadastro$camp_cod), , drop = FALSE]))
+  }
   r <- reg[!(reg$especie %in% excluidas) & !is.na(reg$total) & reg$total > 0, ]
-  cods <- campanhas$codigo[campanhas$codigo %in% r$camp_cod]
-  if (length(cods) < 2) return(NULL)
+  cods <- campanhas$codigo[campanhas$codigo %in% visitas$camp_cod]
+  if (length(cods) < 2 || !nrow(r)) return(NULL)
   mc <- tapply(r$total, list(factor(r$camp_cod, levels = cods), r$especie), sum); mc[is.na(mc)] <- 0
   pres <- mc > 0
   resumo <- data.frame(codigo = cods, campanha = campanhas$campanha[match(cods, campanhas$codigo)],
@@ -38,23 +60,25 @@ comparar_campanhas <- function(reg, excluidas, campanhas) {
   pares <- do.call(rbind, combn(cods, 2, simplify = FALSE, FUN = function(p) {
     a <- pres[p[1], ]; b <- pres[p[2], ]; com <- sum(a & b)
     data.frame(campanha_a = p[1], campanha_b = p[2], comuns = com, so_a = sum(a & !b), so_b = sum(b & !a),
-      jaccard = round(com / sum(a | b), 3), sorensen = round(2 * com / (sum(a) + sum(b)), 3),
-      bray_curtis_sim = round(1 - as.numeric(vegan::vegdist(mc[p, ], "bray")), 3), stringsAsFactors = FALSE) }))
-  pts <- sort(unique(r$ponto_campo)); pts <- pts[order(suppressWarnings(as.integer(sub("\\D+", "", pts))), pts)]
+      jaccard = if (any(a | b)) round(com / sum(a | b), 3) else NA_real_, sorensen = if (any(a | b)) round(2 * com / (sum(a) + sum(b)), 3) else NA_real_,
+      bray_curtis_sim = if (sum(mc[p, , drop = FALSE]) > 0) round(1 - as.numeric(vegan::vegdist(mc[p, , drop = FALSE], "bray")), 3) else NA_real_, stringsAsFactors = FALSE) }))
+  pts <- sort(unique(visitas$ponto_campo)); pts <- pts[order(suppressWarnings(as.integer(sub("\\D+", "", pts))), pts)]
   porponto <- do.call(rbind, lapply(pts, function(p) {
     s <- lapply(cods, function(c) unique(r$especie[r$ponto_campo == p & r$camp_cod == c]))
     linha <- data.frame(ponto = p, stringsAsFactors = FALSE)
-    for (i in seq_along(cods)) { linha[[paste0("S_", cods[i])]] <- length(s[[i]]); linha[[paste0("N_", cods[i])]] <- sum(r$total[r$ponto_campo == p & r$camp_cod == cods[i]]) }
+    visitado <- cods %in% visitas$camp_cod[visitas$ponto_campo == p]
+    for (i in seq_along(cods)) {
+      linha[[paste0("S_", cods[i])]] <- if (visitado[i]) length(s[[i]]) else NA_integer_
+      linha[[paste0("N_", cods[i])]] <- if (visitado[i]) sum(r$total[r$ponto_campo == p & r$camp_cod == cods[i]]) else NA_real_
+    }
     u <- unique(unlist(s)); comum <- Reduce(intersect, s)
-    linha$comuns <- length(comum); linha$jaccard <- if (length(u)) round(length(comum) / length(u), 3) else NA
+    linha$comuns <- if (all(visitado)) length(comum) else NA_integer_
+    linha$jaccard <- if (all(visitado) && length(u)) round(length(comum) / length(u), 3) else NA_real_
     linha }))
-  P1 <- pares[1, ]; mud <- porponto[order(porponto$jaccard), ][1, ]
   texto <- txt(
-    "Compara as campanhas como se fossem duas listas: quantas espécies cada uma teve, quantas aparecem nas duas e quantas só numa. Jaccard e Sørensen medem a parte em comum (1 = mesmas espécies). A tabela por ponto mostra se a mudança foi geral ou ficou concentrada em alguns pontos.",
-    sprintf("%s. Em comum entre %s e %s: %d espécies (Jaccard %s; Sørensen %s). Só em %s: %d; só em %s: %d. O ponto que mais mudou entre campanhas foi o %s (Jaccard %s).",
-      paste(sprintf("%s (%s): %d espécies e %d indivíduos", resumo$codigo, resumo$campanha, resumo$riqueza, resumo$individuos), collapse = "; "),
-      P1$campanha_a, P1$campanha_b, P1$comuns, fmt(P1$jaccard), fmt(P1$sorensen), P1$campanha_a, P1$so_a, P1$campanha_b, P1$so_b, mud$ponto, fmt(mud$jaccard)),
-    "Espécies que aparecem numa campanha só costumam ser de reprodução explosiva ou curta (ativas só no começo das chuvas) ou raras. Muitas exclusivas nas duas campanhas indicam que a comunidade muda ao longo do ano e que uma campanha só subestima a riqueza da área. Pontos com Jaccard baixo entre campanhas são os mais sazonais; pontos com Jaccard alto têm comunidade estável.",
+    "Compara as listas e abundâncias de cada campanha. Para cada par, Jaccard e Sørensen quantificam a semelhança de composição, e Bray–Curtis considera a abundância.",
+    paste(sprintf("%s (%s): %d espécies e %d indivíduos", resumo$codigo, resumo$campanha, resumo$riqueza, resumo$individuos), collapse = ". "),
+    "A tabela por ponto compara as campanhas com registro de visita. Um campo vazio identifica uma visita sem confirmação. O Jaccard por ponto é a interseção dividida pela união das listas das campanhas.",
     "Diferença entre campanhas mistura estação, clima da noite, esforço e quem amostrou. Sem a data e o esforço de cada campanha, não dá para separar o efeito da estação do efeito do método.")
   list(resumo = resumo, especies = esp, pares = pares, por_ponto = porponto, texto = texto)
 }
@@ -92,15 +116,14 @@ desenhar_camp <- function(chave, forma, G, e, gg, pal, k, w, h) {
         titulos_gg(e, chave, paste("Espécies registradas em cada campanha:", gr), NULL, NULL, "Tamanho do círculo = número de indivíduos.") + tema_gg(e) +
         ggplot2::theme(axis.text.y = ggplot2::element_text(face = "italic")), w * .8, max(h, .22 * nrow(E) + 1.2)))
     }
-    P <- C$pares[1, ]
-    d <- data.frame(parte = factor(c(paste("Só", P$campanha_a), "Nas duas", paste("Só", P$campanha_b)), levels = rev(c(paste("Só", P$campanha_a), "Nas duas", paste("Só", P$campanha_b)))),
-                    v = c(P$so_a, P$comuns, P$so_b))
-    return(gg(ggplot2::ggplot(d, ggplot2::aes(x = "Espécies", y = v, fill = parte)) + ggplot2::geom_col(width = .5, colour = k$fundo) +
-      ggplot2::geom_text(ggplot2::aes(label = paste0(parte, "\n", v)), position = ggplot2::position_stack(vjust = .5), family = e$familia, size = tam, colour = "white") +
-      ggplot2::coord_flip() + ggplot2::scale_fill_manual(values = setNames(pal[c(2, 4, 1)], levels(d$parte)), guide = "none") +
-      titulos_gg(e, chave, paste("Espécies em comum entre as campanhas:", gr), NULL, "Número de espécies",
-                 sprintf("%s. Jaccard = %s; Sørensen = %s.", paste(sprintf("%s: %s", C$resumo$codigo, C$resumo$campanha), collapse = "; "), fmt1(P$jaccard, 2), fmt1(P$sorensen, 2))) +
-      tema_gg(e) + ggplot2::theme(axis.text.y = ggplot2::element_blank()), w, h * .6))
+    P <- C$pares
+    d <- data.frame(par = rep(paste(P$campanha_a, "×", P$campanha_b), 3),
+      parte = rep(c("Só na primeira", "Em ambas", "Só na segunda"), each = nrow(P)), v = c(P$so_a, P$comuns, P$so_b))
+    return(gg(ggplot2::ggplot(d, ggplot2::aes(par, v, fill = parte)) + ggplot2::geom_col(width = .6) +
+      ggplot2::geom_text(ggplot2::aes(label = ifelse(v > 0, v, "")), position = ggplot2::position_stack(vjust = .5), family = e$familia, size = tam) +
+      ggplot2::coord_flip() + ggplot2::scale_fill_manual(values = setNames(pal[c(2,4,1)], c("Só na primeira", "Em ambas", "Só na segunda")), name = NULL) +
+      titulos_gg(e, chave, paste("Espécies em comum entre as campanhas:", gr), "Campanhas", "Número de espécies",
+                 paste(sprintf("%s: %s", C$resumo$codigo, C$resumo$campanha), collapse = "; ")) + tema_gg(e), w, max(h * .6, 1.8 + .26 * nrow(P))))
   }
   if (chave == "nmds" && !is.null(G$nmds$pontos)) {
     d <- G$nmds$pontos; if (is.null(d$grupo)) d$grupo <- "Pontos"; d$grupo <- as.character(d$grupo)

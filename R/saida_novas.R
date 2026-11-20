@@ -265,7 +265,8 @@ curvas_estilo_inext <- function(chave, zs, nomes, cores, G, e, gg, pal, k, w, h)
     z <- z[order(z$pontos), ]; z <- z[!duplicated(z$pontos), ]
     T <- if (!is.null(z$real)) max(z$pontos[z$real]) else max(z$pontos)
     xs <- seq(min(z$pontos), max(z$pontos), length.out = 160)
-    f <- function(y) { if (length(y) < 2) return(rep(y, length(xs))); y[is.na(y)] <- stats::approx(z$pontos[!is.na(y)], y[!is.na(y)], z$pontos[is.na(y)], rule = 2)$y; stats::splinefun(z$pontos, y, method = "monoH.FC")(xs) }
+    f <- function(y) stats::approx(z$pontos, y, xs, rule = 2, na.rm = FALSE, ties = "ordered")$y
+    if (nrow(z) == 1) f <- function(y) rep(y, length(xs))
     yy <- f(z$media)
     data.frame(serie = nome, x = xs, y = yy, li = pmin(f(z$li), yy), ls = pmax(f(z$ls), yy), extra = xs > T + 1e-9, T = T)
   }
@@ -334,31 +335,21 @@ curvas_limpas <- function(chave, zs, nomes, cores, e, gg, k, w, h, xlab = "Núme
   # faixas = TRUE (18/11/2026): várias curvas, cada uma com a sua faixa sombreada, só nos pontos amostrados (sem projeção)
   if (faixas) zs <- lapply(zs, function(z) { if (!is.null(z$real)) z <- z[z$real, , drop = FALSE]; z$real <- NULL; z })
   n_amostra <- max(unlist(lapply(zs, function(z) if (!is.null(z$real)) z$pontos[z$real] else z$pontos)))
-  if (varias) {
-    # todas começam no mesmo ponto (1 unidade amostral: Jackknife 1 e Bootstrap = riqueza observada) e vão até o fim da
-    # extrapolação do iNEXT da observada; depois do último ponto amostrado, cada estimador segue no valor com todos os pontos.
-    ob <- zs[[1]]; xmax <- max(ob$pontos); y1 <- ob$media[which.min(ob$pontos)]; x1 <- min(ob$pontos)
-    zs[-1] <- lapply(zs[-1], function(z) {
-      z <- z[order(z$pontos), c("pontos", "media", "li", "ls")]
-      if (min(z$pontos) > x1) z <- rbind(data.frame(pontos = x1, media = y1, li = y1, ls = y1), z)
-      z$real <- TRUE; ult <- z[nrow(z), ]
-      if (xmax > ult$pontos) z <- rbind(z, data.frame(pontos = seq(ult$pontos + 1, xmax), media = ult$media, li = ult$li, ls = ult$ls, real = FALSE))
-      z })
-  }
   pts <- do.call(rbind, Map(function(z, nome) { if (!is.null(z$real)) z <- z[z$real, , drop = FALSE]; data.frame(serie = nome, x = z$pontos, y = z$media) }, zs, nomes))
   pts$serie <- factor(pts$serie, levels = nomes)
   suave <- function(z, nome) {
     z <- z[order(z$pontos), ]; z <- z[!duplicated(z$pontos), ]
     T <- if (!is.null(z$real)) max(z$pontos[z$real]) else max(z$pontos)
-    xs <- seq(min(z$pontos), max(z$pontos), length.out = 200)
-    f <- function(y) { if (length(y) < 2) return(rep(y, length(xs))); y[is.na(y)] <- stats::approx(z$pontos[!is.na(y)], y[!is.na(y)], z$pontos[is.na(y)], rule = 2)$y; stats::splinefun(z$pontos, y, method = "monoH.FC")(xs) }
+    xs <- sort(unique(c(z$pontos, seq(min(z$pontos), max(z$pontos), length.out = 200))))
+    f <- function(y) stats::approx(z$pontos, y, xs, rule = 2, na.rm = FALSE, ties = "ordered")$y
+    if (nrow(z) == 1) f <- function(y) rep(y, length(xs))
     yy <- f(z$media)
     data.frame(serie = nome, x = xs, y = yy, li = pmin(f(z$li), yy), ls = pmax(f(z$ls), yy), T = T)
   }
   d <- do.call(rbind, Map(suave, zs, nomes)); d$serie <- factor(d$serie, levels = nomes)
   d$parte <- factor(ifelse(d$x > d$T + 1e-9, "Extrapolação", "Rarefação"), levels = c("Rarefação", "Extrapolação"))
   rot_partes <- c("Rarefação" = "Interpolação", "Extrapolação" = "Extrapolação")
-  lig <- d[abs(d$x - d$T) == ave(abs(d$x - d$T), d$serie, FUN = min), ]; lig$parte <- "Extrapolação"; d2 <- rbind(d, lig)
+  lig <- d[d$x == d$T & d$serie %in% d$serie[d$x > d$T], ]; lig$parte <- rep("Extrapolação", nrow(lig)); d2 <- rbind(d, lig)
   tem_extra <- any(d$parte == "Extrapolação")
   fim <- do.call(rbind, lapply(split(d, d$serie), function(q) q[which.min(abs(q$x - q$T)), ]))
   cs <- setNames(cores, nomes)

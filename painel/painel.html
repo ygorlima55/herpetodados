@@ -384,6 +384,7 @@ aside.editor{border-radius:26px;background:var(--vidro);border-color:var(--vidro
 .edtit .elems{display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0 4px}.edtit .elems label{flex-direction:row;align-items:center;gap:5px}
 .edtit .itens-leg{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px 14px;margin:6px 0 4px}
 .edtit .itens-leg .it{display:flex;align-items:center;gap:6px}.edtit .itens-leg .q{width:16px;height:16px;border-radius:4px;flex:none;border:1px solid rgba(0,0,0,.15)}.edtit .itens-leg input[type=text]{flex:1;min-width:0}
+.edtit .itens-leg input.cor-it{width:30px;height:24px;padding:0;border:1px solid rgba(0,0,0,.18);border-radius:5px;background:none;cursor:pointer;flex:none}
 .legcores .it.fora{opacity:.45;text-decoration:line-through}
 .ctx .camp{border:1px solid var(--fio-2);border-radius:16px;padding:10px 12px;margin:8px 0;background:var(--cartao)}
 .ctx .cab-camp{display:flex;gap:10px;align-items:center}.ctx .cab-camp input{font:inherit;font-weight:600;border:0;border-bottom:1px solid var(--fio);background:transparent;color:inherit;padding:2px 0}
@@ -637,6 +638,15 @@ html.trocando-tema,html.trocando-tema body,html.trocando-tema main > section,htm
 /* narração e orbe: materializam com desfoque e escala (§12) */
 #narraQuad{filter:blur(4px)}#narraQuad.visivel{filter:none}
 #narraQuad{transition:opacity 400ms var(--ease-out),transform 400ms var(--ease-out),filter 400ms var(--ease-out)!important}
+/* enquanto o R roda (body.analisando): o vidro fica mais fino para o orbe aparecer por trás dos quadros, e volta ao normal no fim */
+body.analisando section.prancha,body.analisando main > section,body.analisando #inserir,body.analisando #levantamentos,body.analisando #guia,body.analisando #arquivos{background:color-mix(in srgb,var(--cartao) 30%,transparent)!important;
+  backdrop-filter:blur(4px) saturate(160%)!important;-webkit-backdrop-filter:blur(4px) saturate(160%)!important}
+body.analisando .figr,body.analisando .tabbox,body.analisando .numeros > div,body.analisando #lista,body.analisando #lista table,body.analisando .solta,body.analisando #solta,body.analisando .passos div,body.analisando .guia div{background:color-mix(in srgb,var(--cartao) 42%,transparent)!important}
+body.analisando .figr .quadro{opacity:.94}
+main > section,section.prancha,.figr,.tabbox,.numeros > div,#lista,.solta{transition:background-color 700ms ease,backdrop-filter 700ms ease}
+body.analisando #analiseQuad.visivel{opacity:1!important}
+/* caixa de log vazia não aparece */
+.log:empty,.tarefa:empty{display:none!important}
 @media (prefers-reduced-motion:reduce){button,.menu nav .marcador,aside.editor,#analiseQuad,.abas .pilula-abas{transition:none!important}button:active{transform:none}.abas .pilula-abas.pousa::before,#narraQuad .ponto,#narraQuad .txt::after{animation:none!important}main > section.prancha.ativa{animation:esmaece 200ms ease!important}}
 @media (prefers-reduced-transparency:reduce){.menu,section.prancha,main > section,aside.editor,#narraQuad,.abas::before{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:var(--papel-2)!important}section.prancha,main > section{background:var(--cartao)!important}.abas::before{background:#1d1d1f!important}}
 @media print{#analiseQuad,.barra.quad{display:none!important}body{background:#fff!important}}
@@ -1043,10 +1053,8 @@ function editorTitulos(chave){
     `<label>Título da legenda<input type="text" data-tl value="${esc(aj.titulo_legenda || "")}" placeholder="(padrão)"></label></div>` +
     `<div class="rotulo" style="margin-top:10px">O que aparece na figura (desmarque para tirar)</div><div class="elems">` +
     ELEMENTOS.map(([k, n]) => `<label><input type="checkbox" data-el="${k}" ${oc.includes(k) ? "" : "checked"}> ${n}</label>`).join("") + `</div>` +
-    `<div class="rotulo" style="margin-top:10px">Itens da legenda: mude o texto ou desmarque para tirar o item da figura</div><div class="itens-leg"><span class="nota">Carregando...</span></div>` +
-    `<div class="rotulo" style="margin-top:10px">Cores desta figura (1ª cor = 1ª série da legenda, 2ª = 2ª série...)</div><div class="cores-fig">` +
-    (E.cores_fig[chave] || cores().slice(0, 4)).slice(0, 4).map((c, i) => `<label>Cor ${i + 1} <input type="color" data-c="${i}" value="${c}"></label>`).join("") +
-    `</div><label class="ck"><input type="checkbox" data-g ${E.mostrar_grupo === true ? "checked" : ""}> Mostrar o grupo (${esc(grupo)}) abaixo do título em todas as figuras</label>` +
+    `<div class="rotulo" style="margin-top:10px">Itens da legenda: clique no quadrado para mudar a cor, mude o texto ou desmarque para tirar o item da figura</div><div class="itens-leg"><span class="nota">Carregando...</span></div>` +
+    `<label class="ck"><input type="checkbox" data-g ${E.mostrar_grupo === true ? "checked" : ""}> Mostrar o grupo (${esc(grupo)}) abaixo do título em todas as figuras</label>` +
     `<p class="nota">Legenda e elementos valem para as figuras feitas com ggplot2. As do R base (mapa de calor, dendrograma base, rarefação vegan, radfit) só aceitam título e eixos.</p>`;
   const il = ed.querySelector(".itens-leg");
   if (LID) fetch(`figuras/${TAG(grupo)}_${chave}.cores.json?v=${versao}`, {cache:"no-store"}).then(r => r.ok ? r.json() : null).catch(() => null).then(itens => {
@@ -1054,14 +1062,17 @@ function editorTitulos(chave){
     if (!itens.length) { il.innerHTML = '<span class="nota">Esta figura não tem itens de legenda para editar.</span>'; return; }
     const nomes = aj.nomes || {}, fora = arr(aj.remover); il.innerHTML = "";
     for (const it of itens) { const d = el("div", {class:"it"});
-      d.innerHTML = `<input type="checkbox" data-it="${esc(it.rotulo)}" ${fora.includes(it.rotulo) ? "" : "checked"} title="Desmarque para tirar da figura"><span class="q" style="background:${it.cor}"></span><input type="text" data-nm="${esc(it.rotulo)}" value="${esc(nomes[it.rotulo] || it.rotulo)}">`;
+      d.innerHTML = `<input type="checkbox" data-it="${esc(it.rotulo)}" ${fora.includes(it.rotulo) ? "" : "checked"} title="Desmarque para tirar da figura">${it.indice ? `<input type="color" class="cor-it" data-ci="${it.indice}" data-orig="${esc(it.cor)}" value="${esc(it.cor)}" title="Cor deste item">` : `<span class="q" style="background:${it.cor}"></span>`}<input type="text" data-nm="${esc(it.rotulo)}" value="${esc(nomes[it.rotulo] || it.rotulo)}">`;
       il.appendChild(d); }
   });
   const ap = el("button", {class:"forte"}, "Aplicar e redesenhar"), vt = el("button", {}, "Voltar ao padrão");
   const grava = limpa => { const t = {}; ed.querySelectorAll("input[data-k]").forEach(i => { if (limpa) i.value = ""; if (i.value.trim()) t[i.dataset.k] = i.value.trim(); });
     if (Object.keys(t).length) E.titulos[chave] = t; else delete E.titulos[chave];
-    const cs = [...ed.querySelectorAll("input[data-c]")].map(i => i.value), pad = cores().slice(0, cs.length);
-    if (!limpa && cs.some((c, i) => c.toLowerCase() !== String(pad[i]).toLowerCase())) E.cores_fig[chave] = cs; else delete E.cores_fig[chave];
+    const mud = [...ed.querySelectorAll("input[data-ci]")].filter(i => i.value.toLowerCase() !== String(i.dataset.orig).toLowerCase());
+    if (limpa) delete E.cores_fig[chave];
+    else if (mud.length) { const pal = (E.cores_fig[chave] || cores()).slice();
+      for (const i of mud) { const n = +i.dataset.ci; while (pal.length < n) pal.push(cores()[pal.length] || "#888888"); pal[n - 1] = i.value; }
+      E.cores_fig[chave] = pal; }
     const a = {}, ocul = [...ed.querySelectorAll("input[data-el]")].filter(i => !i.checked).map(i => i.dataset.el), rem = [...ed.querySelectorAll("input[data-it]")].filter(i => !i.checked).map(i => i.dataset.it);
     const nm = {}; ed.querySelectorAll("input[data-nm]").forEach(i => { const v = i.value.trim(); if (v && v !== i.dataset.nm) nm[i.dataset.nm] = v; });
     const tl = ed.querySelector("[data-tl]").value.trim();
@@ -1191,7 +1202,7 @@ function montaHarmonia(){
 }
 
 /* ---------------- contexto do campo, sugestões por serviço e análises sob pedido (19/11/2026) ---------------- */
-const SERV = [["", "Escolha o serviço"], ["diagnostico", "Diagnóstico para licenciamento (EIA/RIMA, RAS, PCA)"], ["monitoramento", "Monitoramento de fauna"],
+const SERV = [["", "Sem classificação"], ["diagnostico", "Diagnóstico ecológico"], ["monitoramento", "Monitoramento de fauna"],
   ["inventario", "Inventário ou levantamento rápido"], ["resgate", "Resgate e afugentamento"], ["pesquisa", "Pesquisa científica"], ["outro", "Outro"]];
 const METODOS = ["Busca ativa", "Procura visual limitada por tempo", "Zoofonia (escuta)", "Armadilha de queda (pitfall)", "Armadilha de funil", "Encontro ocasional",
   "Transecção", "Armadilha fotográfica", "Rede de neblina", "Captura e marcação"];
@@ -1209,10 +1220,10 @@ function vaiContexto(){ store.set("herp.sub1", "campo"); irPara("planilha"); }
 function irPara(id, sub){ if (sub) { const k = {laudo:"herp.subL", descritiva:"herp.sub2"}[id]; if (k) store.set(k, sub); } aba = id; history.replaceState(null, "", "#" + id); render(); scrollTo(0, 0); }
 function blocoContexto(alvo){
   const C = ctxAtual();
-  alvo.appendChild(el("p", {class:"pergunta"}, "Datas, estação, observadores, horas de busca e tipo de serviço. Entram no esforço por ponto (quando a planilha não tem), na comparação seca e chuva, no texto de métodos e nas análises sugeridas. Ficam salvos em <b>contexto_campo.md</b>, na pasta do levantamento."));
+  alvo.appendChild(el("p", {class:"pergunta"}, "Datas, estação, observadores, horas de busca e objetivo do estudo. Entram no esforço por ponto (quando a planilha não tem), na comparação seca e chuva, no texto de métodos e nas análises sugeridas. Ficam salvos em <b>contexto_campo.md</b>, na pasta do levantamento."));
   const f = el("div", {class:"ctx"});
-  f.innerHTML = `<div class="duas"><label>Tipo de serviço<select data-c="servico">${SERV.map(([v, n]) => `<option value="${v}" ${C.servico === v ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></label>
-    <label>Finalidade<textarea data-c="finalidade" placeholder="Licenciamento de quê, fase, o que comparar...">${esc(C.finalidade)}</textarea></label></div>
+  f.innerHTML = `<div class="duas"><label>Tipo de estudo (opcional)<select data-c="servico">${SERV.map(([v, n]) => `<option value="${v}" ${C.servico === v ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></label>
+    <label>Finalidade<textarea data-c="finalidade" placeholder="Qual pergunta ecológica este estudo pretende responder?">${esc(C.finalidade)}</textarea></label></div>
     <div class="rotulo" style="margin-top:12px">Campanhas</div><div class="camps"></div><button class="maiscamp">+ campanha</button>
     <label class="cp">Observações do campo<textarea data-c="campo" placeholder="Imprevistos, pontos que não deu para amostrar, chuva forte numa noite...">${esc(C.campo)}</textarea></label>
     <p class="esforco-prev"></p>`;
@@ -1258,7 +1269,7 @@ function blocoContexto(alvo){
     if (arr(R.campanhas).length) tabelaAuto(alvo, "contexto_campanhas", "Campanhas e esforço", arr(R.campanhas)); }
   const ag = el("div", {class:"aviso naoimprime"}, `<span><span class="pill informação">agentes</span></span><div><b>Para o assistente e os agentes</b>O contexto vai para <code>contexto_campo.md</code> na pasta do levantamento. Para pedir a leitura do especialista ou a revisão da planilha, copie o pedido e cole numa conversa com o assistente.</div>`);
   const bp = el("button", {style:"margin-left:auto"}, "Copiar pedido para o assistente");
-  bp.onclick = () => copia(`Leia o contexto do campo em "${pastaLev()}\\contexto_campo.md" e os resultados do Quadrante em "${pastaLev()}\\dados.js". Considerando o tipo de serviço, as estações e o esforço, escreva a leitura do especialista (o que os resultados dizem sobre o ambiente, com os limites) em leitura_especialista.md na mesma pasta, e rode o agente corretor-planilha-herpeto na planilha "${pastaLev()}\\planilha.xlsx".`, bp);
+  bp.onclick = () => copia(`Leia o contexto do campo em "${pastaLev()}\\contexto_campo.md" e os resultados do Quadrante em "${pastaLev()}\\dados.js". Considerando a pergunta do estudo, as estações e o esforço, escreva a leitura do especialista (o que os resultados dizem sobre o ambiente, com os limites) em leitura_especialista.md na mesma pasta, e rode o agente corretor-planilha-herpeto na planilha "${pastaLev()}\\planilha.xlsx".`, bp);
   ag.appendChild(bp); alvo.appendChild(ag);
   const sg = el("div"); alvo.appendChild(sg); blocoSugestoes(sg, C.servico);
 }
@@ -1275,10 +1286,16 @@ function blocoSugestoes(alvo, servico){
   const box = el("div", {class:"sugest"}); alvo.appendChild(box);
   pegaCatalogo().then(C => {
     const sv = servico != null ? servico : (H.contexto_json || {}).servico || "";
-    if (!sv || !C.servicos[sv]) { box.innerHTML = `<div class="rotulo">Análises sugeridas</div><p class="nota">Diga o tipo de serviço no Contexto do campo para ver as análises que esse serviço costuma pedir.</p>`;
-      if (aba !== "planilha") { const b = el("button", {}, "Abrir o contexto do campo"); b.onclick = vaiContexto; box.appendChild(b); } return; }
-    const S = C.servicos[sv], nu = (H.grupos[grupo] || {}).n_pontos || 0;
-    box.innerHTML = `<div class="rotulo">Análises sugeridas: ${esc(S.nome)} (${esc(grupo)})</div>`;
+    const S = C.servicos[sv] || C.servicos.outro;
+    if (!S) { box.textContent = "Abra o levantamento pelo Quadrante para consultar o catálogo de análises."; return; }
+    const nu = (H.grupos[grupo] || {}).n_pontos || 0;
+    const titulo = sv && C.servicos[sv] ? "Análises sugeridas para " + S.nome : "Análises para começar";
+    box.innerHTML = `<div class="rotulo">${esc(titulo)} (${esc(grupo)})</div>`;
+    if (aba !== "pedidos") {
+      const b = el("button", {}, "Ver todas as análises");
+      b.onclick = () => { PEDIDO_SEL = null; irPara("pedidos"); };
+      box.appendChild(b);
+    }
     const ul = el("ul", {class:"lista-sug"});
     for (const it of S.itens) {
       const li = el("li"); let est = "", bt = null;
@@ -1286,7 +1303,7 @@ function blocoSugestoes(alvo, servico){
         if (tem) { bt = el("button", {}, "Ver"); bt.onclick = () => irPara(it.id, it.sub); } }
       else if (it.tipo === "pedido") { const pouco = ["nmds", "permanova"].includes(it.id) && nu < 6; est = pouco ? `precisa de 6 ou mais unidades amostrais (há ${nu}): o R vai recusar` : "o R confere os pressupostos e roda";
         bt = el("button", {}, "Pedir"); bt.onclick = () => { PEDIDO_SEL = it.id; irPara("pedidos"); }; }
-      else est = "não se aplica a este serviço";
+      else est = "confira o desenho amostral";
       li.innerHTML = `<b>${esc(it.nome)}</b><span class="por">${esc(it.por)}</span><span class="est${est.startsWith("pronta") || est.startsWith("o R") ? "" : " falta"}">${esc(est)}</span>`;
       if (bt) li.appendChild(bt); ul.appendChild(li);
     }
@@ -1518,7 +1535,11 @@ function texto(alvo, t, aberto){
 function tabela(alvo, id, titulo, cols, linhas, alto){
   const box = el("div", {class:"tabbox"}), topo = el("div", {class:"topo"});
   topo.appendChild(el("span", {class:"tit"}, esc(titulo)));
-  topo.appendChild(marcaRel("tab:" + TAG(grupo) + ":" + id, {tipo:"tab", titulo, cols:cols.map(c => c.t), linhas:linhas.map(r => cols.map(c => String(c.csv ? c.csv(r) : c.f ? c.f(r) : r[c.k] ?? "").replace(/<[^>]+>/g, "")))}));
+  const valorExportado = (c, r) => {
+    const valor = c.csv ? c.csv(r) : c.f ? c.f(r) : r[c.k];
+    return typeof valor === "number" ? valor : String(valor ?? "").replace(/<[^>]+>/g, "");
+  };
+  topo.appendChild(marcaRel("tab:" + TAG(grupo) + ":" + id, {tipo:"tab", titulo, cols:cols.map(c => c.t), linhas:linhas.map(r => cols.map(c => valorExportado(c, r)))}));
   box.appendChild(topo);
   const wrap = el("div", {class: alto ? "rolagem" : ""}); const t = el("table");
   t.innerHTML = "<thead><tr>" + cols.map(c => `<th class="${c.num ? "num" : ""}">${esc(c.t)}</th>`).join("") + "</tr></thead>";
@@ -1611,7 +1632,7 @@ function render(){
   }
   // contexto do campo (19/11/2026): pede para preencher ou mostra o texto de métodos; depois, as análises sugeridas para o serviço
   const temCtx = H.contexto_json && (H.contexto_json.servico || arr(H.contexto_json.campanhas).some(c => c.inicio || c.estacao || c.observadores));
-  if (!temCtx && LID) { const av = el("div", {class:"aviso naoimprime", style:"margin-top:14px"}, `<span><span class="pill atenção">contexto</span></span><div><b>Falta o contexto do campo</b>Datas, estação, observadores, horas de busca por ponto e tipo de serviço. Sem isso, o esforço e a comparação seca e chuva ficam de fora.</div>`);
+  if (!temCtx && LID) { const av = el("div", {class:"aviso naoimprime", style:"margin-top:14px"}, `<span><span class="pill atenção">contexto</span></span><div><b>Falta o contexto do campo</b>Datas, estação, observadores, horas de busca por ponto e métodos complementam a planilha quando essas informações faltam.</div>`);
     const b = el("button", {class:"acento", style:"margin-left:auto"}, "Preencher o contexto"); b.onclick = vaiContexto; av.appendChild(b); s0.appendChild(av); }
   else if (H.contexto_resumo && H.contexto_resumo.texto) s0.appendChild(el("div", {class:"resultado", style:"margin-top:14px"}, "<b>Campo</b>" + esc(H.contexto_resumo.texto)));
   blocoSugestoes(s0);
