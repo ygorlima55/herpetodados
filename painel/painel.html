@@ -495,19 +495,40 @@ section.prancha,#inserir,#levantamentos,#guia,#arquivos,main > section{backgroun
 .solta{border:1.5px dashed var(--tinta-3)!important}
 .solta.sobre{background:var(--papel-3)!important;border-color:var(--acento)!important}
 
-/* abas em botão segmentado (jeito Apple): trilho cinza quente e lente branca que desliza */
-.abas,.seg{background:var(--trilho)!important;border:0!important;border-radius:11px!important;padding:2px!important;gap:2px!important;box-shadow:none!important;backdrop-filter:none!important}
-.abas .pilula-abas{display:block!important;border-radius:9px!important;background:var(--lente)!important;box-shadow:0 1px 2px rgba(42,38,32,.1),0 3px 8px -2px rgba(42,38,32,.22)!important}
-.abas button,.seg button{background:transparent!important;border:0!important;border-radius:9px!important;padding:5px 13px!important;box-shadow:none!important;color:var(--tinta-2)!important;transition:color 150ms ease!important}
-.abas button[aria-pressed="true"],.seg button[aria-pressed="true"]{color:var(--tinta)!important;font-weight:600}
-.abas:not(:has(.pilula-abas.pronta)) button[aria-pressed="true"],.seg button[aria-pressed="true"]{background:var(--lente)!important;box-shadow:0 1px 2px rgba(42,38,32,.1)!important}
+/* controle segmentado (.seg): trilho cinza e lente branca */
+.seg{background:var(--trilho)!important;border:0!important;border-radius:11px!important;padding:2px!important;gap:2px!important;box-shadow:none!important;backdrop-filter:none!important}
+.seg button{background:transparent!important;border:0!important;border-radius:9px!important;padding:5px 13px!important;box-shadow:none!important;color:var(--tinta-2)!important;transition:color 150ms ease!important}
+.seg button[aria-pressed="true"]{color:var(--tinta)!important;font-weight:600;background:var(--lente)!important;box-shadow:0 1px 2px rgba(0,0,0,.1)!important}
+
+/* abas com ENTALHE FLUTUANTE (20/11/2026, escolha do usuário: forma 5 da prévia efeitos.html; ref. Instagram DfWVqU_j_7L).
+   Barra escura numa linha só (rola para o lado se não couber); acima da aba escolhida flutua um círculo terracota com a
+   marca Quadrante, separado da barra por um anel da cor do cartão (o entalhe). O nome da aba escolhida fica em branco.
+   A pílula do JS (abas()) só dá a posição: o círculo é desenhado no ::before dela, centrado. */
+.abas{position:relative!important;display:flex!important;flex-wrap:nowrap!important;gap:2px!important;max-width:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;
+  background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;backdrop-filter:none!important;padding:30px 6px 6px!important;margin:2px 0 16px!important}
+.abas::before{content:"";position:absolute;left:0;right:0;top:24px;bottom:0;min-width:100%;border-radius:14px;background:#1d1d1f;z-index:0}
+:root[data-theme="dark"] .abas::before{background:#2c2c2e}
+.abas button{position:relative;z-index:2;flex:none;white-space:nowrap;background:transparent!important;border:0!important;border-radius:9px!important;padding:16px 14px 9px!important;box-shadow:none!important;
+  color:rgba(255,255,255,.62)!important;font-size:13px;transition:color 150ms ease!important}
+@media (hover:hover) and (pointer:fine){.abas button:hover{color:#fff!important}}
+.abas button[aria-pressed="true"]{color:#fff!important;font-weight:600;background:transparent!important}
+.abas .pilula-abas{display:block!important;z-index:1;background:transparent!important;box-shadow:none!important;border-radius:0!important;top:0!important;height:24px!important;pointer-events:none}
+.abas .pilula-abas::before{content:"";position:absolute;left:50%;top:0;width:36px;height:36px;margin-left:-18px;border-radius:50%;background:var(--acento);
+  box-shadow:0 0 0 5px var(--cartao),0 8px 16px -6px rgba(181,85,44,.65)}
+.abas .pilula-abas::after{content:"";position:absolute;left:50%;top:9px;width:18px;height:18px;margin-left:-9px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Crect x='1' y='1' width='8' height='8' fill='%23fff'/%3E%3Crect x='1' y='1' width='18' height='18' fill='none' stroke='%23fff' stroke-width='1.6'/%3E%3Cpath d='M10 1v18M1 10h18' stroke='%23fff' stroke-width='1.2'/%3E%3C/svg%3E") center/contain no-repeat}
+.abas .pilula-abas.pronta{transition-property:left,width!important}
+.abas .pilula-abas.pousa::before{animation:pousa 320ms var(--ease-out)}
+@keyframes pousa{0%{transform:translateY(8px) scale(.82)}100%{transform:none}}
+@media print{.abas{display:none!important}}
 
 /* botões em pílula; o principal em grafite */
 button,select,input[type=text],input[type=number]{border-radius:999px!important}
 textarea{border-radius:12px!important}
 button,select,input[type=text],input[type=number],textarea{border:1px solid var(--fio);background:var(--cartao);color:var(--tinta);box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;
   transition:transform 160ms var(--ease-out),border-color 150ms ease}
-button:active{transform:scale(.97)}
+/* resposta no aperto (apple-design §1): instantânea, 100 ms */
+button:active{transform:scale(.97);transition:transform 100ms ease-out}
 @media (hover:hover) and (pointer:fine){button:hover{border-color:var(--tinta-3)}}
 button.forte,button.acento,button.bcorr,.abrir,#escolher{background:var(--tinta)!important;color:var(--papel)!important;border-color:var(--tinta)!important;box-shadow:none!important}
 .figr .topo .acs button,.figr .topo .acs a button,.rel,table.lev .acs button:not(.abrir){background:var(--cartao)!important;border-color:var(--fio)!important}
@@ -532,29 +553,92 @@ aside.editor{border-radius:0!important;background:color-mix(in srgb,var(--papel-
 .barra.quad .enche{height:100%;background:var(--acento)!important;border-radius:999px!important;transition:width 400ms linear}
 .barra.quad .reabre{font-size:12px;padding:2px 8px;margin-left:8px}
 
-/* análise em andamento: orbe de partículas sobre vidro escuro, cobrindo a área de conteúdo (o menu fica livre) */
-#analiseQuad{position:fixed;top:14px;right:14px;bottom:14px;left:calc(var(--menu-w) + 14px);z-index:50;display:none;grid-template-rows:auto 1fr auto;gap:10px;padding:26px 32px;border-radius:24px;
-  background:rgba(14,14,15,.86);backdrop-filter:blur(26px) saturate(1.4);-webkit-backdrop-filter:blur(26px) saturate(1.4);border:1px solid rgba(255,255,255,.08);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 30px 80px -30px rgba(0,0,0,.6);color:#f5f5f7;opacity:0;transition:opacity 250ms var(--ease-out)}
-#analiseQuad.on{display:grid}
-#analiseQuad.visivel{opacity:1}
-#analiseQuad .cabq{display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
-#analiseQuad .rotq{font:600 11px var(--f-texto);letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.45)}
-#analiseQuad h4{font:700 26px/1.15 var(--f-titulo);letter-spacing:-.02em;color:#fff;margin-top:4px}
-#analiseQuad .etq{font:15px var(--f-texto);color:rgba(255,255,255,.65);margin-top:2px;min-height:1.4em}
-#analiseQuad .pcq{font:600 46px/1 var(--f-num);color:#f19a6d;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-#analiseQuad canvas{width:100%;height:100%;min-height:260px;display:block}
-#analiseQuad .peq{display:flex;justify-content:space-between;align-items:center;gap:16px;font:12.5px var(--f-texto);color:rgba(255,255,255,.5)}
-#analiseQuad .peq button{font-size:13px;background:rgba(255,255,255,.1)!important;color:#fff!important;border:1px solid rgba(255,255,255,.14)!important}
-@media (max-width:980px){#analiseQuad{left:8px;top:8px;right:8px;bottom:8px;padding:18px}main{margin-left:0!important}.menu{width:280px!important}}
+/* análise rodando: orbe apagado no FUNDO da tela (atrás do conteúdo, não bloqueia nada) e uma pílula embaixo narrando o que o R faz */
+main{position:relative;z-index:1}
+#analiseQuad{position:fixed;top:0;right:0;bottom:0;left:var(--menu-w);z-index:0;display:none;pointer-events:none;opacity:0;transition:opacity 900ms ease}
+#analiseQuad.on{display:block}
+#analiseQuad.visivel{opacity:.85}
+:root[data-theme="dark"] #analiseQuad.visivel{opacity:.9}
+#analiseQuad canvas{width:100%;height:100%;display:block}
+#narraQuad{position:fixed;right:22px;bottom:14px;z-index:55;display:none;align-items:center;gap:8px;pointer-events:none;
+  max-width:min(560px,calc(100vw - var(--menu-w) - 40px));padding:5px 12px 5px 10px;border-radius:999px;
+  background:color-mix(in srgb,var(--papel) 72%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--tinta-2);
+  font:12.5px var(--f-texto);opacity:0;transform:translateY(6px);transition:opacity 400ms var(--ease-out),transform 400ms var(--ease-out)}
+#narraQuad.on{display:flex}
+#narraQuad.visivel{opacity:1;transform:none}
+#narraQuad .ponto{width:7px;height:7px;border-radius:50%;background:#e07a4c;flex:none;box-shadow:0 0 0 0 rgba(224,122,76,.6);animation:pulsaPonto 1.6s ease-out infinite}
+@keyframes pulsaPonto{0%{box-shadow:0 0 0 0 rgba(224,122,76,.55)}100%{box-shadow:0 0 0 9px rgba(224,122,76,0)}}
+#narraQuad .txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#narraQuad .txt::after{content:"";display:inline-block;width:2px;height:1em;margin-left:2px;vertical-align:-2px;background:var(--acento);animation:cursor 1s steps(1) infinite}
+@keyframes cursor{50%{opacity:0}}
+#narraQuad .pcn{margin-left:auto;font:600 12.5px var(--f-num);color:var(--acento);font-variant-numeric:tabular-nums;padding-left:6px}
+@media (max-width:980px){#analiseQuad{left:0}#narraQuad{right:12px;max-width:calc(100vw - 24px)}main{margin-left:0!important}.menu{width:280px!important}}
 
 /* figura redesenhando: orbe pequeno */
 .figr .quadro .aviso-r{background:rgba(14,14,15,.72)!important;color:#fff!important;backdrop-filter:blur(6px)}
 
 .figr .quadro .aviso-r canvas{width:130px!important;height:130px!important}
 
-@media (prefers-reduced-motion:reduce){button,.menu nav .marcador,aside.editor,#analiseQuad,.abas .pilula-abas{transition:none!important}button:active{transform:none}}
-@media (prefers-reduced-transparency:reduce){.menu,section.prancha,main > section,aside.editor,#analiseQuad{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:var(--papel-2)!important}}
+/* troca de seção (20/11/2026, escolha do usuário: forma A): a seção que entra sobe 10 px saindo de um desfoque leve */
+main > section.prancha.ativa{animation:entraSecao 300ms var(--ease-out)}
+/* materializa (apple-design §12): desfoque e escala juntos, sem quique */
+@keyframes entraSecao{from{opacity:0;filter:blur(8px);transform:translateY(8px) scale(.985)}}
+@keyframes esmaece{from{opacity:0}}
+/* ===== Material de vidro (20/11/2026), regras da skill apple-design de Emil Kowalski (github.com/emilkowalski/skills, MIT; lida, não instalada):
+   blur(20px) saturate(180%), fundo branco a 60% e borda superior clara; superfície maior = mais desfoque e sombra;
+   nunca vidro claro em cima de vidro claro (os cartões de dentro ficam sem fundo próprio, só com fio fino);
+   texto com contraste reforçado (vibrancy); fundo sólido com "reduzir transparência"; quase sólido com "mais contraste".
+   As cores (terracota, paletas das figuras) continuam; o orbe aparece através das seções. */
+:root{--g-fundo:rgba(255,255,255,.58);--g-fundo-menu:rgba(246,246,244,.55);--g-borda:rgba(255,255,255,.55);--g-borda-alta:rgba(255,255,255,.9);--g-fio:rgba(0,0,0,.07);
+  --g-sombra:0 1px 1px rgba(0,0,0,.04),0 12px 40px -18px rgba(0,0,0,.28);--g-interno:rgba(255,255,255,.34)}
+:root[data-theme="dark"]{--g-fundo:rgba(30,30,32,.55);--g-fundo-menu:rgba(24,24,26,.55);--g-borda:rgba(255,255,255,.08);--g-borda-alta:rgba(255,255,255,.16);--g-fio:rgba(255,255,255,.08);
+  --g-sombra:0 1px 1px rgba(0,0,0,.3),0 16px 44px -18px rgba(0,0,0,.75);--g-interno:rgba(255,255,255,.04)}
+/* superfícies grandes: seções */
+section.prancha,#inserir,#levantamentos,#guia,#arquivos,main > section{background:var(--g-fundo)!important;border:1px solid var(--g-borda)!important;border-top-color:var(--g-borda-alta)!important;
+  backdrop-filter:blur(28px) saturate(180%)!important;-webkit-backdrop-filter:blur(28px) saturate(180%)!important;box-shadow:var(--g-sombra)!important}
+/* lateral e gaveta */
+.menu{background:var(--g-fundo-menu)!important;backdrop-filter:blur(24px) saturate(180%)!important;-webkit-backdrop-filter:blur(24px) saturate(180%)!important;border-right:1px solid var(--g-borda)!important}
+aside.editor{background:var(--g-fundo)!important;backdrop-filter:blur(30px) saturate(180%)!important;-webkit-backdrop-filter:blur(30px) saturate(180%)!important;border-left:1px solid var(--g-borda)!important}
+/* dentro das seções: sem segunda camada de vidro, só um véu leve e fio fino */
+.prancha .figr,.prancha .tabbox,.prancha .numeros > div,.prancha .leitura,.prancha .resultado,.prancha .explica div,.prancha .corr,.prancha .corrlista,.prancha .edtit,
+.figr,.tabbox,.numeros > div,.numeros > div:last-child,#lista,.passos div,.guia div,.solta,.arvore{background:var(--g-interno)!important;border:1px solid var(--g-fio)!important;box-shadow:none!important;backdrop-filter:none!important}
+.resultado,.como{border-left:3px solid var(--acento)!important}
+.destaque{background:linear-gradient(150deg,rgba(181,85,44,.92),rgba(150,66,32,.88))!important;border:1px solid rgba(255,255,255,.25)!important}
+.figr .quadro{background:#fff!important;border:1px solid var(--g-fio)!important;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+/* abas: barra escura de vidro (mantém o entalhe terracota) */
+.abas::before{background:rgba(29,29,31,.78)!important;backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.abas .pilula-abas::before{box-shadow:0 0 0 5px var(--g-borda-alta),0 8px 16px -6px rgba(181,85,44,.65)!important}
+:root[data-theme="dark"] .abas .pilula-abas::before{box-shadow:0 0 0 5px rgba(60,60,64,.9),0 8px 16px -6px rgba(224,122,76,.6)!important}
+/* contraste do texto sobre vidro */
+.prancha .pergunta,.lead,.numeros .r,.numeros span{color:var(--tinta-2)!important}
+:root:not([data-theme="dark"]){--tinta-2:#55554f;--tinta-3:#7a7a75}
+/* botões claros por cima do vidro: sólidos (não empilhar vidro) */
+.figr .topo .acs button,.figr .topo .acs a button,.rel,table.lev .acs button:not(.abrir),.menu .acoes button,.menu .tema{background:rgba(255,255,255,.75)!important;border:1px solid var(--g-fio)!important;backdrop-filter:none!important}
+:root[data-theme="dark"] .figr .topo .acs button,:root[data-theme="dark"] .rel,:root[data-theme="dark"] .menu .acoes button,:root[data-theme="dark"] .menu .tema,:root[data-theme="dark"] table.lev .acs button:not(.abrir){background:rgba(58,58,62,.8)!important}
+th{border-bottom-color:var(--g-fio)!important}td{border-bottom-color:var(--g-fio)!important}
+/* orbe no fundo: um pouco mais presente agora que o vidro deixa passar */
+#analiseQuad.visivel{opacity:.95!important}
+@media (prefers-contrast:more){section.prancha,main > section,.menu,aside.editor{background:var(--cartao)!important;border-color:var(--tinta-3)!important}}
+/* ===== Refinos pela skill apple-design (20/11/2026) ===== */
+/* material: a lateral é estrutura, então fica um pouco mais pesada que as seções (§12 "material weight encodes hierarchy") */
+:root{--g-fundo-menu:rgba(236,236,233,.72)}
+:root[data-theme="dark"]{--g-fundo-menu:rgba(18,18,20,.72)}
+/* vibrancy: texto pequeno sobre vidro um pouco mais forte e espaçado (§12) */
+.prancha .pergunta,.lead{font-weight:450}
+.rotulo,th,.menu nav a .val,.numeros span,.numeros .r,.figr .topo .acs button,.rel{letter-spacing:.012em}
+.rotulo,th{font-weight:600}
+/* tipografia (§15): tamanho óptico da Segoe UI Variable, entrelinha justa nos títulos grandes, corpo confortável */
+body{font-optical-sizing:auto;line-height:1.5}
+.prancha h2{line-height:1.06}
+h1{line-height:1.05}
+/* troca de tema suave, sem tranco de brilho (§14) */
+html.trocando-tema,html.trocando-tema body,html.trocando-tema main > section,html.trocando-tema .menu,html.trocando-tema .figr,html.trocando-tema .tabbox{
+  transition:background-color 300ms ease,color 300ms ease,border-color 300ms ease!important}
+/* narração e orbe: materializam com desfoque e escala (§12) */
+#narraQuad{filter:blur(4px)}#narraQuad.visivel{filter:none}
+#narraQuad{transition:opacity 400ms var(--ease-out),transform 400ms var(--ease-out),filter 400ms var(--ease-out)!important}
+@media (prefers-reduced-motion:reduce){button,.menu nav .marcador,aside.editor,#analiseQuad,.abas .pilula-abas{transition:none!important}button:active{transform:none}.abas .pilula-abas.pousa::before,#narraQuad .ponto,#narraQuad .txt::after{animation:none!important}main > section.prancha.ativa{animation:esmaece 200ms ease!important}}
+@media (prefers-reduced-transparency:reduce){.menu,section.prancha,main > section,aside.editor,#narraQuad,.abas::before{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:var(--papel-2)!important}section.prancha,main > section{background:var(--cartao)!important}.abas::before{background:#1d1d1f!important}}
 @media print{#analiseQuad,.barra.quad{display:none!important}body{background:#fff!important}}
 /* <<< quadrante.css <<< */
 </style>
@@ -783,50 +867,84 @@ function esferaParticulas(cv){
   quadro();
 }
 
-/* tela de análise sobre a área de conteúdo */
-const QUAD = {el: null, p: 0, alvo: 0, t0: 0, anim: false, dispensada: false, est: null};
+/* análise rodando (20/11/2026, pedido do usuário: "tem que ser sutil e ficar no fundo da tela, e as letras vão falando no que
+   o programa está mexendo"): o orbe fica ATRÁS do conteúdo, apagado, e uma pílula embaixo narra a etapa e as linhas do R,
+   letra por letra. O painel continua livre para usar. */
+const QUAD = {el: null, narra: null, p: 0, alvo: 0, t0: 0, anim: false, est: null, fila: [], vistas: new Set(), digitando: false, ultEtapa: ""};
 function quadTela(){
   if (QUAD.el) return QUAD.el;
-  const d = document.createElement("div"); d.id = "analiseQuad"; d.setAttribute("role", "status"); d.setAttribute("aria-live", "polite");
-  d.innerHTML = '<div class="cabq"><div><div class="rotq">Análise em andamento</div><h4>Analisando os dados</h4><div class="etq"></div></div><div class="pcq">0%</div></div>'
-    + '<canvas aria-hidden="true"></canvas><div class="peq"><span>O R está calculando. Você pode continuar usando o painel.</span><span><button type="button" class="segue">Continuar usando o painel</button></span></div>';
-  document.body.appendChild(d);
-  d.querySelector(".segue").onclick = () => { QUAD.dispensada = true; quadFecha(); };
-  QUAD.el = d; return d;
+  const d = document.createElement("div"); d.id = "analiseQuad"; d.setAttribute("aria-hidden", "true"); d.innerHTML = "<canvas></canvas>";
+  document.body.prepend(d);
+  const n = document.createElement("div"); n.id = "narraQuad"; n.setAttribute("role", "status"); n.setAttribute("aria-live", "polite");
+  n.innerHTML = '<span class="ponto"></span><span class="txt"></span><span class="pcn"></span>';
+  document.body.appendChild(n);
+  QUAD.el = d; QUAD.narra = n; return d;
 }
 function quadAbre(){
   const d = quadTela(); if (d.classList.contains("on")) return;
   const m = document.querySelector(".menu"); if (m) document.documentElement.style.setProperty("--menu-w", Math.round(m.getBoundingClientRect().right) + "px");
-  QUAD.t0 = performance.now(); QUAD.p = 0; QUAD.est = {voo: [], ult: 0};
-  d.classList.add("on"); setTimeout(() => d.classList.add("visivel"), 20);
+  QUAD.t0 = performance.now(); QUAD.p = 0; QUAD.est = {voo: [], ult: 0}; QUAD.fila = []; QUAD.vistas = new Set();
+  d.classList.add("on"); QUAD.narra.classList.add("on"); document.body.classList.add("analisando"); setTimeout(() => { d.classList.add("visivel"); QUAD.narra.classList.add("visivel"); }, 20);
   if (!QUAD.anim) { QUAD.anim = true; quadPasso(); }
 }
-function quadFecha(){ const d = QUAD.el; if (!d) return; d.classList.remove("visivel"); setTimeout(() => d.classList.remove("on"), 260); }
+function quadFecha(){ const d = QUAD.el; if (!d) return; document.body.classList.remove("analisando"); d.classList.remove("visivel"); QUAD.narra.classList.remove("visivel");
+  setTimeout(() => { d.classList.remove("on"); QUAD.narra.classList.remove("on"); }, 600); }
 function quadPasso(){
   const d = QUAD.el; if (!d || !d.classList.contains("on")) { QUAD.anim = false; return; }
-  // segue o andamento do R e, enquanto ele não avança, anda devagar até um pouco além do último passo
   const meta = QUAD.alvo >= 1 ? 1 : Math.min(.97, QUAD.alvo + .05);
   QUAD.p += (meta - QUAD.p) * (QUAD.p < QUAD.alvo ? .12 : .01);
   const r = quadPrep(d.querySelector("canvas")); if (r) quadOrbe(r[0], r[1], r[2], (performance.now() - QUAD.t0) / 1000, QUAD.p, QUAD.est, true);
   if (QUAD_PARADO) { QUAD.anim = false; return; }
-  setTimeout(quadPasso, 33);
+  setTimeout(quadPasso, 40);
+}
+/* narração: cada frase nova entra na fila e é escrita letra por letra; fica 1,4 s e dá lugar à próxima */
+function quadFala(frase){
+  frase = String(frase || "").replace(/^\s*\[\s*\d+%\]\s*/, "").replace(/\s+/g, " ").trim();
+  if (!frase || frase.length < 3 || QUAD.vistas.has(frase) || /scale|Scale|Adding|override\.aes|Warning|Aviso|^\d+:/.test(frase)) return;
+  QUAD.vistas.add(frase); QUAD.fila.push(frase.length > 96 ? frase.slice(0, 93) + "..." : frase);
+  if (QUAD.fila.length > 6) QUAD.fila.splice(0, QUAD.fila.length - 6);   // não acumula atraso
+  if (!QUAD.digitando) quadDigita();
+}
+function quadDigita(){
+  const tx = QUAD.narra && QUAD.narra.querySelector(".txt"); if (!tx) return;
+  const frase = QUAD.fila.shift(); if (!frase) { QUAD.digitando = false; return; }
+  QUAD.digitando = true;
+  if (QUAD_PARADO) { tx.textContent = frase; setTimeout(quadDigita, 1400); return; }
+  let k = 0; const passo = () => { k += 2; tx.textContent = frase.slice(0, k); if (k < frase.length) setTimeout(passo, 22); else setTimeout(quadDigita, QUAD.fila.length ? 900 : 1400); };
+  passo();
 }
 function barra(caixa, t){
   let b = caixa.previousElementSibling;
   if (b && b.classList.contains("barra") && !b.classList.contains("quad")) { b.remove(); b = null; }
   if (!b || !b.classList.contains("barra")) { b = document.createElement("div"); b.className = "barra quad";
-    b.innerHTML = '<div class="info"><span class="et"></span><span><span class="pc"></span><button type="button" class="reabre">Ver análise</button></span></div><div class="trilho"><div class="enche"></div></div>';
-    b.querySelector(".reabre").onclick = () => { QUAD.dispensada = false; quadAbre(); };
+    b.innerHTML = '<div class="info"><span class="et"></span><span class="pc"></span></div><div class="trilho"><div class="enche"></div></div>';
     caixa.parentNode.insertBefore(b, caixa); }
   const p = t.estado === "pronto" ? 100 : (t.pct || 0), rodando = t.estado === "rodando", s = Math.max(0, Math.round(Date.now() / 1000 - (t.inicio || Date.now() / 1000)));
   const etapa = (t.etapa || "Rodando no R"), tempo = rodando ? ` · ${Math.floor(s / 60)} min ${s % 60} s` : "";
   b.style.display = "block"; b.querySelector(".enche").style.width = p + "%"; b.querySelector(".pc").textContent = p + "%";
-  b.querySelector(".et").textContent = etapa + tempo; b.querySelector(".reabre").style.display = rodando ? "" : "none";
+  b.querySelector(".et").textContent = etapa + tempo;
   QUAD.alvo = p / 100;
-  if (rodando) { if (!QUAD.dispensada) quadAbre();
-    const d = quadTela(); d.querySelector(".etq").textContent = etapa + tempo; d.querySelector(".pcq").textContent = p + "%"; }
-  else { QUAD.alvo = 1; QUAD.dispensada = false; setTimeout(quadFecha, t.estado === "pronto" ? 700 : 0); }
+  if (rodando) { quadAbre();
+    QUAD.narra.querySelector(".pcn").textContent = p + "%";
+    if (etapa !== QUAD.ultEtapa) { QUAD.ultEtapa = etapa; quadFala(etapa); }
+    for (const l of (t.log || []).slice(-6)) quadFala(l); }
+  else { QUAD.alvo = 1; QUAD.ultEtapa = ""; if (QUAD.narra) { QUAD.fila = []; QUAD.narra.querySelector(".pcn").textContent = "";
+      QUAD.narra.querySelector(".txt").textContent = t.estado === "pronto" ? "Pronto. Figuras e tabelas atualizadas." : "A análise parou. Veja a mensagem na caixa de andamento."; }
+    setTimeout(quadFecha, t.estado === "pronto" ? 1800 : 4000); }
 }
+/* abas com entalhe flutuante: o círculo "pousa" (sobe 8 px e cresce) a cada troca de aba; a aba escolhida rola para a vista */
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest(".abas button"); if (!b) return;
+  const pil = b.parentElement.querySelector(".pilula-abas");
+  if (pil && !QUAD_PARADO) { pil.classList.remove("pousa"); void pil.offsetWidth; pil.classList.add("pousa"); }
+  if (b.scrollIntoView) b.scrollIntoView({block: "nearest", inline: "nearest", behavior: QUAD_PARADO ? "auto" : "smooth"});
+});
+
+/* troca de tema suave (apple-design §14): liga as transições de cor só durante a troca */
+document.addEventListener("click", e => {
+  if (!(e.target.closest && e.target.closest("#btTema"))) return;
+  const h = document.documentElement; h.classList.add("trocando-tema"); clearTimeout(h._tt); h._tt = setTimeout(() => h.classList.remove("trocando-tema"), 450);
+}, true);
 /* <<< analise-quadrante.js <<< */
 function acompanhar(tid, caixa, fim){
   if (caixa) { caixa.style.display = "block"; caixa.textContent = "Rodando no R"; }
